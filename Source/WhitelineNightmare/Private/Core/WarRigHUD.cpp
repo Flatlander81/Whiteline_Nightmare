@@ -158,7 +158,7 @@ void AWarRigHUD::UpdateDistanceDisplay(float CurrentDistance, float TargetDistan
 	UE_LOG(LogTemp, VeryVerbose, TEXT("Distance: %.2f / %.2f"), CurrentDistance, TargetDistance);
 }
 
-UUserWidget* AWarRigHUD::CreateWidgetIfNeeded(TSubclassOf<UUserWidget> WidgetClass, UUserWidget*& WidgetInstance)
+UUserWidget* AWarRigHUD::CreateWidgetIfNeeded(TSubclassOf<UUserWidget> WidgetClass, TObjectPtr<UUserWidget>& WidgetInstance)
 {
 	if (!WidgetInstance && WidgetClass)
 	{

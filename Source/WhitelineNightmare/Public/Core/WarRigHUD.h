@@ -110,5 +110,5 @@ public:
 
 protected:
 	/** Create a widget from class if it doesn't exist */
-	UUserWidget* CreateWidgetIfNeeded(TSubclassOf<UUserWidget> WidgetClass, UUserWidget*& WidgetInstance);
+	UUserWidget* CreateWidgetIfNeeded(TSubclassOf<UUserWidget> WidgetClass, TObjectPtr<UUserWidget>& WidgetInstance);
 };
