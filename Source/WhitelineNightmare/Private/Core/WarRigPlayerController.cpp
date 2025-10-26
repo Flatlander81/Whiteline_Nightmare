@@ -2,6 +2,7 @@
 
 #include "Core/WarRigPlayerController.h"
 #include "Core/WhitelineNightmareGameMode.h"
+#include "Core/InputConfiguration.h"
 #include "Data/GameplayDataStructs.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -34,12 +35,26 @@ void AWarRigPlayerController::BeginPlay()
 		}
 	}
 
+	// Setup programmatic input if not configured in editor
+	if (!DefaultMappingContext)
+	{
+		UInputConfiguration::SetupInputSystem(this);
+		DefaultMappingContext = UInputConfiguration::GetDefaultMappingContext(this);
+		LaneChangeAction = UInputConfiguration::GetLaneChangeAction(this);
+		PauseAction = UInputConfiguration::GetPauseAction(this);
+	}
+
 	// Setup Enhanced Input
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
 		if (DefaultMappingContext)
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			UE_LOG(LogTemp, Log, TEXT("Added input mapping context to player controller"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to get input mapping context!"));
 		}
 	}
 }
