@@ -438,14 +438,25 @@ static bool ObjectPoolTest_ResetPool()
 	TEST_SUCCESS("ObjectPoolTest_ResetPool");
 }
 
-// Auto-register all object pool tests
-REGISTER_TEST("ObjectPool_Initialization", ETestCategory::ObjectPool, ObjectPoolTest_Initialization);
-REGISTER_TEST("ObjectPool_GetFromPool", ETestCategory::ObjectPool, ObjectPoolTest_GetFromPool);
-REGISTER_TEST("ObjectPool_ReturnToPool", ETestCategory::ObjectPool, ObjectPoolTest_ReturnToPool);
-REGISTER_TEST("ObjectPool_PoolExhaustion", ETestCategory::ObjectPool, ObjectPoolTest_PoolExhaustion);
-REGISTER_TEST("ObjectPool_PoolReuse", ETestCategory::ObjectPool, ObjectPoolTest_PoolReuse);
-REGISTER_TEST("ObjectPool_ActiveCount", ETestCategory::ObjectPool, ObjectPoolTest_ActiveCount);
-REGISTER_TEST("ObjectPool_AutoExpand", ETestCategory::ObjectPool, ObjectPoolTest_AutoExpand);
-REGISTER_TEST("ObjectPool_ResetPool", ETestCategory::ObjectPool, ObjectPoolTest_ResetPool);
+/**
+ * Register all object pool tests with the test manager
+ * This function should be called from TestingGameMode::RegisterSampleTests()
+ */
+void RegisterObjectPoolTests(UTestManager* TestManager)
+{
+	if (!TestManager)
+	{
+		return;
+	}
+
+	TestManager->RegisterTest(TEXT("ObjectPool_Initialization"), ETestCategory::ObjectPool, &ObjectPoolTest_Initialization);
+	TestManager->RegisterTest(TEXT("ObjectPool_GetFromPool"), ETestCategory::ObjectPool, &ObjectPoolTest_GetFromPool);
+	TestManager->RegisterTest(TEXT("ObjectPool_ReturnToPool"), ETestCategory::ObjectPool, &ObjectPoolTest_ReturnToPool);
+	TestManager->RegisterTest(TEXT("ObjectPool_PoolExhaustion"), ETestCategory::ObjectPool, &ObjectPoolTest_PoolExhaustion);
+	TestManager->RegisterTest(TEXT("ObjectPool_PoolReuse"), ETestCategory::ObjectPool, &ObjectPoolTest_PoolReuse);
+	TestManager->RegisterTest(TEXT("ObjectPool_ActiveCount"), ETestCategory::ObjectPool, &ObjectPoolTest_ActiveCount);
+	TestManager->RegisterTest(TEXT("ObjectPool_AutoExpand"), ETestCategory::ObjectPool, &ObjectPoolTest_AutoExpand);
+	TestManager->RegisterTest(TEXT("ObjectPool_ResetPool"), ETestCategory::ObjectPool, &ObjectPoolTest_ResetPool);
+}
 
 #endif // !UE_BUILD_SHIPPING

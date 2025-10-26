@@ -4,6 +4,11 @@
 #include "Testing/TestMacros.h"
 #include "TimerManager.h"
 
+// Forward declaration of test registration functions
+#if !UE_BUILD_SHIPPING
+void RegisterObjectPoolTests(class UTestManager* TestManager);
+#endif
+
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogTestingGameMode, Log, All);
 
@@ -105,6 +110,12 @@ void ATestingGameMode::RegisterSampleTests()
 	TestManager->RegisterTest(TEXT("Sample_NullCheck"), ETestCategory::All, &ATestingGameMode::SampleTest_NullCheck);
 
 	UE_LOG(LogTestingGameMode, Log, TEXT("RegisterSampleTests: Registered %d sample tests"), 4);
+
+#if !UE_BUILD_SHIPPING
+	// Register object pool tests
+	RegisterObjectPoolTests(TestManager);
+	UE_LOG(LogTestingGameMode, Log, TEXT("RegisterSampleTests: Registered object pool tests"));
+#endif
 }
 
 void ATestingGameMode::OnTestStartTimer()
