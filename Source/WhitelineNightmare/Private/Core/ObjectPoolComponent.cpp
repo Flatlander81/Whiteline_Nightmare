@@ -172,11 +172,11 @@ AActor* UObjectPoolComponent::GetFromPool(FVector SpawnLocation, FRotator SpawnR
 		return nullptr;
 	}
 
-	// Set actor location and rotation
-	Actor->SetActorLocationAndRotation(SpawnLocation, SpawnRotation);
-
-	// Activate the actor
+	// Activate the actor first (before moving it)
 	ActivateActor(Actor);
+
+	// Set actor location and rotation (teleport to avoid physics issues)
+	Actor->SetActorLocationAndRotation(SpawnLocation, SpawnRotation, false, nullptr, ETeleportType::TeleportPhysics);
 
 	// Move to active pool
 	ActiveObjects.Add(Actor);
