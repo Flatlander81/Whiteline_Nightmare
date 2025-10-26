@@ -27,10 +27,10 @@ void AWarRigPlayerController::BeginPlay()
 	// Get lane count from game mode
 	if (AWhitelineNightmareGameMode* GameMode = Cast<AWhitelineNightmareGameMode>(GetWorld()->GetAuthGameMode()))
 	{
-		const FGameplayBalanceData* BalanceData = GameMode->GetGameplayBalanceData();
-		if (BalanceData)
+		FGameplayBalanceData BalanceData;
+		if (GameMode->GetGameplayBalanceData(BalanceData))
 		{
-			InitializeLaneData(BalanceData->NumberOfLanes);
+			InitializeLaneData(BalanceData.NumberOfLanes);
 		}
 	}
 

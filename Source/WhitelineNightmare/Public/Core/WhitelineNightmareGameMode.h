@@ -29,9 +29,9 @@ public:
 
 	virtual void BeginPlay() override;
 
-	/** Get the current gameplay balance data */
+	/** Get the current gameplay balance data (returns default values if not set) */
 	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|Data")
-	const FGameplayBalanceData* GetGameplayBalanceData() const;
+	bool GetGameplayBalanceData(FGameplayBalanceData& OutData) const;
 
 protected:
 	/** Data table containing gameplay balance values */

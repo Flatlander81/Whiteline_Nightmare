@@ -69,12 +69,13 @@ void AWhitelineNightmareGameMode::BeginPlay()
 	}
 }
 
-const FGameplayBalanceData* AWhitelineNightmareGameMode::GetGameplayBalanceData() const
+bool AWhitelineNightmareGameMode::GetGameplayBalanceData(FGameplayBalanceData& OutData) const
 {
 	if (!GameplayBalanceTable)
 	{
 		UE_LOG(LogTemp, Error, TEXT("GameplayBalanceTable is not set!"));
-		return nullptr;
+		OutData = FGameplayBalanceData(); // Return default values
+		return false;
 	}
 
 	// Get the first row (we typically only have one balance config per level)
@@ -83,10 +84,15 @@ const FGameplayBalanceData* AWhitelineNightmareGameMode::GetGameplayBalanceData(
 
 	if (RowNames.Num() > 0)
 	{
-		return GameplayBalanceTable->FindRow<FGameplayBalanceData>(RowNames[0], ContextString);
+		if (const FGameplayBalanceData* FoundData = GameplayBalanceTable->FindRow<FGameplayBalanceData>(RowNames[0], ContextString))
+		{
+			OutData = *FoundData;
+			return true;
+		}
 	}
 
-	return nullptr;
+	OutData = FGameplayBalanceData(); // Return default values
+	return false;
 }
 
 void AWhitelineNightmareGameMode::UpdateDistanceTraveled(float DeltaDistance)
@@ -107,8 +113,8 @@ void AWhitelineNightmareGameMode::CheckWinCondition()
 		return;
 	}
 
-	const FGameplayBalanceData* BalanceData = GetGameplayBalanceData();
-	if (BalanceData && DistanceTraveled >= BalanceData->WinDistance)
+	FGameplayBalanceData BalanceData;
+	if (GetGameplayBalanceData(BalanceData) && DistanceTraveled >= BalanceData.WinDistance)
 	{
 		HandleGameOver(true);
 	}
