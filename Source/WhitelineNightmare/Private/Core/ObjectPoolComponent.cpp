@@ -172,38 +172,17 @@ AActor* UObjectPoolComponent::GetFromPool(FVector SpawnLocation, FRotator SpawnR
 		return nullptr;
 	}
 
-	// Debug: Log before activation
-	USceneComponent* RootCompBefore = Actor->GetRootComponent();
-	FVector LocationBefore = Actor->GetActorLocation();
-	UE_LOG(LogTemp, Warning, TEXT("GetFromPool: BEFORE - RootComp=%s, Location=%s"),
-		RootCompBefore ? TEXT("EXISTS") : TEXT("NULL"),
-		*LocationBefore.ToString());
-
 	// Activate the actor first (before moving it)
 	ActivateActor(Actor);
 
-	// Debug: Log after activation
-	USceneComponent* RootCompAfter = Actor->GetRootComponent();
-	FVector LocationAfter = Actor->GetActorLocation();
-	UE_LOG(LogTemp, Warning, TEXT("GetFromPool: AFTER ACTIVATE - RootComp=%s, Location=%s"),
-		RootCompAfter ? TEXT("EXISTS") : TEXT("NULL"),
-		*LocationAfter.ToString());
-
 	// Set actor location and rotation (teleport to avoid physics issues)
-	const bool bLocationSet = Actor->SetActorLocationAndRotation(SpawnLocation, SpawnRotation, false, nullptr, ETeleportType::TeleportPhysics);
-	UE_LOG(LogTemp, Warning, TEXT("GetFromPool: SetActorLocationAndRotation returned %s, requested location=%s"),
-		bLocationSet ? TEXT("TRUE") : TEXT("FALSE"),
-		*SpawnLocation.ToString());
+	Actor->SetActorLocationAndRotation(SpawnLocation, SpawnRotation, false, nullptr, ETeleportType::TeleportPhysics);
 
 	// Force component transforms to update
 	if (USceneComponent* RootComp = Actor->GetRootComponent())
 	{
 		RootComp->UpdateComponentToWorld();
 	}
-
-	// Debug: Log final result
-	FVector LocationFinal = Actor->GetActorLocation();
-	UE_LOG(LogTemp, Warning, TEXT("GetFromPool: FINAL - Location=%s"), *LocationFinal.ToString());
 
 	// Move to active pool
 	ActiveObjects.Add(Actor);

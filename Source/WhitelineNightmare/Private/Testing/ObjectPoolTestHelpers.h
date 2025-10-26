@@ -18,6 +18,10 @@ class ATestPoolableActor : public AActor, public IPoolableActor
 public:
 	ATestPoolableActor()
 	{
+		// Create root component so actor can be positioned in the world
+		USceneComponent* Root = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+		RootComponent = Root;
+
 		ActivationCount = 0;
 		DeactivationCount = 0;
 		ResetCount = 0;
