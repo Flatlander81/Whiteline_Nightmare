@@ -1,16 +1,20 @@
 # Object Pool System - Testing Instructions
 
-## Quick Test (Automated Tests Only)
+## Quick Test (Automated Tests Only) - **RECOMMENDED**
 
-### 1. Open Project
-- Open `WhitelineNightmare.uproject` in Unreal Engine 5.6
-- Rebuild modules when prompted
+This is the fastest and easiest way to verify the object pooling system works.
 
-### 2. Run Tests via Console
-1. Press Play (PIE mode)
-2. Press ` (tilde) to open console
-3. Type: `RunTests ObjectPool`
-4. Check Output Log for results
+### Method 1: Any Map (Easiest)
+1. Open `WhitelineNightmare.uproject` in Unreal Engine 5.6
+2. Click **Yes** when prompted to rebuild modules
+3. Wait for compilation to complete
+4. Open ANY map (or create a new empty level)
+5. Click **Play** button in toolbar (or press Alt+P)
+6. Press **`** (backtick/tilde key, usually above Tab) to open console
+7. Type: `RunTests ObjectPool`
+8. Press **Enter**
+9. Open **Output Log** if not visible: **Window → Developer Tools → Output Log**
+10. Look for test results
 
 **Expected Result:** All 8 tests should pass
 ```
@@ -31,10 +35,8 @@ TEST PASSED: ObjectPoolTest_ResetPool
 ### 1. Create Test Map (First Time)
 1. **File → New Level → Empty Level**
 2. Save as `Content/Maps/PoolTestMap`
-3. **Window → World Settings**
-4. Set **GameMode Override** to `TestingGameMode`
-5. Set **bAutoRunTests** to `true`
-6. Set **AutoTestCategory** to `ObjectPool`
+
+**Note:** The TestingGameMode will auto-run tests by default when you press Play. To change which tests run, use the console command method instead (see Quick Test section).
 
 ### 2. Create Visual Test Actor (Optional)
 
