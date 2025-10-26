@@ -78,44 +78,34 @@ UInputMappingContext* UInputConfiguration::CreateDefaultMappingContext(UObject* 
 	}
 
 	// Get or create input actions
-	UInputAction* LaneChangeAction = CachedLaneChangeAction ? CachedLaneChangeAction : CreateLaneChangeAction(Outer);
-	UInputAction* PauseAction = CachedPauseAction ? CachedPauseAction : CreatePauseAction(Outer);
+	UInputAction* LaneChangeAction = CachedLaneChangeAction ? CachedLaneChangeAction.Get() : CreateLaneChangeAction(Outer);
+	UInputAction* PauseAction = CachedPauseAction ? CachedPauseAction.Get() : CreatePauseAction(Outer);
 
 	// Map keys to actions
 	if (LaneChangeAction)
 	{
 		// Keyboard: A/D for lane changes
-		FEnhancedActionKeyMapping& MappingA = MappingContext->MapKey(LaneChangeAction, EKeys::A);
-		MappingA.Player = nullptr;
-
-		FEnhancedActionKeyMapping& MappingD = MappingContext->MapKey(LaneChangeAction, EKeys::D);
-		MappingD.Player = nullptr;
+		MappingContext->MapKey(LaneChangeAction, EKeys::A);
+		MappingContext->MapKey(LaneChangeAction, EKeys::D);
 
 		// Arrow keys: Left/Right
-		FEnhancedActionKeyMapping& MappingLeft = MappingContext->MapKey(LaneChangeAction, EKeys::Left);
-		MappingLeft.Player = nullptr;
-
-		FEnhancedActionKeyMapping& MappingRight = MappingContext->MapKey(LaneChangeAction, EKeys::Right);
-		MappingRight.Player = nullptr;
+		MappingContext->MapKey(LaneChangeAction, EKeys::Left);
+		MappingContext->MapKey(LaneChangeAction, EKeys::Right);
 
 		// Gamepad: Left stick horizontal axis
-		FEnhancedActionKeyMapping& MappingGamepad = MappingContext->MapKey(LaneChangeAction, EKeys::Gamepad_LeftX);
-		MappingGamepad.Player = nullptr;
+		MappingContext->MapKey(LaneChangeAction, EKeys::Gamepad_LeftX);
 	}
 
 	if (PauseAction)
 	{
 		// Keyboard: Escape key
-		FEnhancedActionKeyMapping& MappingEsc = MappingContext->MapKey(PauseAction, EKeys::Escape);
-		MappingEsc.Player = nullptr;
+		MappingContext->MapKey(PauseAction, EKeys::Escape);
 
 		// Keyboard: P key
-		FEnhancedActionKeyMapping& MappingP = MappingContext->MapKey(PauseAction, EKeys::P);
-		MappingP.Player = nullptr;
+		MappingContext->MapKey(PauseAction, EKeys::P);
 
 		// Gamepad: Start button
-		FEnhancedActionKeyMapping& MappingGamepad = MappingContext->MapKey(PauseAction, EKeys::Gamepad_Special_Right);
-		MappingGamepad.Player = nullptr;
+		MappingContext->MapKey(PauseAction, EKeys::Gamepad_Special_Right);
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("Created default mapping context with %d mappings"), MappingContext->GetMappings().Num());
