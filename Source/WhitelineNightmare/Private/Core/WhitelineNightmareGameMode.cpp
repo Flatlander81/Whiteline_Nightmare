@@ -5,6 +5,13 @@
 #include "Core/WarRigHUD.h"
 #include "Kismet/GameplayStatics.h"
 
+#if !UE_BUILD_SHIPPING
+#include "Testing/TestManager.h"
+
+// Forward declaration of test registration functions
+void RegisterObjectPoolTests(class UTestManager* TestManager);
+#endif
+
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogWhitelineNightmare, Log, All);
 
@@ -31,6 +38,16 @@ void AWhitelineNightmareGameMode::BeginPlay()
 	DistanceTraveled = 0.0f;
 	bIsGameOver = false;
 	bPlayerWon = false;
+
+#if !UE_BUILD_SHIPPING
+	// Register tests for non-shipping builds
+	UTestManager* TestManager = UTestManager::Get(this);
+	if (TestManager)
+	{
+		RegisterObjectPoolTests(TestManager);
+		UE_LOG(LogWhitelineNightmare, Log, TEXT("WhitelineNightmareGameMode: Registered ObjectPool tests"));
+	}
+#endif
 
 	UE_LOG(LogWhitelineNightmare, Log, TEXT("WhitelineNightmareGameMode: Game started. Target distance: %.2f"), WinDistance);
 }
