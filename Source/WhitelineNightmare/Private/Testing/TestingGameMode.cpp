@@ -120,8 +120,9 @@ bool ATestingGameMode::SampleTest_BasicAssertion()
 	TEST_ASSERT(true, "This should always pass");
 	TEST_ASSERT(1 + 1 == 2, "Basic math should work");
 	TEST_SUCCESS("BasicAssertion");
-#endif
+#else
 	return true;
+#endif
 }
 
 bool ATestingGameMode::SampleTest_Equality()
@@ -136,8 +137,9 @@ bool ATestingGameMode::SampleTest_Equality()
 	TEST_EQUAL(StrA, StrB, "Strings should be equal");
 
 	TEST_SUCCESS("Equality");
-#endif
+#else
 	return true;
+#endif
 }
 
 bool ATestingGameMode::SampleTest_NearlyEqual()
@@ -152,8 +154,9 @@ bool ATestingGameMode::SampleTest_NearlyEqual()
 	TEST_NEARLY_EQUAL(C, D, 0.1f, "Large floats should be nearly equal");
 
 	TEST_SUCCESS("NearlyEqual");
-#endif
+#else
 	return true;
+#endif
 }
 
 bool ATestingGameMode::SampleTest_NullCheck()
@@ -166,8 +169,9 @@ bool ATestingGameMode::SampleTest_NullCheck()
 	TEST_NOT_NULL(ValidObject, "Valid object should not be null");
 
 	TEST_SUCCESS("NullCheck");
-#endif
+#else
 	return true;
+#endif
 }
 
 // Console command implementation
