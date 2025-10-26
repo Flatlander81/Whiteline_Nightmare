@@ -2,49 +2,13 @@
 
 #include "Testing/TestMacros.h"
 #include "Testing/TestManager.h"
+#include "Testing/ObjectPoolTestHelpers.h"
 #include "Core/ObjectPoolComponent.h"
 #include "Core/ObjectPoolTypes.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 
 #if !UE_BUILD_SHIPPING
-
-// Define a simple test actor that implements IPoolableActor
-UCLASS()
-class ATestPoolableActor : public AActor, public IPoolableActor
-{
-	GENERATED_BODY()
-
-public:
-	ATestPoolableActor()
-	{
-		ActivationCount = 0;
-		DeactivationCount = 0;
-		ResetCount = 0;
-	}
-
-	// IPoolableActor interface
-	virtual void OnActivated_Implementation() override
-	{
-		ActivationCount++;
-	}
-
-	virtual void OnDeactivated_Implementation() override
-	{
-		DeactivationCount++;
-	}
-
-	virtual void ResetState_Implementation() override
-	{
-		ResetCount++;
-		ActivationCount = 0;
-		DeactivationCount = 0;
-	}
-
-	int32 ActivationCount;
-	int32 DeactivationCount;
-	int32 ResetCount;
-};
 
 // Helper function to get a valid world for testing
 static UWorld* GetTestWorld()

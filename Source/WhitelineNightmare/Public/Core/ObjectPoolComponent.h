@@ -94,6 +94,13 @@ public:
 	int32 GetTotalPoolSize() const { return ActiveObjects.Num() + AvailableObjects.Num(); }
 
 	/**
+	 * Check if debug visualization is enabled
+	 * @return True if debug visualization is enabled
+	 */
+	UFUNCTION(BlueprintPure, Category = "Object Pool|Debug")
+	bool IsDebugVisualizationEnabled() const { return bShowDebugVisualization; }
+
+	/**
 	 * Enable or disable debug visualization for this pool
 	 * @param bEnabled - Whether to show debug visualization
 	 */

@@ -396,7 +396,7 @@ static FAutoConsoleCommand DebugShowPoolsCommand(
 						// Toggle visualization (if first pool, determine new state)
 						if (PoolCount == 0)
 						{
-							bNewState = !PoolComponent->bShowDebugVisualization;
+							bNewState = !PoolComponent->IsDebugVisualizationEnabled();
 						}
 
 						PoolComponent->SetDebugVisualization(bNewState);
