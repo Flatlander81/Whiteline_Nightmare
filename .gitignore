@@ -1,5 +1,19 @@
-# Visual Studio 2015 user specific files
+# Visual Studio 2015+ user specific files
 .vs/
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# JetBrains Rider
+.idea/
+.fleet/
+*.DotSettings.user
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+Desktop.ini
 
 # Compiled Object files
 *.slo
@@ -40,7 +54,16 @@
 *.sdf
 *.VC.db
 *.VC.opendb
-.vsconfig
+
+# Visual Studio user-specific files (can be regenerated)
+*.user
+*.aps
+*.sln.docstates
+
+# Note: .vsconfig defines VS workload requirements
+# Some teams commit this to ensure consistent IDE setup
+# Uncomment the line below if you want to ignore it
+#.vsconfig
 
 # Precompiled Assets
 SourceArt/**/*.png
@@ -73,3 +96,9 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+# Unreal Engine crash logs and autosaves
+*.autosave
+
+# Unreal project directory cache
+*.uprojectdirs
