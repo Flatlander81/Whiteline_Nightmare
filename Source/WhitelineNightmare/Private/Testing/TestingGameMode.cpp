@@ -180,7 +180,7 @@ bool ATestingGameMode::SampleTest_NullCheck()
 
 static FAutoConsoleCommand RunTestsCommand(
 	TEXT("RunTests"),
-	TEXT("Run automated tests. Usage: RunTests [Category]\nCategories: All, Movement, Combat, Economy, Spawning, ObjectPool, GAS"),
+	TEXT("Run automated tests. Usage: RunTests [Category]\nCategories: All, Movement, Combat, Economy, Spawning, ObjectPool, GAS, UI"),
 	FConsoleCommandWithArgsDelegate::CreateStatic([](const TArray<FString>& Args)
 	{
 		UE_LOG(LogTestingGameMode, Log, TEXT("Console: RunTests command executed"));
@@ -239,10 +239,113 @@ static FAutoConsoleCommand RunTestsCommand(
 			{
 				Category = ETestCategory::GAS;
 			}
+			else if (CategoryStr.Equals(TEXT("UI"), ESearchCase::IgnoreCase))
+			{
+				Category = ETestCategory::UI;
+			}
 		}
 
 		// Run tests
 		TestManager->RunTestCategory(Category);
+	})
+);
+
+static FAutoConsoleCommand ListTestsCommand(
+	TEXT("ListTests"),
+	TEXT("List all registered tests by category"),
+	FConsoleCommandDelegate::CreateStatic([]()
+	{
+		UE_LOG(LogTestingGameMode, Log, TEXT("Console: ListTests command executed"));
+
+		// Get the world
+		UWorld* World = nullptr;
+		for (const FWorldContext& Context : GEngine->GetWorldContexts())
+		{
+			if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+			{
+				World = Context.World();
+				break;
+			}
+		}
+
+		if (!World)
+		{
+			UE_LOG(LogTestingGameMode, Error, TEXT("Console: No valid world found"));
+			return;
+		}
+
+		// Get test manager
+		UTestManager* TestManager = UTestManager::Get(World);
+		if (!TestManager)
+		{
+			UE_LOG(LogTestingGameMode, Error, TEXT("Console: Failed to get TestManager"));
+			return;
+		}
+
+		// Get all tests
+		const TArray<FTestCase>& AllTests = TestManager->GetAllTests();
+
+		if (AllTests.Num() == 0)
+		{
+			UE_LOG(LogTestingGameMode, Warning, TEXT("No tests registered"));
+			return;
+		}
+
+		// Log header
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("Registered Tests (%d total):"), AllTests.Num());
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+
+		// Group tests by category
+		TMap<ETestCategory, TArray<FString>> TestsByCategory;
+		for (const FTestCase& Test : AllTests)
+		{
+			TestsByCategory.FindOrAdd(Test.Category).Add(Test.TestName);
+		}
+
+		// Display tests by category
+		auto DisplayCategory = [](ETestCategory Category, const TArray<FString>& Tests)
+		{
+			FString CategoryName;
+			switch (Category)
+			{
+				case ETestCategory::All: CategoryName = TEXT("All"); break;
+				case ETestCategory::Movement: CategoryName = TEXT("Movement"); break;
+				case ETestCategory::Combat: CategoryName = TEXT("Combat"); break;
+				case ETestCategory::Economy: CategoryName = TEXT("Economy"); break;
+				case ETestCategory::Spawning: CategoryName = TEXT("Spawning"); break;
+				case ETestCategory::ObjectPool: CategoryName = TEXT("ObjectPool"); break;
+				case ETestCategory::GAS: CategoryName = TEXT("GAS"); break;
+				case ETestCategory::UI: CategoryName = TEXT("UI"); break;
+				default: CategoryName = TEXT("Unknown"); break;
+			}
+
+			UE_LOG(LogTestingGameMode, Log, TEXT("\n[%s] - %d tests:"), *CategoryName, Tests.Num());
+			for (const FString& TestName : Tests)
+			{
+				UE_LOG(LogTestingGameMode, Log, TEXT("  - %s"), *TestName);
+			}
+		};
+
+		// Display in category order
+		if (TestsByCategory.Contains(ETestCategory::Movement))
+			DisplayCategory(ETestCategory::Movement, TestsByCategory[ETestCategory::Movement]);
+		if (TestsByCategory.Contains(ETestCategory::Combat))
+			DisplayCategory(ETestCategory::Combat, TestsByCategory[ETestCategory::Combat]);
+		if (TestsByCategory.Contains(ETestCategory::Economy))
+			DisplayCategory(ETestCategory::Economy, TestsByCategory[ETestCategory::Economy]);
+		if (TestsByCategory.Contains(ETestCategory::Spawning))
+			DisplayCategory(ETestCategory::Spawning, TestsByCategory[ETestCategory::Spawning]);
+		if (TestsByCategory.Contains(ETestCategory::ObjectPool))
+			DisplayCategory(ETestCategory::ObjectPool, TestsByCategory[ETestCategory::ObjectPool]);
+		if (TestsByCategory.Contains(ETestCategory::GAS))
+			DisplayCategory(ETestCategory::GAS, TestsByCategory[ETestCategory::GAS]);
+		if (TestsByCategory.Contains(ETestCategory::UI))
+			DisplayCategory(ETestCategory::UI, TestsByCategory[ETestCategory::UI]);
+		if (TestsByCategory.Contains(ETestCategory::All))
+			DisplayCategory(ETestCategory::All, TestsByCategory[ETestCategory::All]);
+
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
 	})
 );
 
