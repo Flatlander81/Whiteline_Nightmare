@@ -16,7 +16,8 @@ enum class ETestCategory : uint8
 	Economy		UMETA(DisplayName = "Economy Tests"),
 	Spawning	UMETA(DisplayName = "Spawning Tests"),
 	ObjectPool	UMETA(DisplayName = "Object Pool Tests"),
-	GAS			UMETA(DisplayName = "Gameplay Ability System Tests")
+	GAS			UMETA(DisplayName = "Gameplay Ability System Tests"),
+	UI			UMETA(DisplayName = "UI Tests")
 };
 
 // Forward declarations

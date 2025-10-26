@@ -81,6 +81,27 @@
 	} while(0)
 
 /**
+ * Test true macro - fails test if condition is false (alias for TEST_ASSERT)
+ * @param Condition - Condition to check
+ * @param Message - Error message if assertion fails
+ */
+#define TEST_TRUE(Condition, Message) TEST_ASSERT(Condition, Message)
+
+/**
+ * Test false macro - fails test if condition is true
+ * @param Condition - Condition to check
+ * @param Message - Error message if assertion fails
+ */
+#define TEST_FALSE(Condition, Message) \
+	do { \
+		if (Condition) \
+		{ \
+			UE_LOG(LogTemp, Error, TEXT("TEST FAILED: %s is true (expected false) - %s (Line %d)"), TEXT(#Condition), TEXT(Message), __LINE__); \
+			return false; \
+		} \
+	} while(0)
+
+/**
  * Test success macro - logs success message
  * @param TestName - Name of the test that passed
  */
@@ -98,6 +119,8 @@
 #define TEST_NEARLY_EQUAL(A, B, Tolerance, Message) do {} while(0)
 #define TEST_NOT_NULL(Pointer, Message) do {} while(0)
 #define TEST_NULL(Pointer, Message) do {} while(0)
+#define TEST_TRUE(Condition, Message) do {} while(0)
+#define TEST_FALSE(Condition, Message) do {} while(0)
 #define TEST_SUCCESS(TestName) do { return true; } while(0)
 
 #endif // !UE_BUILD_SHIPPING
