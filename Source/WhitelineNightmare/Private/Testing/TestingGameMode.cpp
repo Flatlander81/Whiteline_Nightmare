@@ -165,7 +165,8 @@ bool ATestingGameMode::SampleTest_NullCheck()
 	UObject* NullObject = nullptr;
 	TEST_NULL(NullObject, "Null pointer should be null");
 
-	UObject* ValidObject = NewObject<UObject>();
+	// Use a concrete class instead of abstract UObject
+	UTestManager* ValidObject = NewObject<UTestManager>();
 	TEST_NOT_NULL(ValidObject, "Valid object should not be null");
 
 	TEST_SUCCESS("NullCheck");
