@@ -176,7 +176,13 @@ AActor* UObjectPoolComponent::GetFromPool(FVector SpawnLocation, FRotator SpawnR
 	ActivateActor(Actor);
 
 	// Set actor location and rotation (teleport to avoid physics issues)
-	Actor->SetActorLocationAndRotation(SpawnLocation, SpawnRotation, false, nullptr, ETeleportType::TeleportPhysics);
+	const bool bLocationSet = Actor->SetActorLocationAndRotation(SpawnLocation, SpawnRotation, false, nullptr, ETeleportType::TeleportPhysics);
+
+	// Force component transforms to update
+	if (USceneComponent* RootComp = Actor->GetRootComponent())
+	{
+		RootComp->UpdateComponentToWorld();
+	}
 
 	// Move to active pool
 	ActiveObjects.Add(Actor);
