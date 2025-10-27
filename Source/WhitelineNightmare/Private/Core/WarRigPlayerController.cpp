@@ -34,6 +34,13 @@ void AWarRigPlayerController::BeginPlay()
 
 	// Note: SetupEnhancedInput() is now called in SetupInputComponent() to fix timing issue
 
+	// CRITICAL: Set input mode to Game Only so that keyboard input works
+	// Without this, Enhanced Input won't receive keyboard events!
+	FInputModeGameOnly InputMode;
+	SetInputMode(InputMode);
+	bShowMouseCursor = false; // Hide cursor in game mode
+
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("WarRigPlayerController: Set input mode to Game Only"));
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("WarRigPlayerController: Initialized with %d starting scrap"), StartingScrap);
 	LogPlayerState();
 }
