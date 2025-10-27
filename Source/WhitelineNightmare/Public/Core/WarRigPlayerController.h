@@ -116,16 +116,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Whiteline Nightmare|Economy")
 	int32 StartingScrap;
 
-	// Enhanced Input - Mapping Context
-	UPROPERTY()
+	// Enhanced Input - Mapping Context (optional: leave empty to use programmatic setup)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Whiteline Nightmare|Input")
 	UInputMappingContext* InputMappingContext;
 
-	// Enhanced Input - Move Left Action
-	UPROPERTY()
+	// Enhanced Input - Move Left Action (optional: leave empty to use programmatic setup)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Whiteline Nightmare|Input")
 	UInputAction* MoveLeftAction;
 
-	// Enhanced Input - Move Right Action
-	UPROPERTY()
+	// Enhanced Input - Move Right Action (optional: leave empty to use programmatic setup)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Whiteline Nightmare|Input")
 	UInputAction* MoveRightAction;
 
 private:

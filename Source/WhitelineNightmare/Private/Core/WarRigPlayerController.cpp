@@ -209,16 +209,32 @@ void AWarRigPlayerController::LogPlayerState() const
 
 void AWarRigPlayerController::SetupEnhancedInput()
 {
-	// Prevent double-initialization
-	if (InputMappingContext != nullptr)
+	// Get the Enhanced Input Local Player Subsystem
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+	if (!Subsystem)
 	{
-		UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupEnhancedInput: Already initialized, skipping"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("SetupEnhancedInput: Failed to get Enhanced Input Subsystem - check Project Settings -> Input"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("  Make sure Default Player Input Class = EnhancedPlayerInput"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("  Make sure Default Input Component Class = EnhancedInputComponent"));
 		return;
 	}
 
-	// Get the Enhanced Input Local Player Subsystem
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	// Check if assets are assigned from editor (manual setup)
+	bool bUsingEditorAssets = (InputMappingContext != nullptr && MoveLeftAction != nullptr && MoveRightAction != nullptr);
+
+	if (bUsingEditorAssets)
 	{
+		// Using editor-assigned assets
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupEnhancedInput: Using editor-assigned Input Assets"));
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - Mapping Context: %s"), *InputMappingContext->GetName());
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - Move Left Action: %s"), *MoveLeftAction->GetName());
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - Move Right Action: %s"), *MoveRightAction->GetName());
+	}
+	else
+	{
+		// Create programmatically
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupEnhancedInput: Creating Input Assets programmatically"));
+
 		// Create Input Mapping Context
 		InputMappingContext = NewObject<UInputMappingContext>(this, TEXT("WarRigInputMappingContext"));
 
@@ -231,24 +247,20 @@ void AWarRigPlayerController::SetupEnhancedInput()
 
 		// Add mappings to context
 		// Move Left: A key and Left Arrow
-		FEnhancedActionKeyMapping& LeftMappingA = InputMappingContext->MapKey(MoveLeftAction, EKeys::A);
-		FEnhancedActionKeyMapping& LeftMappingArrow = InputMappingContext->MapKey(MoveLeftAction, EKeys::Left);
+		InputMappingContext->MapKey(MoveLeftAction, EKeys::A);
+		InputMappingContext->MapKey(MoveLeftAction, EKeys::Left);
 
 		// Move Right: D key and Right Arrow
-		FEnhancedActionKeyMapping& RightMappingD = InputMappingContext->MapKey(MoveRightAction, EKeys::D);
-		FEnhancedActionKeyMapping& RightMappingArrow = InputMappingContext->MapKey(MoveRightAction, EKeys::Right);
+		InputMappingContext->MapKey(MoveRightAction, EKeys::D);
+		InputMappingContext->MapKey(MoveRightAction, EKeys::Right);
 
-		// Add mapping context to subsystem
-		Subsystem->AddMappingContext(InputMappingContext, 0);
-
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupEnhancedInput: Enhanced Input configured programmatically"));
 		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - Move Left: A or Left Arrow"));
 		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - Move Right: D or Right Arrow"));
 	}
-	else
-	{
-		UE_LOG(LogWarRigPlayerController, Error, TEXT("SetupEnhancedInput: Failed to get Enhanced Input Subsystem"));
-	}
+
+	// Add mapping context to subsystem (priority 0)
+	Subsystem->AddMappingContext(InputMappingContext, 0);
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupEnhancedInput: Added mapping context to Enhanced Input Subsystem with priority 0"));
 }
 
 void AWarRigPlayerController::OnMoveLeft()
