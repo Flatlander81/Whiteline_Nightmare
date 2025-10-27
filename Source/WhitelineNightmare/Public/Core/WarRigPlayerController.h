@@ -65,6 +65,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|Game State")
 	void OnGameOver(bool bPlayerWon);
 
+	// Debug Console Commands
+
+	/**
+	 * Toggle lane line visualization
+	 */
+	UFUNCTION(Exec, Category = "Whiteline Nightmare|Debug")
+	void DebugShowLanes();
+
+	/**
+	 * Toggle tile spawn/despawn boundary visualization
+	 */
+	UFUNCTION(Exec, Category = "Whiteline Nightmare|Debug")
+	void DebugShowTileBounds();
+
+	/**
+	 * Set the world scroll speed
+	 * @param Speed - New scroll speed in units per second
+	 */
+	UFUNCTION(Exec, Category = "Whiteline Nightmare|Debug")
+	void DebugSetScrollSpeed(float Speed);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
