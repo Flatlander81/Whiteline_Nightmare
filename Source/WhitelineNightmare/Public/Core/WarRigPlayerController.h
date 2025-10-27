@@ -6,9 +6,6 @@
 #include "GameFramework/PlayerController.h"
 #include "WarRigPlayerController.generated.h"
 
-class UInputAction;
-class UInputMappingContext;
-
 /**
  * Player Controller for the War Rig
  * Handles input, UI interaction, and player state management
@@ -106,29 +103,14 @@ protected:
 	virtual void BeginPlay() override;
 
 	/**
-	 * Setup Enhanced Input System programmatically
+	 * Handle move left input (legacy input system)
 	 */
-	void SetupEnhancedInput();
+	void OnMoveLeft();
 
 	/**
-	 * Handle move left input (Triggered event with edge detection)
+	 * Handle move right input (legacy input system)
 	 */
-	void OnMoveLeftTriggered();
-
-	/**
-	 * Handle move left input complete (resets edge detection flag)
-	 */
-	void OnMoveLeftCompleted();
-
-	/**
-	 * Handle move right input (Triggered event with edge detection)
-	 */
-	void OnMoveRightTriggered();
-
-	/**
-	 * Handle move right input complete (resets edge detection flag)
-	 */
-	void OnMoveRightCompleted();
+	void OnMoveRight();
 
 	// Current scrap resources
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Economy")
@@ -137,18 +119,6 @@ protected:
 	// Starting scrap amount (can be configured in data table)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Whiteline Nightmare|Economy")
 	int32 StartingScrap;
-
-	// Enhanced Input - Mapping Context (optional: leave empty to use programmatic setup)
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Whiteline Nightmare|Input")
-	UInputMappingContext* InputMappingContext;
-
-	// Enhanced Input - Move Left Action (optional: leave empty to use programmatic setup)
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Whiteline Nightmare|Input")
-	UInputAction* MoveLeftAction;
-
-	// Enhanced Input - Move Right Action (optional: leave empty to use programmatic setup)
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Whiteline Nightmare|Input")
-	UInputAction* MoveRightAction;
 
 private:
 	/**
@@ -162,8 +132,4 @@ private:
 	 * Log player state for debugging
 	 */
 	void LogPlayerState() const;
-
-	// Edge detection flags for Triggered events (prevents continuous firing)
-	bool bMoveLeftWasTriggered = false;
-	bool bMoveRightWasTriggered = false;
 };

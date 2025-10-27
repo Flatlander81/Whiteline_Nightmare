@@ -6,10 +6,6 @@
 #include "WarRig/LaneSystemComponent.h"
 #include "World/WorldScrollComponent.h"
 #include "Core/WhitelineNightmareGameMode.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "InputMappingContext.h"
-#include "InputAction.h"
 
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogWarRigPlayerController, Log, All);
@@ -17,11 +13,8 @@ DEFINE_LOG_CATEGORY_STATIC(LogWarRigPlayerController, Log, All);
 AWarRigPlayerController::AWarRigPlayerController()
 	: CurrentScrap(0)
 	, StartingScrap(100)
-	, InputMappingContext(nullptr)
-	, MoveLeftAction(nullptr)
-	, MoveRightAction(nullptr)
 {
-	// Ticking not needed - using Enhanced Input exclusively
+	// Ticking not needed - using legacy input system
 	PrimaryActorTick.bCanEverTick = false;
 }
 
@@ -32,7 +25,6 @@ void AWarRigPlayerController::BeginPlay()
 	// Initialize resources
 	CurrentScrap = StartingScrap;
 
-	// Note: SetupEnhancedInput() is now called in SetupInputComponent() to fix timing issue
 	// Note: SetInputMode() is now called in OnPossess() to ensure it persists through re-possession
 
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("WarRigPlayerController: Initialized with %d starting scrap"), StartingScrap);
@@ -78,42 +70,11 @@ void AWarRigPlayerController::SetupInputComponent()
 		return;
 	}
 
-	// Setup Enhanced Input BEFORE binding (fixes timing issue)
-	SetupEnhancedInput();
+	// Bind legacy input actions (defined in DefaultInput.ini)
+	InputComponent->BindAction("MoveLeft", IE_Pressed, this, &AWarRigPlayerController::OnMoveLeft);
+	InputComponent->BindAction("MoveRight", IE_Pressed, this, &AWarRigPlayerController::OnMoveRight);
 
-	// Bind Enhanced Input actions
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-	{
-		if (MoveLeftAction)
-		{
-			// Bind to Triggered (with edge detection) and Completed (to reset flag)
-			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Triggered, this, &AWarRigPlayerController::OnMoveLeftTriggered);
-			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Completed, this, &AWarRigPlayerController::OnMoveLeftCompleted);
-			UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound MoveLeft action"));
-		}
-		else
-		{
-			UE_LOG(LogWarRigPlayerController, Error, TEXT("SetupInputComponent: MoveLeftAction is null - Enhanced Input will not work!"));
-		}
-
-		if (MoveRightAction)
-		{
-			// Bind to Triggered (with edge detection) and Completed (to reset flag)
-			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &AWarRigPlayerController::OnMoveRightTriggered);
-			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Completed, this, &AWarRigPlayerController::OnMoveRightCompleted);
-			UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound MoveRight action"));
-		}
-		else
-		{
-			UE_LOG(LogWarRigPlayerController, Error, TEXT("SetupInputComponent: MoveRightAction is null - Enhanced Input will not work!"));
-		}
-
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Enhanced Input bindings complete"));
-	}
-	else
-	{
-		UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupInputComponent: Failed to cast to EnhancedInputComponent"));
-	}
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound legacy input actions (MoveLeft, MoveRight)"));
 }
 
 bool AWarRigPlayerController::AddScrap(int32 Amount)
@@ -219,128 +180,52 @@ void AWarRigPlayerController::LogPlayerState() const
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("==================="));
 }
 
-// Enhanced Input Setup
+// Legacy Input Callbacks
 
-void AWarRigPlayerController::SetupEnhancedInput()
+void AWarRigPlayerController::OnMoveLeft()
 {
-	// Get the Enhanced Input Local Player Subsystem
-	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
-	if (!Subsystem)
-	{
-		UE_LOG(LogWarRigPlayerController, Error, TEXT("SetupEnhancedInput: Failed to get Enhanced Input Subsystem - check Project Settings -> Input"));
-		UE_LOG(LogWarRigPlayerController, Error, TEXT("  Make sure Default Player Input Class = EnhancedPlayerInput"));
-		UE_LOG(LogWarRigPlayerController, Error, TEXT("  Make sure Default Input Component Class = EnhancedInputComponent"));
-		return;
-	}
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveLeft: Input received"));
 
-	// Check if assets are assigned from editor (manual setup)
-	bool bUsingEditorAssets = (InputMappingContext != nullptr && MoveLeftAction != nullptr && MoveRightAction != nullptr);
-
-	if (bUsingEditorAssets)
+	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
+	if (WarRig)
 	{
-		// Using editor-assigned assets
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupEnhancedInput: Using editor-assigned Input Assets"));
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - Mapping Context: %s"), *InputMappingContext->GetName());
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - Move Left Action: %s"), *MoveLeftAction->GetName());
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - Move Right Action: %s"), *MoveRightAction->GetName());
+		bool bSuccess = WarRig->RequestLaneChange(-1);
+		if (bSuccess)
+		{
+			UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveLeft: Lane change LEFT successful"));
+		}
+		else
+		{
+			UE_LOG(LogWarRigPlayerController, Verbose, TEXT("OnMoveLeft: Lane change LEFT failed (already transitioning)"));
+		}
 	}
 	else
 	{
-		// Create programmatically
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupEnhancedInput: Creating Input Assets programmatically"));
-
-		// Create Input Mapping Context
-		InputMappingContext = NewObject<UInputMappingContext>(this, TEXT("WarRigInputMappingContext"));
-
-		// Create Input Actions
-		MoveLeftAction = NewObject<UInputAction>(this, TEXT("MoveLeftAction"));
-		MoveLeftAction->ValueType = EInputActionValueType::Boolean;
-
-		MoveRightAction = NewObject<UInputAction>(this, TEXT("MoveRightAction"));
-		MoveRightAction->ValueType = EInputActionValueType::Boolean;
-
-		// Add mappings to context
-		// Move Left: A key and Left Arrow
-		InputMappingContext->MapKey(MoveLeftAction, EKeys::A);
-		InputMappingContext->MapKey(MoveLeftAction, EKeys::Left);
-
-		// Move Right: D key and Right Arrow
-		InputMappingContext->MapKey(MoveRightAction, EKeys::D);
-		InputMappingContext->MapKey(MoveRightAction, EKeys::Right);
-
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - Move Left: A or Left Arrow"));
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - Move Right: D or Right Arrow"));
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveLeft: No War Rig pawn possessed"));
 	}
-
-	// Add mapping context to subsystem (priority 0)
-	Subsystem->AddMappingContext(InputMappingContext, 0);
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupEnhancedInput: Added mapping context to Enhanced Input Subsystem with priority 0"));
 }
 
-void AWarRigPlayerController::OnMoveLeftTriggered()
+void AWarRigPlayerController::OnMoveRight()
 {
-	// Edge detection: only fire once per key press
-	if (!bMoveLeftWasTriggered)
-	{
-		bMoveLeftWasTriggered = true;
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveRight: Input received"));
 
-		AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
-		if (WarRig)
+	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
+	if (WarRig)
+	{
+		bool bSuccess = WarRig->RequestLaneChange(1);
+		if (bSuccess)
 		{
-			bool bSuccess = WarRig->RequestLaneChange(-1);
-			if (bSuccess)
-			{
-				UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveLeftTriggered: Lane change LEFT successful"));
-			}
-			else
-			{
-				UE_LOG(LogWarRigPlayerController, Verbose, TEXT("OnMoveLeftTriggered: Lane change LEFT failed (already transitioning)"));
-			}
+			UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveRight: Lane change RIGHT successful"));
 		}
 		else
 		{
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveLeftTriggered: No War Rig pawn possessed"));
+			UE_LOG(LogWarRigPlayerController, Verbose, TEXT("OnMoveRight: Lane change RIGHT failed (already transitioning)"));
 		}
 	}
-}
-
-void AWarRigPlayerController::OnMoveLeftCompleted()
-{
-	// Reset edge detection flag on key release
-	bMoveLeftWasTriggered = false;
-}
-
-void AWarRigPlayerController::OnMoveRightTriggered()
-{
-	// Edge detection: only fire once per key press
-	if (!bMoveRightWasTriggered)
+	else
 	{
-		bMoveRightWasTriggered = true;
-
-		AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
-		if (WarRig)
-		{
-			bool bSuccess = WarRig->RequestLaneChange(1);
-			if (bSuccess)
-			{
-				UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveRightTriggered: Lane change RIGHT successful"));
-			}
-			else
-			{
-				UE_LOG(LogWarRigPlayerController, Verbose, TEXT("OnMoveRightTriggered: Lane change RIGHT failed (already transitioning)"));
-			}
-		}
-		else
-		{
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveRightTriggered: No War Rig pawn possessed"));
-		}
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveRight: No War Rig pawn possessed"));
 	}
-}
-
-void AWarRigPlayerController::OnMoveRightCompleted()
-{
-	// Reset edge detection flag on key release
-	bMoveRightWasTriggered = false;
 }
 
 // Debug Console Commands
