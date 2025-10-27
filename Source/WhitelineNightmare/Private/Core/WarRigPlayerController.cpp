@@ -457,3 +457,109 @@ void AWarRigPlayerController::DebugListInputContexts()
 	UE_LOG(LogWarRigPlayerController, Warning, TEXT("Run this command in PIE console to diagnose input issues"));
 	UE_LOG(LogWarRigPlayerController, Warning, TEXT("Then press A or D and check if callback logs appear"));
 }
+
+void AWarRigPlayerController::DebugShowKeyMappings()
+{
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT("=== KEY MAPPINGS DIAGNOSTIC ==="));
+
+	if (!InputMappingContext)
+	{
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("InputMappingContext is NULL - no mappings to show!"));
+		return;
+	}
+
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("Input Mapping Context: %s"), *InputMappingContext->GetName());
+
+	// Get all mappings from the context
+	const TArray<FEnhancedActionKeyMapping>& Mappings = InputMappingContext->GetMappings();
+
+	if (Mappings.Num() == 0)
+	{
+		UE_LOG(LogWarRigPlayerController, Error, TEXT(">>> IMC_WarRig HAS ZERO KEY MAPPINGS! <<<"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT(">>> This is why input doesn't work! <<<"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT(""));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("You need to open IMC_WarRig in the editor and add mappings:"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("1. In Content Browser, navigate to Content/Input/"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("2. Double-click IMC_WarRig to open it"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("3. In the Mappings section, add:"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("   - IA_MoveLeft mapped to A and Left Arrow"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("   - IA_MoveRight mapped to D and Right Arrow"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("4. Save the asset"));
+		return;
+	}
+
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("Total Mappings: %d"), Mappings.Num());
+	UE_LOG(LogWarRigPlayerController, Log, TEXT(""));
+
+	// List all mappings
+	for (int32 i = 0; i < Mappings.Num(); i++)
+	{
+		const FEnhancedActionKeyMapping& Mapping = Mappings[i];
+
+		if (Mapping.Action)
+		{
+			FString ActionName = Mapping.Action->GetName();
+			FString KeyName = Mapping.Key.GetDisplayName().ToString();
+
+			UE_LOG(LogWarRigPlayerController, Log, TEXT("  [%d] Action: %s -> Key: %s"), i, *ActionName, *KeyName);
+
+			// Check if it's one of our expected actions
+			if (Mapping.Action == MoveLeftAction)
+			{
+				UE_LOG(LogWarRigPlayerController, Log, TEXT("       ^ This is MoveLeftAction (CORRECT)"));
+			}
+			else if (Mapping.Action == MoveRightAction)
+			{
+				UE_LOG(LogWarRigPlayerController, Log, TEXT("       ^ This is MoveRightAction (CORRECT)"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT("  [%d] Invalid mapping - Action is NULL"), i);
+		}
+	}
+
+	UE_LOG(LogWarRigPlayerController, Log, TEXT(""));
+
+	// Check if we have the expected mappings
+	bool bFoundMoveLeftA = false;
+	bool bFoundMoveLeftArrow = false;
+	bool bFoundMoveRightD = false;
+	bool bFoundMoveRightArrow = false;
+
+	for (const FEnhancedActionKeyMapping& Mapping : Mappings)
+	{
+		if (Mapping.Action == MoveLeftAction)
+		{
+			if (Mapping.Key == EKeys::A) bFoundMoveLeftA = true;
+			if (Mapping.Key == EKeys::Left) bFoundMoveLeftArrow = true;
+		}
+		else if (Mapping.Action == MoveRightAction)
+		{
+			if (Mapping.Key == EKeys::D) bFoundMoveRightD = true;
+			if (Mapping.Key == EKeys::Right) bFoundMoveRightArrow = true;
+		}
+	}
+
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("Expected Mappings Check:"));
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("  MoveLeft + A Key:         %s"), bFoundMoveLeftA ? TEXT("FOUND") : TEXT("MISSING"));
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("  MoveLeft + Left Arrow:    %s"), bFoundMoveLeftArrow ? TEXT("FOUND") : TEXT("MISSING"));
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("  MoveRight + D Key:        %s"), bFoundMoveRightD ? TEXT("FOUND") : TEXT("MISSING"));
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("  MoveRight + Right Arrow:  %s"), bFoundMoveRightArrow ? TEXT("FOUND") : TEXT("MISSING"));
+
+	if (bFoundMoveLeftA && bFoundMoveLeftArrow && bFoundMoveRightD && bFoundMoveRightArrow)
+	{
+		UE_LOG(LogWarRigPlayerController, Log, TEXT(""));
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> ALL MAPPINGS ARE CORRECT! <<<"));
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> Input should be working! <<<"));
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> If input still doesn't work, click in the viewport and try again <<<"));
+	}
+	else
+	{
+		UE_LOG(LogWarRigPlayerController, Error, TEXT(""));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT(">>> SOME MAPPINGS ARE MISSING! <<<"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT(">>> This is why input doesn't work! <<<"));
+	}
+
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT("================================="));
+}

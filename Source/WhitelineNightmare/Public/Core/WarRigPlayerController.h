@@ -95,6 +95,12 @@ public:
 	UFUNCTION(Exec, Category = "Whiteline Nightmare|Debug")
 	void DebugListInputContexts();
 
+	/**
+	 * Show all key mappings inside IMC_WarRig
+	 */
+	UFUNCTION(Exec, Category = "Whiteline Nightmare|Debug")
+	void DebugShowKeyMappings();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
