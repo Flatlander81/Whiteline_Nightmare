@@ -194,7 +194,7 @@ Create a Blueprint actor or add to Game Mode:
 
 Input is configured **programmatically** using Enhanced Input System - no manual setup required!
 
-The `AWarRigPlayerController` automatically creates and binds input actions in `BeginPlay()`:
+The `AWarRigPlayerController` automatically creates and binds input actions in `SetupInputComponent()`:
 
 **Configured Bindings:**
 - **Move Left**: `A` key or `Left Arrow`
@@ -206,7 +206,12 @@ The `AWarRigPlayerController` automatically creates and binds input actions in `
 - Registers context with Enhanced Input Subsystem
 - Binds actions to controller methods
 
-**No editor configuration needed!** Just play and the input will work automatically.
+**No editor configuration needed!** Just ensure Enhanced Input is enabled in Project Settings:
+- Edit → Project Settings → Input
+- **Default Player Input Class** = `EnhancedPlayerInput`
+- **Default Input Component Class** = `EnhancedInputComponent`
+
+Then play and the input will work automatically.
 
 ## Debug Commands
 
@@ -253,14 +258,18 @@ Available tests:
      ```
 
 2. **Verify input actions are bound correctly**
-   - Check **Output Log** for:
+   - Check **Output Log** for these messages in order:
      ```
      LogWarRigPlayerController: SetupEnhancedInput: Enhanced Input configured programmatically
      LogWarRigPlayerController:   - Move Left: A or Left Arrow
      LogWarRigPlayerController:   - Move Right: D or Right Arrow
+     LogWarRigPlayerController: SetupInputComponent: Bound MoveLeft action
+     LogWarRigPlayerController: SetupInputComponent: Bound MoveRight action
+     LogWarRigPlayerController: SetupInputComponent: Enhanced Input bindings complete
      ```
-   - If you don't see these messages, the controller didn't initialize input
-   - Try pressing A or D and look for: `LogWarRigPlayerController: OnMoveLeft: Lane change requested` (Verbose level)
+   - If you see "MoveLeftAction is null" or "MoveRightAction is null", the input system failed to initialize
+   - If you see "Failed to get Enhanced Input Subsystem", check Project Settings (see step 5 below)
+   - Try pressing A or D and look for: `LogWarRigPlayerController: OnMoveLeft: Lane change requested` (enable Verbose logging)
 
 3. **Check lane change speed**
    - In Details panel, find **LaneSystemComponent**
@@ -273,6 +282,14 @@ Available tests:
    - You should see 5 colored lines extending forward from the war rig
    - Green line = current lane, White lines = other lanes
    - If lines appear but war rig doesn't move, check the Output Log for lane change rejections
+
+5. **Verify Enhanced Input is enabled in Project Settings**
+   - Go to **Edit → Project Settings → Input**
+   - Under **Default Classes**, verify:
+     - **Default Player Input Class** = `EnhancedPlayerInput`
+     - **Default Input Component Class** = `EnhancedInputComponent`
+   - If these are set to "PlayerInput" or "InputComponent", change them and restart the editor
+   - This is required for the programmatic Enhanced Input setup to work
 
 ### World Not Scrolling
 
