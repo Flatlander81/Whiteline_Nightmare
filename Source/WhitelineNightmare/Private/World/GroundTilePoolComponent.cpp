@@ -226,7 +226,7 @@ void UGroundTilePoolComponent::UpdateTiles(float DeltaTime)
 	// Update all active tiles
 	TArray<AActor*> TilesToRecycle;
 
-	for (AActor* Actor : GetActiveCount() > 0 ? TArray<AActor*>() : TArray<AActor*>())
+	for (AActor* Actor : ActiveObjects)
 	{
 		if (!Actor)
 		{
