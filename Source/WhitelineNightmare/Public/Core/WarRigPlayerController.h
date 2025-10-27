@@ -114,14 +114,34 @@ protected:
 	void SetupEnhancedInput();
 
 	/**
-	 * Handle move left input
+	 * Handle move left input (Started event)
 	 */
 	void OnMoveLeft();
 
 	/**
-	 * Handle move right input
+	 * Handle move left input (Triggered event) - diagnostic only
+	 */
+	void OnMoveLeftTriggered();
+
+	/**
+	 * Handle move left input (Completed event) - diagnostic only
+	 */
+	void OnMoveLeftCompleted();
+
+	/**
+	 * Handle move right input (Started event)
 	 */
 	void OnMoveRight();
+
+	/**
+	 * Handle move right input (Triggered event) - diagnostic only
+	 */
+	void OnMoveRightTriggered();
+
+	/**
+	 * Handle move right input (Completed event) - diagnostic only
+	 */
+	void OnMoveRightCompleted();
 
 	// Current scrap resources
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Economy")

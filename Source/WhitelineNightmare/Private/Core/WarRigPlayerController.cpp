@@ -21,26 +21,27 @@ AWarRigPlayerController::AWarRigPlayerController()
 	, MoveLeftAction(nullptr)
 	, MoveRightAction(nullptr)
 {
-	// Enable ticking for fallback keyboard input
-	PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.bStartWithTickEnabled = true;
+	// DIAGNOSTIC: Disable ticking to test Enhanced Input only
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 void AWarRigPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// FALLBACK: Direct keyboard polling for lane changing
-	// This provides input even if Enhanced Input isn't configured in Blueprint
-	// Once Enhanced Input is properly set up, you can remove this
+	// DIAGNOSTIC: Tick function disabled to test Enhanced Input only
+	// If Enhanced Input is working, you should see log messages from OnMoveLeft/OnMoveRight callbacks
+	// If you see NO logs when pressing A/D, then Enhanced Input is not configured properly
 
+	/* FALLBACK INPUT - COMMENTED OUT FOR DIAGNOSTICS
 	static bool bAKeyWasDown = false;
 	if (IsInputKeyDown(EKeys::A))
 	{
 		if (!bAKeyWasDown)
 		{
 			bAKeyWasDown = true;
-			OnMoveLeft(); // Use the same callback as Enhanced Input
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK: A key pressed <<<"));
+			OnMoveLeft();
 		}
 	}
 	else
@@ -54,7 +55,8 @@ void AWarRigPlayerController::Tick(float DeltaTime)
 		if (!bDKeyWasDown)
 		{
 			bDKeyWasDown = true;
-			OnMoveRight(); // Use the same callback as Enhanced Input
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK: D key pressed <<<"));
+			OnMoveRight();
 		}
 	}
 	else
@@ -62,13 +64,13 @@ void AWarRigPlayerController::Tick(float DeltaTime)
 		bDKeyWasDown = false;
 	}
 
-	// Also support arrow keys
 	static bool bLeftKeyWasDown = false;
 	if (IsInputKeyDown(EKeys::Left))
 	{
 		if (!bLeftKeyWasDown)
 		{
 			bLeftKeyWasDown = true;
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK: Left key pressed <<<"));
 			OnMoveLeft();
 		}
 	}
@@ -83,6 +85,7 @@ void AWarRigPlayerController::Tick(float DeltaTime)
 		if (!bRightKeyWasDown)
 		{
 			bRightKeyWasDown = true;
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK: Right key pressed <<<"));
 			OnMoveRight();
 		}
 	}
@@ -90,6 +93,7 @@ void AWarRigPlayerController::Tick(float DeltaTime)
 	{
 		bRightKeyWasDown = false;
 	}
+	*/
 }
 
 void AWarRigPlayerController::BeginPlay()
@@ -153,27 +157,31 @@ void AWarRigPlayerController::SetupInputComponent()
 	{
 		if (MoveLeftAction)
 		{
-			// Use ETriggerEvent::Started to fire once per key press (not every frame)
+			// Bind to multiple trigger events to diagnose which one fires
 			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Started, this, &AWarRigPlayerController::OnMoveLeft);
-			UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound MoveLeft action"));
+			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Triggered, this, &AWarRigPlayerController::OnMoveLeftTriggered);
+			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Completed, this, &AWarRigPlayerController::OnMoveLeftCompleted);
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupInputComponent: Bound MoveLeft action to Started, Triggered, and Completed events"));
 		}
 		else
 		{
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupInputComponent: MoveLeftAction is null"));
+			UE_LOG(LogWarRigPlayerController, Error, TEXT("SetupInputComponent: MoveLeftAction is null - Enhanced Input will not work!"));
 		}
 
 		if (MoveRightAction)
 		{
-			// Use ETriggerEvent::Started to fire once per key press (not every frame)
+			// Bind to multiple trigger events to diagnose which one fires
 			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Started, this, &AWarRigPlayerController::OnMoveRight);
-			UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound MoveRight action"));
+			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &AWarRigPlayerController::OnMoveRightTriggered);
+			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Completed, this, &AWarRigPlayerController::OnMoveRightCompleted);
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupInputComponent: Bound MoveRight action to Started, Triggered, and Completed events"));
 		}
 		else
 		{
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupInputComponent: MoveRightAction is null"));
+			UE_LOG(LogWarRigPlayerController, Error, TEXT("SetupInputComponent: MoveRightAction is null - Enhanced Input will not work!"));
 		}
 
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Enhanced Input bindings complete"));
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupInputComponent: Enhanced Input bindings complete - press A or D and watch for callback logs"));
 	}
 	else
 	{
@@ -344,10 +352,11 @@ void AWarRigPlayerController::SetupEnhancedInput()
 
 void AWarRigPlayerController::OnMoveLeft()
 {
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft (Started) FIRED <<<"));
+
 	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
 	if (WarRig)
 	{
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveLeft: Requesting lane change left"));
 		bool bSuccess = WarRig->RequestLaneChange(-1);
 		if (bSuccess)
 		{
@@ -364,12 +373,23 @@ void AWarRigPlayerController::OnMoveLeft()
 	}
 }
 
+void AWarRigPlayerController::OnMoveLeftTriggered()
+{
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft (Triggered) FIRED <<<"));
+}
+
+void AWarRigPlayerController::OnMoveLeftCompleted()
+{
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft (Completed) FIRED <<<"));
+}
+
 void AWarRigPlayerController::OnMoveRight()
 {
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight (Started) FIRED <<<"));
+
 	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
 	if (WarRig)
 	{
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveRight: Requesting lane change right"));
 		bool bSuccess = WarRig->RequestLaneChange(1);
 		if (bSuccess)
 		{
@@ -384,6 +404,16 @@ void AWarRigPlayerController::OnMoveRight()
 	{
 		UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveRight: No War Rig pawn possessed"));
 	}
+}
+
+void AWarRigPlayerController::OnMoveRightTriggered()
+{
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight (Triggered) FIRED <<<"));
+}
+
+void AWarRigPlayerController::OnMoveRightCompleted()
+{
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight (Completed) FIRED <<<"));
 }
 
 // Debug Console Commands
