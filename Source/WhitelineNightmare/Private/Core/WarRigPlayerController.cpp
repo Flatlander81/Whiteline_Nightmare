@@ -21,8 +21,75 @@ AWarRigPlayerController::AWarRigPlayerController()
 	, MoveLeftAction(nullptr)
 	, MoveRightAction(nullptr)
 {
-	// No ticking needed
-	PrimaryActorTick.bCanEverTick = false;
+	// Enable ticking for fallback keyboard input
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
+}
+
+void AWarRigPlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	// FALLBACK: Direct keyboard polling for lane changing
+	// This provides input even if Enhanced Input isn't configured in Blueprint
+	// Once Enhanced Input is properly set up, you can remove this
+
+	static bool bAKeyWasDown = false;
+	if (IsInputKeyDown(EKeys::A))
+	{
+		if (!bAKeyWasDown)
+		{
+			bAKeyWasDown = true;
+			OnMoveLeft(); // Use the same callback as Enhanced Input
+		}
+	}
+	else
+	{
+		bAKeyWasDown = false;
+	}
+
+	static bool bDKeyWasDown = false;
+	if (IsInputKeyDown(EKeys::D))
+	{
+		if (!bDKeyWasDown)
+		{
+			bDKeyWasDown = true;
+			OnMoveRight(); // Use the same callback as Enhanced Input
+		}
+	}
+	else
+	{
+		bDKeyWasDown = false;
+	}
+
+	// Also support arrow keys
+	static bool bLeftKeyWasDown = false;
+	if (IsInputKeyDown(EKeys::Left))
+	{
+		if (!bLeftKeyWasDown)
+		{
+			bLeftKeyWasDown = true;
+			OnMoveLeft();
+		}
+	}
+	else
+	{
+		bLeftKeyWasDown = false;
+	}
+
+	static bool bRightKeyWasDown = false;
+	if (IsInputKeyDown(EKeys::Right))
+	{
+		if (!bRightKeyWasDown)
+		{
+			bRightKeyWasDown = true;
+			OnMoveRight();
+		}
+	}
+	else
+	{
+		bRightKeyWasDown = false;
+	}
 }
 
 void AWarRigPlayerController::BeginPlay()
