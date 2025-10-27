@@ -21,26 +21,24 @@ AWarRigPlayerController::AWarRigPlayerController()
 	, MoveLeftAction(nullptr)
 	, MoveRightAction(nullptr)
 {
-	// DIAGNOSTIC: Disable ticking to test Enhanced Input only
-	PrimaryActorTick.bCanEverTick = false;
+	// Enable ticking for fallback input AND Enhanced Input diagnostics
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
 }
 
 void AWarRigPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// DIAGNOSTIC: Tick function disabled to test Enhanced Input only
-	// If Enhanced Input is working, you should see log messages from OnMoveLeft/OnMoveRight callbacks
-	// If you see NO logs when pressing A/D, then Enhanced Input is not configured properly
-
-	/* FALLBACK INPUT - COMMENTED OUT FOR DIAGNOSTICS
+	// FALLBACK INPUT - Active to ensure input works
+	// This also lets us compare when Tick fires vs when Enhanced Input fires
 	static bool bAKeyWasDown = false;
 	if (IsInputKeyDown(EKeys::A))
 	{
 		if (!bAKeyWasDown)
 		{
 			bAKeyWasDown = true;
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK: A key pressed <<<"));
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK TICK: A key pressed <<<"));
 			OnMoveLeft();
 		}
 	}
@@ -55,7 +53,7 @@ void AWarRigPlayerController::Tick(float DeltaTime)
 		if (!bDKeyWasDown)
 		{
 			bDKeyWasDown = true;
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK: D key pressed <<<"));
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK TICK: D key pressed <<<"));
 			OnMoveRight();
 		}
 	}
@@ -70,7 +68,7 @@ void AWarRigPlayerController::Tick(float DeltaTime)
 		if (!bLeftKeyWasDown)
 		{
 			bLeftKeyWasDown = true;
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK: Left key pressed <<<"));
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK TICK: Left key pressed <<<"));
 			OnMoveLeft();
 		}
 	}
@@ -85,7 +83,7 @@ void AWarRigPlayerController::Tick(float DeltaTime)
 		if (!bRightKeyWasDown)
 		{
 			bRightKeyWasDown = true;
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK: Right key pressed <<<"));
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK TICK: Right key pressed <<<"));
 			OnMoveRight();
 		}
 	}
@@ -93,7 +91,6 @@ void AWarRigPlayerController::Tick(float DeltaTime)
 	{
 		bRightKeyWasDown = false;
 	}
-	*/
 }
 
 void AWarRigPlayerController::BeginPlay()
