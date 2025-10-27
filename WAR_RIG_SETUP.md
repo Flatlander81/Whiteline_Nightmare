@@ -291,6 +291,188 @@ Available tests:
    - If these are set to "PlayerInput" or "InputComponent", change them and restart the editor
    - This is required for the programmatic Enhanced Input setup to work
 
+### Enhanced Input Not Working - Advanced Diagnostics
+
+**If input still doesn't work after following all steps above**, use these advanced diagnostic tools:
+
+#### Step 1: Run the Input Diagnostic Command
+
+1. **Play the game (PIE)**
+2. **Open console** (~ key)
+3. **Type**: `DebugListInputContexts`
+4. **Press Enter**
+
+This command will show detailed information about the Enhanced Input system state.
+
+**What to look for:**
+
+✅ **Expected output** (everything working):
+```
+LogWarRigPlayerController: === ENHANCED INPUT DIAGNOSTIC ===
+LogWarRigPlayerController: Enhanced Input Subsystem: FOUND (OK)
+LogWarRigPlayerController: Checking for our IMC_WarRig context: IMC_WarRig
+LogWarRigPlayerController:   >>> IMC_WarRig IS ACTIVE in subsystem (OK) <<<
+LogWarRigPlayerController:   Priority: 0
+LogWarRigPlayerController: Input Actions:
+LogWarRigPlayerController:   - MoveLeftAction: IA_MoveLeft (OK)
+LogWarRigPlayerController:   - MoveRightAction: IA_MoveRight (OK)
+LogWarRigPlayerController: Input Component: EnhancedInputComponent (OK)
+LogWarRigPlayerController: =================================
+```
+
+❌ **Problem 1: Enhanced Input Subsystem NOT FOUND**
+```
+LogWarRigPlayerController: Enhanced Input Subsystem NOT FOUND!
+LogWarRigPlayerController:   >>> This means Project Settings -> Input is NOT configured for Enhanced Input! <<<
+```
+
+**FIX:**
+1. Close Unreal Editor completely
+2. Go to **Edit → Project Settings → Input**
+3. Under **Default Classes**, set:
+   - **Default Player Input Class** = `EnhancedPlayerInput`
+   - **Default Input Component Class** = `EnhancedInputComponent`
+4. Click **Set as Default** for both
+5. **CRITICAL**: Close and restart the editor (required for input system changes)
+6. Test again
+
+❌ **Problem 2: IMC_WarRig is NOT ACTIVE in subsystem**
+```
+LogWarRigPlayerController:   >>> IMC_WarRig is NOT ACTIVE in subsystem! <<<
+```
+
+**FIX:**
+- This means the Input Mapping Context failed to register
+- Check that BP_WarRigPlayerController is actually being used as the Player Controller
+- Verify Game Mode's **Player Controller Class** = `BP_WarRigPlayerController`
+- Check Output Log for "SetupEnhancedInput: Added mapping context" message during startup
+
+❌ **Problem 3: Input Component NOT EnhancedInputComponent**
+```
+LogWarRigPlayerController: Input Component: NOT EnhancedInputComponent!
+```
+
+**FIX:**
+- Same as Problem 1 - Project Settings not configured correctly
+- Must restart editor after changing settings
+
+#### Step 2: Test if Callbacks are Being Invoked
+
+After running `DebugListInputContexts` and seeing "OK" for everything:
+
+1. **Keep the Output Log visible**
+2. **Press A key**
+3. **Look for this LOUD warning log**:
+   ```
+   LogWarRigPlayerController: Warning: >>> OnMoveLeft() CALLED - Enhanced Input callback triggered! <<<
+   ```
+
+**Results:**
+
+✅ **If you see the log**:
+- Enhanced Input is working correctly!
+- The problem is NOT with input, but with lane changing logic
+- Check LaneSystemComponent initialization
+- Run `DebugShowLanes` to visualize lanes
+
+❌ **If you DON'T see the log**:
+- Enhanced Input system is NOT triggering the callback
+- Even though everything appears configured correctly
+- **Most likely causes:**
+  1. **Viewport doesn't have focus** - Click in the game viewport before pressing keys
+  2. **Another Input Mapping Context is blocking** - Check for conflicting IMCs with higher priority
+  3. **Key mappings not set in IMC_WarRig** - See "Manual Editor Setup" below
+
+#### Step 3: Manual Editor Setup (Alternative to Programmatic)
+
+If the programmatic setup continues to fail, you can set up Enhanced Input manually in the editor:
+
+**A. Create Input Actions:**
+
+1. Navigate to `Content/Input/` (create folder if needed)
+2. Right-click → Input → Input Action
+3. Create two actions:
+   - `IA_MoveLeft` (Value Type: Digital (bool))
+   - `IA_MoveRight` (Value Type: Digital (bool))
+
+**B. Create Input Mapping Context:**
+
+1. In `Content/Input/`, right-click → Input → Input Mapping Context
+2. Name it `IMC_WarRig`
+3. Open `IMC_WarRig`
+4. In the **Mappings** section:
+
+   **Add IA_MoveLeft:**
+   - Click **"+ Add Mapping"**
+   - Select `IA_MoveLeft` from dropdown
+   - Click the **"+"** icon next to it
+   - Press **A** key (it will record "A : Keyboard")
+   - Click **"+"** again
+   - Press **Left Arrow** key (it will record "Left : Keyboard")
+
+   **Add IA_MoveRight:**
+   - Click **"+ Add Mapping"**
+   - Select `IA_MoveRight` from dropdown
+   - Click the **"+"** icon
+   - Press **D** key
+   - Click **"+"** again
+   - Press **Right Arrow** key
+
+5. **Save** the asset
+
+**C. Assign to Player Controller Blueprint:**
+
+1. Open `Content/Blueprints/Player/BP_WarRigPlayerController`
+2. In **Class Defaults** (toolbar button), find **Whiteline Nightmare | Input** category:
+   - **Input Mapping Context** = `IMC_WarRig`
+   - **Move Left Action** = `IA_MoveLeft`
+   - **Move Right Action** = `IA_MoveRight`
+3. **Compile** and **Save**
+
+**D. Verify in Output Log:**
+
+When you play, you should now see:
+```
+LogWarRigPlayerController: SetupEnhancedInput: Using editor-assigned Input Assets
+LogWarRigPlayerController:   - Mapping Context: IMC_WarRig
+LogWarRigPlayerController:   - Move Left Action: IA_MoveLeft
+LogWarRigPlayerController:   - Move Right Action: IA_MoveRight
+```
+
+Instead of:
+```
+LogWarRigPlayerController: SetupEnhancedInput: Creating Input Assets programmatically
+```
+
+#### Common Issues and Final Checks
+
+**Issue**: "Everything shows OK but input still doesn't work"
+
+**Try these:**
+1. **Click in the viewport** before pressing keys (viewport must have focus)
+2. **Check for conflicting input** - Disable any other input systems or plugins
+3. **Verify War Rig is possessed** - Output Log should show: `LogWarRigPlayerController: Possessed pawn BP_WarRigPawn`
+4. **Check Game Mode setup**:
+   - World Settings → Game Mode = `BP_WarRigGameMode`
+   - BP_WarRigGameMode → Player Controller Class = `BP_WarRigPlayerController`
+   - BP_WarRigGameMode → Default Pawn Class = `BP_WarRigPawn`
+
+**Issue**: "Logs show OnMoveLeft() called but war rig doesn't move"
+
+**This is NOT an input problem!** The input system is working. Check:
+1. LaneSystemComponent initialization (see "War Rig Not Moving Between Lanes" section above)
+2. Lane change speed > 0
+3. Not already at leftmost/rightmost lane
+4. Enable `DebugShowLanes` to visualize
+
+**Issue**: "Project Settings changes don't take effect"
+
+**Solution:**
+1. Close Unreal Editor completely (don't just stop PIE)
+2. Delete `Saved/` and `Intermediate/` folders from project root
+3. Reopen editor
+4. Test again
+
 ### World Not Scrolling
 
 **Symptom**: Ground tiles aren't moving backward, world appears frozen.

@@ -265,13 +265,21 @@ void AWarRigPlayerController::SetupEnhancedInput()
 
 void AWarRigPlayerController::OnMoveLeft()
 {
+	// DIAGNOSTIC: This log confirms the callback is being invoked
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft() CALLED - Enhanced Input callback triggered! <<<"));
+
 	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
 	if (WarRig)
 	{
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveLeft: War Rig pawn found, requesting lane change left"));
 		bool bSuccess = WarRig->RequestLaneChange(-1);
 		if (bSuccess)
 		{
-			UE_LOG(LogWarRigPlayerController, Verbose, TEXT("OnMoveLeft: Lane change requested"));
+			UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveLeft: Lane change LEFT successful"));
+		}
+		else
+		{
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveLeft: Lane change LEFT failed (already at leftmost lane or transitioning)"));
 		}
 	}
 	else
@@ -282,13 +290,21 @@ void AWarRigPlayerController::OnMoveLeft()
 
 void AWarRigPlayerController::OnMoveRight()
 {
+	// DIAGNOSTIC: This log confirms the callback is being invoked
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight() CALLED - Enhanced Input callback triggered! <<<"));
+
 	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
 	if (WarRig)
 	{
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveRight: War Rig pawn found, requesting lane change right"));
 		bool bSuccess = WarRig->RequestLaneChange(1);
 		if (bSuccess)
 		{
-			UE_LOG(LogWarRigPlayerController, Verbose, TEXT("OnMoveRight: Lane change requested"));
+			UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveRight: Lane change RIGHT successful"));
+		}
+		else
+		{
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveRight: Lane change RIGHT failed (already at rightmost lane or transitioning)"));
 		}
 	}
 	else
@@ -354,4 +370,90 @@ void AWarRigPlayerController::DebugSetScrollSpeed(float Speed)
 
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("DebugSetScrollSpeed: Not yet implemented - needs WorldScrollComponent on GameMode."));
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("DebugSetScrollSpeed: Requested speed: %.2f"), Speed);
+}
+
+void AWarRigPlayerController::DebugListInputContexts()
+{
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT("=== ENHANCED INPUT DIAGNOSTIC ==="));
+
+	// Get the Enhanced Input Local Player Subsystem
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+	if (!Subsystem)
+	{
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("DebugListInputContexts: Enhanced Input Subsystem NOT FOUND!"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("  >>> This means Project Settings -> Input is NOT configured for Enhanced Input! <<<"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("  Required settings:"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("    - Default Player Input Class = EnhancedPlayerInput"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("    - Default Input Component Class = EnhancedInputComponent"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("  After changing, you MUST restart the editor!"));
+		return;
+	}
+
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("Enhanced Input Subsystem: FOUND (OK)"));
+
+	// Get all active mapping contexts
+	TArray<FEnhancedActionKeyMapping> Mappings = Subsystem->GetAllPlayerMappableActionKeyMappings();
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("Total Player Mappable Key Mappings: %d"), Mappings.Num());
+
+	// Check if our specific mapping context is present
+	bool bFoundWarRigContext = false;
+	if (InputMappingContext)
+	{
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("Checking for our IMC_WarRig context: %s"), *InputMappingContext->GetName());
+
+		// Check if it's in the subsystem
+		if (Subsystem->HasMappingContext(InputMappingContext))
+		{
+			UE_LOG(LogWarRigPlayerController, Log, TEXT("  >>> IMC_WarRig IS ACTIVE in subsystem (OK) <<<"));
+			bFoundWarRigContext = true;
+
+			// Get priority
+			int32 Priority = 0; // Default priority
+			UE_LOG(LogWarRigPlayerController, Log, TEXT("  Priority: %d"), Priority);
+		}
+		else
+		{
+			UE_LOG(LogWarRigPlayerController, Error, TEXT("  >>> IMC_WarRig is NOT ACTIVE in subsystem! <<<"));
+			UE_LOG(LogWarRigPlayerController, Error, TEXT("  This means AddMappingContext failed or was never called!"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("InputMappingContext is NULL - not assigned!"));
+	}
+
+	// Check input actions
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("Input Actions:"));
+	if (MoveLeftAction)
+	{
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - MoveLeftAction: %s (OK)"), *MoveLeftAction->GetName());
+	}
+	else
+	{
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("  - MoveLeftAction: NULL!"));
+	}
+
+	if (MoveRightAction)
+	{
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - MoveRightAction: %s (OK)"), *MoveRightAction->GetName());
+	}
+	else
+	{
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("  - MoveRightAction: NULL!"));
+	}
+
+	// Check if input component is Enhanced
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("Input Component: EnhancedInputComponent (OK)"));
+	}
+	else
+	{
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("Input Component: NOT EnhancedInputComponent!"));
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("  >>> Check Project Settings -> Input -> Default Input Component Class <<<"));
+	}
+
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT("================================="));
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT("Run this command in PIE console to diagnose input issues"));
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT("Then press A or D and check if callback logs appear"));
 }

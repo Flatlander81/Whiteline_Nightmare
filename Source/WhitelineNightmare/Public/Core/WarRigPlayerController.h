@@ -89,6 +89,12 @@ public:
 	UFUNCTION(Exec, Category = "Whiteline Nightmare|Debug")
 	void DebugSetScrollSpeed(float Speed);
 
+	/**
+	 * List all active Enhanced Input mapping contexts and their priorities
+	 */
+	UFUNCTION(Exec, Category = "Whiteline Nightmare|Debug")
+	void DebugListInputContexts();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
