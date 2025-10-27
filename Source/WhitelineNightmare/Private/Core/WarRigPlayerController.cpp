@@ -21,8 +21,61 @@ AWarRigPlayerController::AWarRigPlayerController()
 	, MoveLeftAction(nullptr)
 	, MoveRightAction(nullptr)
 {
-	// Enable ticking if needed
-	PrimaryActorTick.bCanEverTick = false;
+	// Enable ticking for input diagnostics
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
+}
+
+void AWarRigPlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	// DIAGNOSTIC: Direct keyboard polling to see if keyboard input works AT ALL
+	// This bypasses Enhanced Input entirely to test if the issue is with Enhanced Input or keyboard in general
+
+	static bool bAKeyWasDown = false;
+	if (IsInputKeyDown(EKeys::A))
+	{
+		if (!bAKeyWasDown)
+		{
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> TICK: A KEY IS DOWN (Direct Polling) <<<"));
+			bAKeyWasDown = true;
+
+			// Try to trigger lane change directly
+			AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
+			if (WarRig)
+			{
+				UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> TICK: Attempting lane change LEFT via direct polling <<<"));
+				WarRig->RequestLaneChange(-1);
+			}
+		}
+	}
+	else
+	{
+		bAKeyWasDown = false;
+	}
+
+	static bool bDKeyWasDown = false;
+	if (IsInputKeyDown(EKeys::D))
+	{
+		if (!bDKeyWasDown)
+		{
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> TICK: D KEY IS DOWN (Direct Polling) <<<"));
+			bDKeyWasDown = true;
+
+			// Try to trigger lane change directly
+			AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
+			if (WarRig)
+			{
+				UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> TICK: Attempting lane change RIGHT via direct polling <<<"));
+				WarRig->RequestLaneChange(1);
+			}
+		}
+	}
+	else
+	{
+		bDKeyWasDown = false;
+	}
 }
 
 void AWarRigPlayerController::BeginPlay()
