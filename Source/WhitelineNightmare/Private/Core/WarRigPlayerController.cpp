@@ -32,8 +32,7 @@ void AWarRigPlayerController::BeginPlay()
 	// Initialize resources
 	CurrentScrap = StartingScrap;
 
-	// Setup Enhanced Input
-	SetupEnhancedInput();
+	// Note: SetupEnhancedInput() is now called in SetupInputComponent() to fix timing issue
 
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("WarRigPlayerController: Initialized with %d starting scrap"), StartingScrap);
 	LogPlayerState();
@@ -69,6 +68,9 @@ void AWarRigPlayerController::SetupInputComponent()
 		return;
 	}
 
+	// Setup Enhanced Input BEFORE binding (fixes timing issue)
+	SetupEnhancedInput();
+
 	// Bind Enhanced Input actions
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 	{
@@ -77,11 +79,19 @@ void AWarRigPlayerController::SetupInputComponent()
 			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Triggered, this, &AWarRigPlayerController::OnMoveLeft);
 			UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound MoveLeft action"));
 		}
+		else
+		{
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupInputComponent: MoveLeftAction is null"));
+		}
 
 		if (MoveRightAction)
 		{
 			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &AWarRigPlayerController::OnMoveRight);
 			UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound MoveRight action"));
+		}
+		else
+		{
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupInputComponent: MoveRightAction is null"));
 		}
 
 		UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Enhanced Input bindings complete"));
@@ -199,6 +209,13 @@ void AWarRigPlayerController::LogPlayerState() const
 
 void AWarRigPlayerController::SetupEnhancedInput()
 {
+	// Prevent double-initialization
+	if (InputMappingContext != nullptr)
+	{
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupEnhancedInput: Already initialized, skipping"));
+		return;
+	}
+
 	// Get the Enhanced Input Local Player Subsystem
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
