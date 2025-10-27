@@ -21,9 +21,6 @@ class WHITELINENIGHTMARE_API AWarRigPlayerController : public APlayerController
 public:
 	AWarRigPlayerController();
 
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
 	// Called when the controller possesses a pawn
 	virtual void OnPossess(APawn* InPawn) override;
 

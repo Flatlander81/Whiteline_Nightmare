@@ -21,61 +21,8 @@ AWarRigPlayerController::AWarRigPlayerController()
 	, MoveLeftAction(nullptr)
 	, MoveRightAction(nullptr)
 {
-	// Enable ticking for input diagnostics
-	PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.bStartWithTickEnabled = true;
-}
-
-void AWarRigPlayerController::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	// DIAGNOSTIC: Direct keyboard polling to see if keyboard input works AT ALL
-	// This bypasses Enhanced Input entirely to test if the issue is with Enhanced Input or keyboard in general
-
-	static bool bAKeyWasDown = false;
-	if (IsInputKeyDown(EKeys::A))
-	{
-		if (!bAKeyWasDown)
-		{
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> TICK: A KEY IS DOWN (Direct Polling) <<<"));
-			bAKeyWasDown = true;
-
-			// Try to trigger lane change directly
-			AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
-			if (WarRig)
-			{
-				UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> TICK: Attempting lane change LEFT via direct polling <<<"));
-				WarRig->RequestLaneChange(-1);
-			}
-		}
-	}
-	else
-	{
-		bAKeyWasDown = false;
-	}
-
-	static bool bDKeyWasDown = false;
-	if (IsInputKeyDown(EKeys::D))
-	{
-		if (!bDKeyWasDown)
-		{
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> TICK: D KEY IS DOWN (Direct Polling) <<<"));
-			bDKeyWasDown = true;
-
-			// Try to trigger lane change directly
-			AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
-			if (WarRig)
-			{
-				UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> TICK: Attempting lane change RIGHT via direct polling <<<"));
-				WarRig->RequestLaneChange(1);
-			}
-		}
-	}
-	else
-	{
-		bDKeyWasDown = false;
-	}
+	// No ticking needed
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 void AWarRigPlayerController::BeginPlay()
@@ -139,7 +86,8 @@ void AWarRigPlayerController::SetupInputComponent()
 	{
 		if (MoveLeftAction)
 		{
-			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Triggered, this, &AWarRigPlayerController::OnMoveLeft);
+			// Use ETriggerEvent::Started to fire once per key press (not every frame)
+			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Started, this, &AWarRigPlayerController::OnMoveLeft);
 			UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound MoveLeft action"));
 		}
 		else
@@ -149,7 +97,8 @@ void AWarRigPlayerController::SetupInputComponent()
 
 		if (MoveRightAction)
 		{
-			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &AWarRigPlayerController::OnMoveRight);
+			// Use ETriggerEvent::Started to fire once per key press (not every frame)
+			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Started, this, &AWarRigPlayerController::OnMoveRight);
 			UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound MoveRight action"));
 		}
 		else
@@ -328,13 +277,10 @@ void AWarRigPlayerController::SetupEnhancedInput()
 
 void AWarRigPlayerController::OnMoveLeft()
 {
-	// DIAGNOSTIC: This log confirms the callback is being invoked
-	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft() CALLED - Enhanced Input callback triggered! <<<"));
-
 	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
 	if (WarRig)
 	{
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveLeft: War Rig pawn found, requesting lane change left"));
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveLeft: Requesting lane change left"));
 		bool bSuccess = WarRig->RequestLaneChange(-1);
 		if (bSuccess)
 		{
@@ -353,13 +299,10 @@ void AWarRigPlayerController::OnMoveLeft()
 
 void AWarRigPlayerController::OnMoveRight()
 {
-	// DIAGNOSTIC: This log confirms the callback is being invoked
-	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight() CALLED - Enhanced Input callback triggered! <<<"));
-
 	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
 	if (WarRig)
 	{
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveRight: War Rig pawn found, requesting lane change right"));
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveRight: Requesting lane change right"));
 		bool bSuccess = WarRig->RequestLaneChange(1);
 		if (bSuccess)
 		{
