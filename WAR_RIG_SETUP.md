@@ -237,25 +237,201 @@ Available tests:
 ## Troubleshooting
 
 ### War Rig Not Moving Between Lanes
-- Check that `ULaneSystemComponent` is initialized
-- Verify input actions are bound correctly
-- Check lane change speed is > 0
+
+**Symptom**: Pressing A/D or Left/Right Arrow keys does nothing.
+
+**How to Check:**
+
+1. **Verify LaneSystemComponent is initialized**
+   - Play the game (PIE - Play in Editor)
+   - Select your War Rig pawn in the World Outliner (should be selected automatically)
+   - In the Details panel, find **LaneSystemComponent**
+   - Under **Lane System**, check **Is Initialized** - should be ✓ (true)
+   - Check **Output Log** (Window → Developer Tools → Output Log) for:
+     ```
+     LogTemp: LaneSystemComponent: Initialized with 5 lanes, width 400.00. Starting in lane 2.
+     ```
+
+2. **Verify input actions are bound correctly**
+   - Check **Output Log** for:
+     ```
+     LogWarRigPlayerController: SetupEnhancedInput: Enhanced Input configured programmatically
+     LogWarRigPlayerController:   - Move Left: A or Left Arrow
+     LogWarRigPlayerController:   - Move Right: D or Right Arrow
+     ```
+   - If you don't see these messages, the controller didn't initialize input
+   - Try pressing A or D and look for: `LogWarRigPlayerController: OnMoveLeft: Lane change requested` (Verbose level)
+
+3. **Check lane change speed**
+   - In Details panel, find **LaneSystemComponent**
+   - Check **Lane Change Speed** - should be `500.0` or higher
+   - If it's 0 or very low, lane changes will be invisible/very slow
+   - Also check in **War Rig Data Table** (`DT_WarRigData` → SemiTruck row) that **Lane Change Speed** = `500.0`
+
+4. **Use debug visualization**
+   - Open console (~ key) and type: `DebugShowLanes`
+   - You should see 5 colored lines extending forward from the war rig
+   - Green line = current lane, White lines = other lanes
+   - If lines appear but war rig doesn't move, check the Output Log for lane change rejections
 
 ### World Not Scrolling
-- Verify `UWorldScrollComponent` is initialized and enabled
-- Check scroll speed is > 0
-- Ensure scroll direction is set (default: -X)
+
+**Symptom**: Ground tiles aren't moving backward, world appears frozen.
+
+**How to Check:**
+
+1. **Verify WorldScrollComponent is initialized and enabled**
+   - During Play in Editor, select the actor with WorldScrollComponent (BP_WarRigGameMode)
+   - In Details panel, find **WorldScrollComponent**
+   - Under **World Scroll | Runtime**, check:
+     - **Is Initialized**: Should be ✓ (true)
+     - **Scroll Speed**: Should show a value like `1000.0` (not 0)
+     - **Distance Traveled**: Should be increasing every frame (watch it change)
+   - Check **Output Log** for:
+     ```
+     LogTemp: WorldScrollComponent: Loaded scroll speed 1000.00 from gameplay balance data table 'Default'
+     ```
+
+2. **Check scroll speed is greater than 0**
+   - In Details panel: **World Scroll | Runtime → Scroll Speed** should be > 0
+   - Check data table: Open `DT_GameplayBalance` → Default row → **Scroll Speed** = `1000.0`
+   - If Scroll Speed is 0 in runtime, check:
+     - **Gameplay Balance Data Table** is set in Config section
+     - **Balance Data Row Name** = "Default"
+     - **Fallback Scroll Speed** = `1000.0` (in case table fails)
+
+3. **Ensure scroll direction is set**
+   - In Details panel: **World Scroll | Config → Scroll Direction** = `(-1, 0, 0)`
+   - X should be **negative** for backward scroll
+   - Check **Output Log** for: `LogTemp: WorldScrollComponent: Initialized with speed 1000.00`
+
+4. **Check scrolling is enabled**
+   - In Details panel: **World Scroll | Config → Is Scroll Enabled** should be ✓ (checked)
+   - If unchecked, scrolling is paused
 
 ### Ground Tiles Not Appearing
-- Verify `UGroundTilePoolComponent` is initialized
-- Check that `SpawnInitialTiles()` was called
-- Verify tile pool size > 0
-- Check spawn/despawn distances are reasonable
+
+**Symptom**: No ground visible, or tiles aren't recycling.
+
+**How to Check:**
+
+1. **Verify GroundTilePoolComponent is initialized**
+   - During Play in Editor, select the actor with GroundTilePoolComponent
+   - In Details panel, find **GroundTilePoolComponent**
+   - Under **Ground Tile Pool | Runtime**, check:
+     - **Is Tile Pool Initialized**: Should be ✓ (true)
+     - **Tile Size**: Should show `(2000, 2000)` or your configured size
+   - Check **Output Log** for:
+     ```
+     LogTemp: GroundTilePoolComponent: Auto-discovered WorldScrollComponent on owner actor
+     LogTemp: GroundTilePoolComponent: Initialized with 5 tiles of size (2000.00, 2000.00).
+     LogTemp: GroundTilePoolComponent: Spawning 5 initial tiles.
+     ```
+
+2. **Check that SpawnInitialTiles was called**
+   - Look in **Output Log** for: `LogTemp: GroundTilePoolComponent: Initial tiles spawned. Furthest position: XXXX`
+   - If you see "Auto-initialization failed", check:
+     - **Tile Class** is set to `AGroundTile`
+     - **WorldScrollComponent** was found (should see "Auto-discovered" message)
+     - **Auto Initialize** is ✓ (checked)
+
+3. **Verify tile pool size > 0**
+   - In Details panel: **Ground Tile Pool | Config → Default Pool Size** should be `5` or higher
+   - Check base class: **Object Pool Component** section shows:
+     - **Total Pool Size**: Should match your Default Pool Size
+     - **Available Count** + **Active Count** = Total Pool Size
+
+4. **Check spawn/despawn distances**
+   - In Details panel:
+     - **Spawn Distance Ahead**: `3000.0` (should be > tile size)
+     - **Despawn Distance Behind**: `1000.0`
+   - If tiles spawn too far ahead or despawn too late, adjust these values
+   - For 2000-unit tiles, spawn distance should be at least 3000
+
+5. **Verify WorldScrollComponent reference**
+   - Check **Output Log** for: `LogTemp: GroundTilePoolComponent: Auto-discovered WorldScrollComponent on owner actor`
+   - If you see "WorldScrollComponent not found", both components aren't on the same actor
+   - In that case, manually set **World Scroll Component** reference
+
+6. **Check tile pool status during play**
+   - Select the GroundTilePoolComponent actor
+   - Watch **Active Count** and **Available Count** change as tiles recycle
+   - **Active Count** should be around 3-5 (depending on distances)
+   - **Available Count** should decrease/increase as tiles are used/returned
 
 ### Camera Not Following War Rig
-- Verify `USpringArmComponent` and `UCameraComponent` are attached
-- Check camera distance and pitch values in data table
-- Ensure camera lag is disabled for rigid following
+
+**Symptom**: Camera is at wrong angle, too far, or not attached.
+
+**How to Check:**
+
+1. **Verify SpringArm and Camera are attached**
+   - Select your War Rig pawn in World Outliner
+   - In the Details panel, look at the component hierarchy (top left)
+   - Should see:
+     ```
+     RigRoot (SceneComponent)
+     ├─ CameraSpringArm (SpringArmComponent)
+     │  └─ Camera (CameraComponent)
+     └─ LaneSystemComponent
+     ```
+   - If Camera or SpringArm is missing, check War Rig blueprint/C++ class
+
+2. **Check camera distance and pitch**
+   - During Play, select War Rig pawn
+   - Find **CameraSpringArm** in Details panel:
+     - **Target Arm Length**: Should be `1500.0` (or value from data table)
+     - **Rotation**: Pitch should be around `-75.0` (negative for top-down)
+   - Check **War Rig Data Table** (`DT_WarRigData` → SemiTruck row):
+     - **Camera Distance** = `1500.0`
+     - **Camera Pitch** = `-75.0`
+   - Check **Output Log** for:
+     ```
+     LogTemp: WarRigPawn: Camera setup - Distance: 1500.00, Pitch: -75.00
+     ```
+
+3. **Ensure camera lag is disabled**
+   - Select War Rig pawn
+   - Find **CameraSpringArm** in Details panel
+   - **Camera Settings**:
+     - **Enable Camera Lag**: Should be ☐ (unchecked) for rigid following
+     - **Enable Camera Rotation Lag**: Should be ☐ (unchecked)
+   - If enabled, camera will smoothly follow instead of staying locked
+
+4. **Check camera is set as view target**
+   - War Rig pawn should auto-possess Player 0
+   - Check **Output Log** for: `LogWarRigPlayerController: Possessed pawn BP_WarRigPawn`
+   - If camera view is wrong, check:
+     - **Auto Possess Player** = `Player 0` in War Rig pawn defaults
+     - Game Mode's **Default Pawn Class** points to your War Rig
+
+### General Debugging Tips
+
+**Enable Verbose Logging:**
+- Open console (~) and type: `Log LogTemp Verbose`
+- This shows more detailed messages including lane change requests
+
+**Check All Components During Play:**
+- Select actor in World Outliner during PIE
+- Details panel shows RUNTIME values (different from edit-time)
+- Watch values change in real-time
+
+**Output Log Categories:**
+- `LogTemp`: General system messages
+- `LogWarRigPlayerController`: Input and player actions
+- Filter Output Log by typing category name in search box
+
+**Common Data Table Issues:**
+- Ensure all data tables are saved and compiled
+- Row names are case-sensitive ("Default" ≠ "default")
+- Check for typos in row names in component configs
+
+**Reset to Defaults:**
+- If something is completely broken:
+  1. Delete the component
+  2. Re-add it (gets fresh default values)
+  3. Set only the essential properties (data tables)
+  4. Test incrementally
 
 ## Future Enhancements
 
