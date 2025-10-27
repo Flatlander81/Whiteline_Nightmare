@@ -111,6 +111,12 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	/**
+	 * Get the active objects array (for derived classes)
+	 * @return Const reference to active objects array
+	 */
+	const TArray<AActor*>& GetActiveObjects() const { return ActiveObjects; }
+
 private:
 	/**
 	 * Pre-spawn pool of actors
