@@ -197,9 +197,12 @@ void UGroundTilePoolComponent::SpawnInitialTiles()
 
 	UE_LOG(LogTemp, Log, TEXT("GroundTilePoolComponent: Spawning %d initial tiles."), NumTilesToSpawn);
 
-	// Start spawning from behind war rig
-	float CurrentSpawnX = WarRigLocation.X - DespawnDistanceBehind;
+	// Start spawning from behind war rig, accounting for tile being centered at spawn position
+	// First tile should be centered so its back edge is at the despawn threshold behind the war rig
+	float CurrentSpawnX = WarRigLocation.X - DespawnDistanceBehind + (TileSize.X / 2.0f);
 	FurthestTilePosition = CurrentSpawnX;
+
+	UE_LOG(LogTemp, Log, TEXT("GroundTilePoolComponent: Starting spawn at X=%.2f (WarRig at X=%.2f)"), CurrentSpawnX, WarRigLocation.X);
 
 	for (int32 i = 0; i < NumTilesToSpawn; ++i)
 	{
@@ -208,6 +211,9 @@ void UGroundTilePoolComponent::SpawnInitialTiles()
 
 		CurrentSpawnX += TileSize.X;
 		FurthestTilePosition = CurrentSpawnX;
+
+		UE_LOG(LogTemp, Verbose, TEXT("GroundTilePoolComponent: Tile %d spawned at X=%.2f, next spawn at X=%.2f"),
+			i, SpawnPosition.X, CurrentSpawnX);
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("GroundTilePoolComponent: Initial tiles spawned. Furthest position: %.2f"), FurthestTilePosition);
@@ -257,9 +263,12 @@ void UGroundTilePoolComponent::UpdateTiles(float DeltaTime)
 		// Return to pool
 		ReturnToPool(TileToRecycle);
 
-		// Spawn new tile ahead
+		// Spawn new tile ahead at the furthest position
 		FVector SpawnPosition = GetNextSpawnPosition();
 		SpawnTileAt(SpawnPosition);
+
+		// Update furthest position for next spawn
+		FurthestTilePosition += TileSize.X;
 	}
 }
 
@@ -309,11 +318,9 @@ void UGroundTilePoolComponent::SpawnTileAt(FVector SpawnPosition)
 	// Configure tile
 	Tile->SetTileSize(TileSize);
 
-	// Update furthest position if this tile is ahead
-	if (SpawnPosition.X > FurthestTilePosition)
-	{
-		FurthestTilePosition = SpawnPosition.X + TileSize.X;
-	}
+	// Note: FurthestTilePosition is updated by the caller (SpawnInitialTiles or UpdateTiles)
+	// to maintain the correct next spawn position
 
-	UE_LOG(LogTemp, Verbose, TEXT("GroundTilePoolComponent: Spawned tile at X=%.2f"), SpawnPosition.X);
+	UE_LOG(LogTemp, Verbose, TEXT("GroundTilePoolComponent: Spawned tile at X=%.2f (extends from %.2f to %.2f)"),
+		SpawnPosition.X, SpawnPosition.X - TileSize.X/2.0f, SpawnPosition.X + TileSize.X/2.0f);
 }
