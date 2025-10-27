@@ -168,15 +168,23 @@ Create a Blueprint actor or add to Game Mode:
 
 ## Input Setup
 
-### Configure Input Bindings
+### Automatic Input Configuration
 
-In `Project Settings → Input`:
+Input is configured **programmatically** using Enhanced Input System - no manual setup required!
 
-1. Add Action Mappings:
-   - **MoveLeft**: Keyboard `A` or `Left Arrow`
-   - **MoveRight**: Keyboard `D` or `Right Arrow`
+The `AWarRigPlayerController` automatically creates and binds input actions in `BeginPlay()`:
 
-The `AWarRigPawn` will automatically bind to these actions.
+**Configured Bindings:**
+- **Move Left**: `A` key or `Left Arrow`
+- **Move Right**: `D` key or `Right Arrow`
+
+**Implementation Details:**
+- Creates `UInputAction` objects at runtime
+- Creates `UInputMappingContext` and adds key mappings
+- Registers context with Enhanced Input Subsystem
+- Binds actions to controller methods
+
+**No editor configuration needed!** Just play and the input will work automatically.
 
 ## Debug Commands
 

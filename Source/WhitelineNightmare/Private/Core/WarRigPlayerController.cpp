@@ -6,6 +6,10 @@
 #include "WarRig/LaneSystemComponent.h"
 #include "World/WorldScrollComponent.h"
 #include "Core/WhitelineNightmareGameMode.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
+#include "InputAction.h"
 
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogWarRigPlayerController, Log, All);
@@ -13,6 +17,9 @@ DEFINE_LOG_CATEGORY_STATIC(LogWarRigPlayerController, Log, All);
 AWarRigPlayerController::AWarRigPlayerController()
 	: CurrentScrap(0)
 	, StartingScrap(100)
+	, InputMappingContext(nullptr)
+	, MoveLeftAction(nullptr)
+	, MoveRightAction(nullptr)
 {
 	// Enable ticking if needed
 	PrimaryActorTick.bCanEverTick = false;
@@ -24,6 +31,9 @@ void AWarRigPlayerController::BeginPlay()
 
 	// Initialize resources
 	CurrentScrap = StartingScrap;
+
+	// Setup Enhanced Input
+	SetupEnhancedInput();
 
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("WarRigPlayerController: Initialized with %d starting scrap"), StartingScrap);
 	LogPlayerState();
@@ -53,15 +63,33 @@ void AWarRigPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	// Input will be set up using Enhanced Input in the future
-	// For now, this is just a placeholder
 	if (!InputComponent)
 	{
 		UE_LOG(LogWarRigPlayerController, Error, TEXT("SetupInputComponent: InputComponent is null"));
 		return;
 	}
 
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready"));
+	// Bind Enhanced Input actions
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		if (MoveLeftAction)
+		{
+			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Triggered, this, &AWarRigPlayerController::OnMoveLeft);
+			UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound MoveLeft action"));
+		}
+
+		if (MoveRightAction)
+		{
+			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &AWarRigPlayerController::OnMoveRight);
+			UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound MoveRight action"));
+		}
+
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Enhanced Input bindings complete"));
+	}
+	else
+	{
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupInputComponent: Failed to cast to EnhancedInputComponent"));
+	}
 }
 
 bool AWarRigPlayerController::AddScrap(int32 Amount)
@@ -165,6 +193,79 @@ void AWarRigPlayerController::LogPlayerState() const
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("=== Player State ==="));
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("Current Scrap: %d"), CurrentScrap);
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("==================="));
+}
+
+// Enhanced Input Setup
+
+void AWarRigPlayerController::SetupEnhancedInput()
+{
+	// Get the Enhanced Input Local Player Subsystem
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	{
+		// Create Input Mapping Context
+		InputMappingContext = NewObject<UInputMappingContext>(this, TEXT("WarRigInputMappingContext"));
+
+		// Create Input Actions
+		MoveLeftAction = NewObject<UInputAction>(this, TEXT("MoveLeftAction"));
+		MoveLeftAction->ValueType = EInputActionValueType::Boolean;
+
+		MoveRightAction = NewObject<UInputAction>(this, TEXT("MoveRightAction"));
+		MoveRightAction->ValueType = EInputActionValueType::Boolean;
+
+		// Add mappings to context
+		// Move Left: A key and Left Arrow
+		FEnhancedActionKeyMapping& LeftMappingA = InputMappingContext->MapKey(MoveLeftAction, EKeys::A);
+		FEnhancedActionKeyMapping& LeftMappingArrow = InputMappingContext->MapKey(MoveLeftAction, EKeys::Left);
+
+		// Move Right: D key and Right Arrow
+		FEnhancedActionKeyMapping& RightMappingD = InputMappingContext->MapKey(MoveRightAction, EKeys::D);
+		FEnhancedActionKeyMapping& RightMappingArrow = InputMappingContext->MapKey(MoveRightAction, EKeys::Right);
+
+		// Add mapping context to subsystem
+		Subsystem->AddMappingContext(InputMappingContext, 0);
+
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupEnhancedInput: Enhanced Input configured programmatically"));
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - Move Left: A or Left Arrow"));
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("  - Move Right: D or Right Arrow"));
+	}
+	else
+	{
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("SetupEnhancedInput: Failed to get Enhanced Input Subsystem"));
+	}
+}
+
+void AWarRigPlayerController::OnMoveLeft()
+{
+	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
+	if (WarRig)
+	{
+		bool bSuccess = WarRig->RequestLaneChange(-1);
+		if (bSuccess)
+		{
+			UE_LOG(LogWarRigPlayerController, Verbose, TEXT("OnMoveLeft: Lane change requested"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveLeft: No War Rig pawn possessed"));
+	}
+}
+
+void AWarRigPlayerController::OnMoveRight()
+{
+	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
+	if (WarRig)
+	{
+		bool bSuccess = WarRig->RequestLaneChange(1);
+		if (bSuccess)
+		{
+			UE_LOG(LogWarRigPlayerController, Verbose, TEXT("OnMoveRight: Lane change requested"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveRight: No War Rig pawn possessed"));
+	}
 }
 
 // Debug Console Commands

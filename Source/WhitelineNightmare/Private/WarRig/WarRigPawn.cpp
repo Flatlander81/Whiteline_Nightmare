@@ -71,10 +71,9 @@ void AWarRigPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// Bind input actions (assuming you have input actions set up)
-	// For now, bind to keyboard keys
-	PlayerInputComponent->BindAction("MoveLeft", IE_Pressed, this, &AWarRigPawn::MoveLeft);
-	PlayerInputComponent->BindAction("MoveRight", IE_Pressed, this, &AWarRigPawn::MoveRight);
+	// Input is now handled by the WarRigPlayerController using Enhanced Input System
+	// No need to bind actions here - controller will call RequestLaneChange directly
+	UE_LOG(LogTemp, Log, TEXT("WarRigPawn: Input component setup (input handled by controller)"));
 }
 
 bool AWarRigPawn::LoadWarRigData(UDataTable* WarRigDataTable, FName RowName)
@@ -310,14 +309,4 @@ void AWarRigPawn::CreateDefaultMVPMeshes()
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("WarRigPawn: Created %d default MVP mesh sections."), MeshSections.Num());
-}
-
-void AWarRigPawn::MoveLeft()
-{
-	RequestLaneChange(-1);
-}
-
-void AWarRigPawn::MoveRight()
-{
-	RequestLaneChange(1);
 }

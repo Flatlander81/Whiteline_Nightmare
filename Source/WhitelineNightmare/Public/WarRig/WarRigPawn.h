@@ -98,16 +98,6 @@ private:
 	 */
 	void CreateDefaultMVPMeshes();
 
-	/**
-	 * Input handler for moving left
-	 */
-	void MoveLeft();
-
-	/**
-	 * Input handler for moving right
-	 */
-	void MoveRight();
-
 	// Root component (war rig stays at this position)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "War Rig", meta = (AllowPrivateAccess = "true"))
 	USceneComponent* RigRoot;

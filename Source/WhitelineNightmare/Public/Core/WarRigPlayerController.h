@@ -6,6 +6,9 @@
 #include "GameFramework/PlayerController.h"
 #include "WarRigPlayerController.generated.h"
 
+class UInputAction;
+class UInputMappingContext;
+
 /**
  * Player Controller for the War Rig
  * Handles input, UI interaction, and player state management
@@ -90,6 +93,21 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	/**
+	 * Setup Enhanced Input System programmatically
+	 */
+	void SetupEnhancedInput();
+
+	/**
+	 * Handle move left input
+	 */
+	void OnMoveLeft();
+
+	/**
+	 * Handle move right input
+	 */
+	void OnMoveRight();
+
 	// Current scrap resources
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Economy")
 	int32 CurrentScrap;
@@ -97,6 +115,18 @@ protected:
 	// Starting scrap amount (can be configured in data table)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Whiteline Nightmare|Economy")
 	int32 StartingScrap;
+
+	// Enhanced Input - Mapping Context
+	UPROPERTY()
+	UInputMappingContext* InputMappingContext;
+
+	// Enhanced Input - Move Left Action
+	UPROPERTY()
+	UInputAction* MoveLeftAction;
+
+	// Enhanced Input - Move Right Action
+	UPROPERTY()
+	UInputAction* MoveRightAction;
 
 private:
 	/**
