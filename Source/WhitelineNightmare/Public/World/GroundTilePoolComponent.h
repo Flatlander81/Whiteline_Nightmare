@@ -124,7 +124,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool|Config", meta = (AllowPrivateAccess = "true"))
 	float DespawnDistanceBehind;
 
-	// Reference to world scroll component (required)
+	// Reference to world scroll component (auto-discovered if on same actor, otherwise set manually)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool|Config", meta = (AllowPrivateAccess = "true"))
 	UWorldScrollComponent* WorldScrollComponent;
 

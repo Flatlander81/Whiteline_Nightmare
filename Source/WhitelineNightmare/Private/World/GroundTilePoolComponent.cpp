@@ -59,10 +59,24 @@ void UGroundTilePoolComponent::BeginPlay()
 			}
 		}
 
+		// Auto-discover WorldScrollComponent if not set
+		if (!WorldScrollComponent)
+		{
+			AActor* Owner = GetOwner();
+			if (Owner)
+			{
+				WorldScrollComponent = Owner->FindComponentByClass<UWorldScrollComponent>();
+				if (WorldScrollComponent)
+				{
+					UE_LOG(LogTemp, Log, TEXT("GroundTilePoolComponent: Auto-discovered WorldScrollComponent on owner actor"));
+				}
+			}
+		}
+
 		// Validate WorldScrollComponent
 		if (!WorldScrollComponent)
 		{
-			UE_LOG(LogTemp, Error, TEXT("GroundTilePoolComponent: WorldScrollComponent is not set. Cannot auto-initialize."));
+			UE_LOG(LogTemp, Error, TEXT("GroundTilePoolComponent: WorldScrollComponent not found. Please add a WorldScrollComponent to the same actor or set the reference manually."));
 			return;
 		}
 

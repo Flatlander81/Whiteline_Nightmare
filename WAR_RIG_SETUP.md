@@ -170,12 +170,14 @@ Create a Blueprint actor or add to Game Mode:
    - **Default Pool Size**: `5`
    - **Spawn Distance Ahead**: `3000.0`
    - **Despawn Distance Behind**: `1000.0`
-   - **World Scroll Component**: Drag your WorldScrollComponent here
+   - **World Scroll Component**: Leave empty if both components are on the same actor (auto-discovered)
    - **World Scroll Data Table**: (Optional) Select `DT_WorldScrollData`
    - **Data Table Row Name**: `Default`
    - **Auto Initialize**: ✓ (checked)
 
 **That's it!** The component auto-initializes on BeginPlay, loads config from data tables, and spawns tiles automatically.
+
+**Important**: If both `GroundTilePoolComponent` and `WorldScrollComponent` are on the **same actor** (like BP_WarRigGameMode), you can leave **World Scroll Component** empty - it will automatically find the WorldScrollComponent on BeginPlay. If they're on different actors, you'll need to set the reference in Blueprint's Event Graph.
 
 **Advanced Option**: If you set the **World Scroll Data Table**, it will load tile size, pool size, and spawn/despawn distances from there instead of the default values.
 
