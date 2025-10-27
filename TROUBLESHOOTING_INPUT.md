@@ -1,12 +1,16 @@
 # Troubleshooting Lane Changing Input
 
-## RECOMMENDED SOLUTION: Blueprint Input
+## RECOMMENDED SOLUTION: Blueprint Enhanced Input
 
-After extensive troubleshooting, we've determined that **Blueprint input is the most reliable solution** for UE5.6. The editor automatically forces Enhanced Input on, which causes C++ input bindings to fail.
+After extensive troubleshooting, we've determined that **Blueprint Enhanced Input is the correct approach** for UE5.6. The editor automatically forces Enhanced Input on, which causes C++ input bindings to fail.
 
-**→ See [BLUEPRINT_INPUT_SETUP.md](BLUEPRINT_INPUT_SETUP.md) for step-by-step instructions**
+**→ See [ENHANCED_INPUT_SETUP_GUIDE.md](ENHANCED_INPUT_SETUP_GUIDE.md) for complete step-by-step instructions**
 
-The Blueprint setup is simple, doesn't require recompilation, and won't be overridden by the editor.
+This is the official UE5.6 approach:
+- Uses Input Actions (IA_MoveLeft, IA_MoveRight)
+- Uses Input Mapping Context (IMC_WarRig)
+- Binds Input Action events in PlayerController Blueprint
+- Simple, doesn't require recompilation, and won't be overridden by the editor
 
 ---
 

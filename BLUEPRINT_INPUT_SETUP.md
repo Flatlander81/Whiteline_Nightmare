@@ -1,18 +1,28 @@
 # Blueprint Input Setup Guide
 
-## Why Blueprint Input?
+## IMPORTANT: Use the Enhanced Input Guide
+
+**For the proper, official Enhanced Input setup, see: [ENHANCED_INPUT_SETUP_GUIDE.md](ENHANCED_INPUT_SETUP_GUIDE.md)**
+
+This file is kept for reference but contains outdated/incorrect information about Blueprint node names.
+
+---
+
+## Why Blueprint Input? (Historical Context)
 
 After extensive troubleshooting with C++ input systems (both Enhanced Input and Legacy Input), we discovered that the Unreal Engine 5.6 editor automatically forces Enhanced Input on, even when configured for legacy input. This causes C++ input bindings to fail.
 
-**Blueprint input is the most reliable solution** because:
+**Blueprint Enhanced Input is the reliable solution** because:
 - The editor doesn't fight or override Blueprint input
-- It's simpler to configure and debug
+- It's the standard approach for UE5.6
 - Changes don't require recompilation
 - Input events are visual and easy to verify
 
 ## Prerequisites
 
 The C++ code is already set up - `RequestLaneChange` is BlueprintCallable in `WarRigPawn.h`. You just need to wire up the Blueprint input events.
+
+**→ Go to [ENHANCED_INPUT_SETUP_GUIDE.md](ENHANCED_INPUT_SETUP_GUIDE.md) for the correct, detailed instructions.**
 
 ## Setup Instructions
 
