@@ -1,9 +1,24 @@
 # Troubleshooting Lane Changing Input
 
-## Issue
-Lane changing (A/D or Left/Right arrow keys) not working.
+## RECOMMENDED SOLUTION: Blueprint Input
 
-## Diagnostic Steps
+After extensive troubleshooting, we've determined that **Blueprint input is the most reliable solution** for UE5.6. The editor automatically forces Enhanced Input on, which causes C++ input bindings to fail.
+
+**→ See [BLUEPRINT_INPUT_SETUP.md](BLUEPRINT_INPUT_SETUP.md) for step-by-step instructions**
+
+The Blueprint setup is simple, doesn't require recompilation, and won't be overridden by the editor.
+
+---
+
+## Legacy C++ Input Troubleshooting (For Reference)
+
+### Issue
+Lane changing (A/D or Left/Right arrow keys) not working with C++ input system.
+
+### Root Cause
+UE5.6 editor automatically upgrades input classes to Enhanced Input, even when configured for legacy input in DefaultInput.ini. This causes C++ BindAction calls to fail.
+
+## Diagnostic Steps (Legacy C++)
 
 ### 1. Check PIE Output Log
 

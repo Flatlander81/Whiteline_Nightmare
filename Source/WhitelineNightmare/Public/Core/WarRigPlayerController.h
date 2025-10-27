@@ -102,16 +102,6 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	/**
-	 * Handle move left input (legacy input system)
-	 */
-	void OnMoveLeft();
-
-	/**
-	 * Handle move right input (legacy input system)
-	 */
-	void OnMoveRight();
-
 	// Current scrap resources
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Economy")
 	int32 CurrentScrap;

@@ -64,17 +64,9 @@ void AWarRigPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	if (!InputComponent)
-	{
-		UE_LOG(LogWarRigPlayerController, Error, TEXT("SetupInputComponent: InputComponent is null"));
-		return;
-	}
-
-	// Bind legacy input actions (defined in DefaultInput.ini)
-	InputComponent->BindAction("MoveLeft", IE_Pressed, this, &AWarRigPlayerController::OnMoveLeft);
-	InputComponent->BindAction("MoveRight", IE_Pressed, this, &AWarRigPlayerController::OnMoveRight);
-
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound legacy input actions (MoveLeft, MoveRight)"));
+	// Input is now handled in Blueprint (BP_WarRigPlayerController)
+	// See BLUEPRINT_INPUT_SETUP.md for instructions
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input handled in Blueprint"));
 }
 
 bool AWarRigPlayerController::AddScrap(int32 Amount)
@@ -180,53 +172,8 @@ void AWarRigPlayerController::LogPlayerState() const
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("==================="));
 }
 
-// Legacy Input Callbacks
-
-void AWarRigPlayerController::OnMoveLeft()
-{
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveLeft: Input received"));
-
-	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
-	if (WarRig)
-	{
-		bool bSuccess = WarRig->RequestLaneChange(-1);
-		if (bSuccess)
-		{
-			UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveLeft: Lane change LEFT successful"));
-		}
-		else
-		{
-			UE_LOG(LogWarRigPlayerController, Verbose, TEXT("OnMoveLeft: Lane change LEFT failed (already transitioning)"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveLeft: No War Rig pawn possessed"));
-	}
-}
-
-void AWarRigPlayerController::OnMoveRight()
-{
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveRight: Input received"));
-
-	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
-	if (WarRig)
-	{
-		bool bSuccess = WarRig->RequestLaneChange(1);
-		if (bSuccess)
-		{
-			UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveRight: Lane change RIGHT successful"));
-		}
-		else
-		{
-			UE_LOG(LogWarRigPlayerController, Verbose, TEXT("OnMoveRight: Lane change RIGHT failed (already transitioning)"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveRight: No War Rig pawn possessed"));
-	}
-}
+// Input is now handled in Blueprint (BP_WarRigPlayerController)
+// See BLUEPRINT_INPUT_SETUP.md for setup instructions
 
 // Debug Console Commands
 
