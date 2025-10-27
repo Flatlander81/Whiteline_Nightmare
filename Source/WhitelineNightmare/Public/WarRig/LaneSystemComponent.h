@@ -97,6 +97,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Lane System|Debug")
 	bool IsDebugVisualizationEnabled() const { return bShowDebugVisualization; }
 
+#if !UE_BUILD_SHIPPING
+	/**
+	 * Simulate a tick for testing purposes (only available in non-shipping builds)
+	 * @param DeltaTime - Time to simulate
+	 */
+	void SimulateTick(float DeltaTime) { TickComponent(DeltaTime, ELevelTick::LEVELTICK_All, nullptr); }
+#endif
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

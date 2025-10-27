@@ -53,6 +53,15 @@
 	} while(0)
 
 /**
+ * Test near equality macro for floats (alias for TEST_NEARLY_EQUAL)
+ * @param A - First value
+ * @param B - Second value
+ * @param Tolerance - Acceptable difference
+ * @param Message - Error message if assertion fails
+ */
+#define TEST_NEAR(A, B, Tolerance, Message) TEST_NEARLY_EQUAL(A, B, Tolerance, Message)
+
+/**
  * Test null check macro - fails test if pointer is null
  * @param Pointer - Pointer to check
  * @param Message - Error message if assertion fails
@@ -117,6 +126,7 @@
 #define TEST_ASSERT(Condition, Message) do {} while(0)
 #define TEST_EQUAL(A, B, Message) do {} while(0)
 #define TEST_NEARLY_EQUAL(A, B, Tolerance, Message) do {} while(0)
+#define TEST_NEAR(A, B, Tolerance, Message) do {} while(0)
 #define TEST_NOT_NULL(Pointer, Message) do {} while(0)
 #define TEST_NULL(Pointer, Message) do {} while(0)
 #define TEST_TRUE(Condition, Message) do {} while(0)

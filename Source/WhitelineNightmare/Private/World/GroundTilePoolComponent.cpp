@@ -80,14 +80,14 @@ bool UGroundTilePoolComponent::InitializeTilePool(
 	WarRigLocation = FVector::ZeroVector; // Assume war rig at origin
 
 	// Initialize base object pool
-	FObjectPoolConfig PoolConfig;
-	PoolConfig.PoolSize = InPoolSize;
-	PoolConfig.bAutoExpand = false; // Fixed pool size for ground tiles
-	PoolConfig.MaxPoolSize = InPoolSize;
-	PoolConfig.SpawnDistanceAhead = InSpawnDistance;
-	PoolConfig.DespawnDistanceBehind = InDespawnDistance;
+	FObjectPoolConfig Config;
+	Config.PoolSize = InPoolSize;
+	Config.bAutoExpand = false; // Fixed pool size for ground tiles
+	Config.MaxPoolSize = InPoolSize;
+	Config.SpawnDistanceAhead = InSpawnDistance;
+	Config.DespawnDistanceBehind = InDespawnDistance;
 
-	if (!Initialize(InTileClass, PoolConfig))
+	if (!Initialize(InTileClass, Config))
 	{
 		UE_LOG(LogTemp, Error, TEXT("GroundTilePoolComponent: Failed to initialize base object pool."));
 		return false;

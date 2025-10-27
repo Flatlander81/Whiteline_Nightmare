@@ -98,7 +98,7 @@ static bool TestLaneSystemBounds()
 		// Wait for lane change to complete (simulate multiple ticks)
 		for (int32 tick = 0; tick < 10; ++tick)
 		{
-			LaneSystem->TickComponent(0.1f, ELevelTick::LEVELTICK_All, nullptr);
+			LaneSystem->SimulateTick(0.1f);
 		}
 	}
 
@@ -117,7 +117,7 @@ static bool TestLaneSystemBounds()
 		// Wait for lane change to complete
 		for (int32 tick = 0; tick < 10; ++tick)
 		{
-			LaneSystem->TickComponent(0.1f, ELevelTick::LEVELTICK_All, nullptr);
+			LaneSystem->SimulateTick(0.1f);
 		}
 	}
 
@@ -169,7 +169,7 @@ static bool TestLaneTransitionSpeed()
 
 	while (LaneSystem->IsChangingLanes() && TickCount < 20) // Max 2 seconds to prevent infinite loop
 	{
-		LaneSystem->TickComponent(DeltaTime, ELevelTick::LEVELTICK_All, nullptr);
+		LaneSystem->SimulateTick(DeltaTime);
 		TotalTime += DeltaTime;
 		TickCount++;
 	}
@@ -227,7 +227,7 @@ static bool TestScrollSpeedConsistency()
 	// Tick several times and verify speed remains constant
 	for (int32 i = 0; i < 10; ++i)
 	{
-		WorldScroll->TickComponent(0.1f, ELevelTick::LEVELTICK_All, nullptr);
+		WorldScroll->SimulateTick(0.1f);
 		TEST_EQUAL(WorldScroll->GetScrollSpeed(), ExpectedSpeed, "Scroll speed should remain constant");
 	}
 
