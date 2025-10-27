@@ -175,4 +175,8 @@ private:
 	 * Log player state for debugging
 	 */
 	void LogPlayerState() const;
+
+	// Edge detection flags for Triggered events (prevents continuous firing)
+	bool bMoveLeftWasTriggered = false;
+	bool bMoveRightWasTriggered = false;
 };

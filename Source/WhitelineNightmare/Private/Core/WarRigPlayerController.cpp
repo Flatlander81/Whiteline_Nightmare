@@ -373,11 +373,37 @@ void AWarRigPlayerController::OnMoveLeft()
 void AWarRigPlayerController::OnMoveLeftTriggered()
 {
 	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft (Triggered) FIRED <<<"));
+
+	// Edge detection: only fire once per key press
+	if (!bMoveLeftWasTriggered)
+	{
+		bMoveLeftWasTriggered = true;
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft (Triggered WITH EDGE DETECTION) - PERFORMING LANE CHANGE <<<"));
+
+		AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
+		if (WarRig)
+		{
+			bool bSuccess = WarRig->RequestLaneChange(-1);
+			if (bSuccess)
+			{
+				UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveLeftTriggered: Lane change LEFT successful"));
+			}
+			else
+			{
+				UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveLeftTriggered: Lane change LEFT failed (already at leftmost lane or transitioning)"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveLeftTriggered: No War Rig pawn possessed"));
+		}
+	}
 }
 
 void AWarRigPlayerController::OnMoveLeftCompleted()
 {
-	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft (Completed) FIRED <<<"));
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft (Completed) FIRED - RESETTING EDGE DETECTION FLAG <<<"));
+	bMoveLeftWasTriggered = false;
 }
 
 void AWarRigPlayerController::OnMoveRight()
@@ -406,11 +432,37 @@ void AWarRigPlayerController::OnMoveRight()
 void AWarRigPlayerController::OnMoveRightTriggered()
 {
 	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight (Triggered) FIRED <<<"));
+
+	// Edge detection: only fire once per key press
+	if (!bMoveRightWasTriggered)
+	{
+		bMoveRightWasTriggered = true;
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight (Triggered WITH EDGE DETECTION) - PERFORMING LANE CHANGE <<<"));
+
+		AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
+		if (WarRig)
+		{
+			bool bSuccess = WarRig->RequestLaneChange(1);
+			if (bSuccess)
+			{
+				UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveRightTriggered: Lane change RIGHT successful"));
+			}
+			else
+			{
+				UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveRightTriggered: Lane change RIGHT failed (already at rightmost lane or transitioning)"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveRightTriggered: No War Rig pawn possessed"));
+		}
+	}
 }
 
 void AWarRigPlayerController::OnMoveRightCompleted()
 {
-	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight (Completed) FIRED <<<"));
+	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight (Completed) FIRED - RESETTING EDGE DETECTION FLAG <<<"));
+	bMoveRightWasTriggered = false;
 }
 
 // Debug Console Commands
