@@ -122,17 +122,17 @@ private:
 	 */
 	void UpdateDistanceTraveled(float DeltaTime);
 
-	// Default scroll speed (units per second) - configurable in editor
+	// Data table for gameplay balance (contains scroll speed) - PRIMARY SOURCE
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll|Config", meta = (AllowPrivateAccess = "true"))
-	float DefaultScrollSpeed;
+	UDataTable* GameplayBalanceDataTable;
 
-	// Optional: Data table for world scroll configuration
+	// Row name in gameplay balance data table
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll|Config", meta = (AllowPrivateAccess = "true"))
-	UDataTable* WorldScrollDataTable;
+	FName BalanceDataRowName;
 
-	// Optional: Row name in data table
+	// Fallback scroll speed if data table is not set (units per second)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll|Config", meta = (AllowPrivateAccess = "true"))
-	FName DataTableRowName;
+	float FallbackScrollSpeed;
 
 	// Current scroll speed in units per second
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Scroll|Runtime", meta = (AllowPrivateAccess = "true"))

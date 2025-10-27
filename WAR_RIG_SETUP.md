@@ -134,38 +134,29 @@ Add a row with the name **"Default"**:
 
 In your level:
 1. Add a `BP_WarRigPawn` (or create Blueprint based on `AWarRigPawn`)
-2. Configure:
+2. In the **Details Panel**, under **War Rig | Data**:
    - **Default War Rig Data Table**: Select `DT_WarRigData`
-   - **Default Row Name**: "SemiTruck"
+   - **Default Row Name**: `SemiTruck`
+   - **Gameplay Balance Data Table**: Select `DT_GameplayBalance`
+   - **Balance Data Row Name**: `Default`
 3. Position at origin: `Location=(0, 0, 100)` (slight Z offset to be above ground)
 
 ### 3. Setup World Scrolling
 
-**Option A: Simple Setup (Recommended for MVP)**
-
 Create a Blueprint actor or add to Game Mode:
 1. Add `UWorldScrollComponent`
 2. In the **Details Panel**, under **World Scroll | Config**:
-   - **Default Scroll Speed**: `1000.0` (units per second)
+   - **Gameplay Balance Data Table**: Select `DT_GameplayBalance`
+   - **Balance Data Row Name**: `Default`
+   - **Fallback Scroll Speed**: `1000.0` (used if data table unavailable)
    - **Scroll Direction**: `(-1, 0, 0)` (already set by default)
    - **Is Scroll Enabled**: ✓ (checked)
 
-That's it! The component will auto-initialize with these values on BeginPlay.
-
-**Option B: Data Table Configuration (Advanced)**
-
-If you want to use a data table for configuration:
-1. Add `UWorldScrollComponent`
-2. In the **Details Panel**, under **World Scroll | Config**:
-   - **World Scroll Data Table**: Select `DT_WorldScrollData`
-   - **Data Table Row Name**: "Default"
-   - **Default Scroll Speed**: `1000.0` (fallback if data table fails)
-
-The component will prioritize data table settings, falling back to Default Scroll Speed if the table is unavailable.
+**That's it!** The component auto-initializes on BeginPlay and loads scroll speed from the data table.
 
 **Runtime Properties** (visible during Play in Editor):
 - Under **World Scroll | Runtime**, you'll see:
-  - **Scroll Speed**: Current active scroll speed
+  - **Scroll Speed**: Current active scroll speed (loaded from data table)
   - **Distance Traveled**: Total distance traveled (for win condition tracking)
   - **Is Initialized**: Whether the component has been initialized
 
@@ -173,21 +164,27 @@ The component will prioritize data table settings, falling back to Default Scrol
 
 Create a Blueprint actor or add to Game Mode:
 1. Add `UGroundTilePoolComponent`
-2. Configure in BeginPlay:
-   ```cpp
-   // Initialize tile pool
-   GroundTilePool->InitializeTilePool(
-       AGroundTile::StaticClass(),
-       FVector2D(2000.0f, 2000.0f),  // Tile size
-       5,                              // Pool size
-       3000.0f,                        // Spawn distance ahead
-       1000.0f,                        // Despawn distance behind
-       WorldScrollComponent            // Reference to scroll component
-   );
+2. In the **Details Panel**, under **Ground Tile Pool | Config**:
+   - **Tile Class**: Select `AGroundTile` (or your custom tile class)
+   - **Default Tile Size**: `(2000, 2000)` (X=length, Y=width)
+   - **Default Pool Size**: `5`
+   - **Spawn Distance Ahead**: `3000.0`
+   - **Despawn Distance Behind**: `1000.0`
+   - **World Scroll Component**: Drag your WorldScrollComponent here
+   - **World Scroll Data Table**: (Optional) Select `DT_WorldScrollData`
+   - **Data Table Row Name**: `Default`
+   - **Auto Initialize**: ✓ (checked)
 
-   // Spawn initial tiles
-   GroundTilePool->SpawnInitialTiles();
-   ```
+**That's it!** The component auto-initializes on BeginPlay, loads config from data tables, and spawns tiles automatically.
+
+**Advanced Option**: If you set the **World Scroll Data Table**, it will load tile size, pool size, and spawn/despawn distances from there instead of the default values.
+
+**Runtime Properties** (visible during Play in Editor):
+- Under **Ground Tile Pool | Runtime**, you'll see:
+  - **Tile Size**: Current tile size being used
+  - **War Rig Location**: Reference point for spawning/despawning
+  - **Furthest Tile Position**: Position of the furthest tile ahead
+  - **Is Tile Pool Initialized**: Whether the pool has been initialized
 
 ## Input Setup
 

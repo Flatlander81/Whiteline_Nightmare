@@ -133,4 +133,12 @@ private:
 	// Default row name to load
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Data", meta = (AllowPrivateAccess = "true"))
 	FName DefaultRowName;
+
+	// Gameplay balance data table (for lane width, etc.)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Data", meta = (AllowPrivateAccess = "true"))
+	UDataTable* GameplayBalanceDataTable;
+
+	// Balance data row name
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Data", meta = (AllowPrivateAccess = "true"))
+	FName BalanceDataRowName;
 };

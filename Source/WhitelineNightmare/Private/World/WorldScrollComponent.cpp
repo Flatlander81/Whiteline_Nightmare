@@ -1,6 +1,7 @@
 // Copyright Flatlander81. All Rights Reserved.
 
 #include "World/WorldScrollComponent.h"
+#include "Core/GameDataStructs.h"
 #include "Engine/DataTable.h"
 
 UWorldScrollComponent::UWorldScrollComponent()
@@ -9,12 +10,12 @@ UWorldScrollComponent::UWorldScrollComponent()
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 
 	// Default configuration (editor-configurable)
-	DefaultScrollSpeed = 1000.0f;
-	WorldScrollDataTable = nullptr;
-	DataTableRowName = "Default";
+	GameplayBalanceDataTable = nullptr;
+	BalanceDataRowName = "Default";
+	FallbackScrollSpeed = 1000.0f;
 
 	// Runtime state
-	ScrollSpeed = 0.0f; // Will be set from DefaultScrollSpeed in BeginPlay
+	ScrollSpeed = 0.0f; // Will be set from data table or fallback in BeginPlay
 	DistanceTraveled = 0.0f;
 	ScrollDirection = FVector(-1.0f, 0.0f, 0.0f); // Backward (negative X)
 	bIsScrollEnabled = true;
@@ -28,20 +29,31 @@ void UWorldScrollComponent::BeginPlay()
 	// Auto-initialize with configuration
 	if (!bIsInitialized)
 	{
-		// Try to initialize from data table first, fall back to default speed
-		if (WorldScrollDataTable)
+		float ScrollSpeedToUse = FallbackScrollSpeed;
+
+		// Try to load from gameplay balance data table (PRIMARY SOURCE)
+		if (GameplayBalanceDataTable)
 		{
-			if (!Initialize(WorldScrollDataTable, DataTableRowName))
+			FGameplayBalanceData* BalanceData = GameplayBalanceDataTable->FindRow<FGameplayBalanceData>(BalanceDataRowName, TEXT("WorldScrollComponent"));
+			if (BalanceData)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("WorldScrollComponent: Data table initialization failed, using default speed."));
-				InitializeWithSpeed(DefaultScrollSpeed);
+				ScrollSpeedToUse = BalanceData->ScrollSpeed;
+				UE_LOG(LogTemp, Log, TEXT("WorldScrollComponent: Loaded scroll speed %.2f from gameplay balance data table '%s'"),
+					ScrollSpeedToUse, *BalanceDataRowName.ToString());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("WorldScrollComponent: Failed to load row '%s' from gameplay balance data table, using fallback speed %.2f"),
+					*BalanceDataRowName.ToString(), FallbackScrollSpeed);
 			}
 		}
 		else
 		{
-			// No data table, use default speed
-			InitializeWithSpeed(DefaultScrollSpeed);
+			UE_LOG(LogTemp, Warning, TEXT("WorldScrollComponent: No gameplay balance data table set, using fallback scroll speed %.2f"), FallbackScrollSpeed);
 		}
+
+		// Initialize with the determined speed
+		InitializeWithSpeed(ScrollSpeedToUse);
 	}
 }
 

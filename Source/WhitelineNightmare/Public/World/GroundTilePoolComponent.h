@@ -102,31 +102,59 @@ private:
 	 */
 	void SpawnTileAt(FVector SpawnPosition);
 
-	// Size of each tile
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ground Tile Pool", meta = (AllowPrivateAccess = "true"))
-	FVector2D TileSize;
+	// === CONFIGURATION (Set in Editor) ===
+
+	// Class of ground tile to spawn
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool|Config", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<AGroundTile> TileClass;
+
+	// Size of each tile (X = length, Y = width)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool|Config", meta = (AllowPrivateAccess = "true"))
+	FVector2D DefaultTileSize;
+
+	// Number of tiles to pre-allocate in the pool
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool|Config", meta = (AllowPrivateAccess = "true"))
+	int32 DefaultPoolSize;
 
 	// Distance ahead of war rig to spawn tiles
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool|Config", meta = (AllowPrivateAccess = "true"))
 	float SpawnDistanceAhead;
 
 	// Distance behind war rig to despawn tiles
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool|Config", meta = (AllowPrivateAccess = "true"))
 	float DespawnDistanceBehind;
 
-	// Reference to world scroll component
-	UPROPERTY()
+	// Reference to world scroll component (required)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool|Config", meta = (AllowPrivateAccess = "true"))
 	UWorldScrollComponent* WorldScrollComponent;
 
+	// Optional: Data table for world scroll configuration
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool|Config", meta = (AllowPrivateAccess = "true"))
+	UDataTable* WorldScrollDataTable;
+
+	// Optional: Row name in data table
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool|Config", meta = (AllowPrivateAccess = "true"))
+	FName DataTableRowName;
+
+	// Whether to auto-initialize on BeginPlay
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Pool|Config", meta = (AllowPrivateAccess = "true"))
+	bool bAutoInitialize;
+
+	// === RUNTIME STATE (Read-Only) ===
+
+	// Current tile size (runtime)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ground Tile Pool|Runtime", meta = (AllowPrivateAccess = "true"))
+	FVector2D TileSize;
+
 	// War rig location (reference point for spawning/despawning)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ground Tile Pool", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ground Tile Pool|Runtime", meta = (AllowPrivateAccess = "true"))
 	FVector WarRigLocation;
 
 	// Position of the furthest tile ahead (for tracking spawn position)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ground Tile Pool", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ground Tile Pool|Runtime", meta = (AllowPrivateAccess = "true"))
 	float FurthestTilePosition;
 
 	// Whether the tile pool has been initialized
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ground Tile Pool", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ground Tile Pool|Runtime", meta = (AllowPrivateAccess = "true"))
 	bool bIsTilePoolInitialized;
 };

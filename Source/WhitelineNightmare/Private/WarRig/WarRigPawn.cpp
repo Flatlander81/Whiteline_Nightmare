@@ -2,6 +2,7 @@
 
 #include "WarRig/WarRigPawn.h"
 #include "WarRig/LaneSystemComponent.h"
+#include "Core/GameDataStructs.h"
 #include "Components/StaticMeshComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -34,6 +35,8 @@ AWarRigPawn::AWarRigPawn()
 	// Default configuration
 	bIsDataLoaded = false;
 	DefaultRowName = "SemiTruck";
+	GameplayBalanceDataTable = nullptr;
+	BalanceDataRowName = "Default";
 
 	// Auto-possess by player 0
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
@@ -105,9 +108,28 @@ bool AWarRigPawn::LoadWarRigData(UDataTable* WarRigDataTable, FName RowName)
 	// Initialize lane system
 	if (LaneSystemComponent)
 	{
-		// Lane width from gameplay balance data (default: 400)
-		// TODO: Load from gameplay balance data table
-		float LaneWidth = 400.0f;
+		// Load lane width from gameplay balance data table
+		float LaneWidth = 400.0f; // Default fallback
+
+		if (GameplayBalanceDataTable)
+		{
+			FGameplayBalanceData* BalanceData = GameplayBalanceDataTable->FindRow<FGameplayBalanceData>(BalanceDataRowName, TEXT("WarRigPawn"));
+			if (BalanceData)
+			{
+				LaneWidth = BalanceData->LaneWidth;
+				UE_LOG(LogTemp, Log, TEXT("WarRigPawn: Loaded lane width %.2f from gameplay balance data"), LaneWidth);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("WarRigPawn: Failed to load balance data row '%s', using default lane width %.2f"),
+					*BalanceDataRowName.ToString(), LaneWidth);
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("WarRigPawn: No gameplay balance data table set, using default lane width %.2f"), LaneWidth);
+		}
+
 		LaneSystemComponent->Initialize(LaneWidth, 5);
 		LaneSystemComponent->SetLaneChangeSpeed(WarRigData.LaneChangeSpeed);
 	}

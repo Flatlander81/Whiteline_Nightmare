@@ -3,6 +3,8 @@
 #include "World/GroundTilePoolComponent.h"
 #include "World/GroundTile.h"
 #include "World/WorldScrollComponent.h"
+#include "Core/GameDataStructs.h"
+#include "Engine/DataTable.h"
 #include "DrawDebugHelpers.h"
 
 UGroundTilePoolComponent::UGroundTilePoolComponent()
@@ -10,19 +12,81 @@ UGroundTilePoolComponent::UGroundTilePoolComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 
-	// Default configuration
-	TileSize = FVector2D(2000.0f, 2000.0f);
+	// Editor-configurable defaults
+	TileClass = AGroundTile::StaticClass();
+	DefaultTileSize = FVector2D(2000.0f, 2000.0f);
+	DefaultPoolSize = 5;
 	SpawnDistanceAhead = 3000.0f;
 	DespawnDistanceBehind = 1000.0f;
+	WorldScrollComponent = nullptr;
+	WorldScrollDataTable = nullptr;
+	DataTableRowName = "Default";
+	bAutoInitialize = true;
+
+	// Runtime state
+	TileSize = FVector2D::ZeroVector;
 	WarRigLocation = FVector::ZeroVector;
 	FurthestTilePosition = 0.0f;
 	bIsTilePoolInitialized = false;
-	WorldScrollComponent = nullptr;
 }
 
 void UGroundTilePoolComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Auto-initialize if enabled
+	if (bAutoInitialize && !bIsTilePoolInitialized)
+	{
+		// Load configuration from data table if provided
+		FVector2D TileSizeToUse = DefaultTileSize;
+		int32 PoolSizeToUse = DefaultPoolSize;
+
+		if (WorldScrollDataTable)
+		{
+			FWorldScrollData* ScrollData = WorldScrollDataTable->FindRow<FWorldScrollData>(DataTableRowName, TEXT("GroundTilePoolComponent"));
+			if (ScrollData)
+			{
+				TileSizeToUse = FVector2D(ScrollData->TileSize, ScrollData->TileSize);
+				PoolSizeToUse = ScrollData->TilePoolSize;
+				SpawnDistanceAhead = ScrollData->TileSpawnDistance;
+				DespawnDistanceBehind = ScrollData->TileDespawnDistance;
+
+				UE_LOG(LogTemp, Log, TEXT("GroundTilePoolComponent: Loaded configuration from data table '%s'"), *DataTableRowName.ToString());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("GroundTilePoolComponent: Failed to load row '%s' from data table, using defaults"), *DataTableRowName.ToString());
+			}
+		}
+
+		// Validate WorldScrollComponent
+		if (!WorldScrollComponent)
+		{
+			UE_LOG(LogTemp, Error, TEXT("GroundTilePoolComponent: WorldScrollComponent is not set. Cannot auto-initialize."));
+			return;
+		}
+
+		// Initialize the pool
+		bool bSuccess = InitializeTilePool(
+			TileClass,
+			TileSizeToUse,
+			PoolSizeToUse,
+			SpawnDistanceAhead,
+			DespawnDistanceBehind,
+			WorldScrollComponent
+		);
+
+		if (bSuccess)
+		{
+			// Spawn initial tiles
+			SpawnInitialTiles();
+			UE_LOG(LogTemp, Log, TEXT("GroundTilePoolComponent: Auto-initialization complete"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("GroundTilePoolComponent: Auto-initialization failed"));
+		}
+	}
 }
 
 void UGroundTilePoolComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
