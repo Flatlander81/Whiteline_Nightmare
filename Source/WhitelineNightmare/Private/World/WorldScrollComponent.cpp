@@ -8,8 +8,13 @@ UWorldScrollComponent::UWorldScrollComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 
-	// Default configuration
-	ScrollSpeed = 1000.0f;
+	// Default configuration (editor-configurable)
+	DefaultScrollSpeed = 1000.0f;
+	WorldScrollDataTable = nullptr;
+	DataTableRowName = "Default";
+
+	// Runtime state
+	ScrollSpeed = 0.0f; // Will be set from DefaultScrollSpeed in BeginPlay
 	DistanceTraveled = 0.0f;
 	ScrollDirection = FVector(-1.0f, 0.0f, 0.0f); // Backward (negative X)
 	bIsScrollEnabled = true;
@@ -20,10 +25,23 @@ void UWorldScrollComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Auto-initialize with defaults if not already initialized
+	// Auto-initialize with configuration
 	if (!bIsInitialized)
 	{
-		InitializeWithSpeed(ScrollSpeed);
+		// Try to initialize from data table first, fall back to default speed
+		if (WorldScrollDataTable)
+		{
+			if (!Initialize(WorldScrollDataTable, DataTableRowName))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("WorldScrollComponent: Data table initialization failed, using default speed."));
+				InitializeWithSpeed(DefaultScrollSpeed);
+			}
+		}
+		else
+		{
+			// No data table, use default speed
+			InitializeWithSpeed(DefaultScrollSpeed);
+		}
 	}
 }
 

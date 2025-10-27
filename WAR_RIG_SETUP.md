@@ -141,10 +141,33 @@ In your level:
 
 ### 3. Setup World Scrolling
 
+**Option A: Simple Setup (Recommended for MVP)**
+
 Create a Blueprint actor or add to Game Mode:
 1. Add `UWorldScrollComponent`
-2. Configure:
-   - Initialize with `DT_WorldScrollData` or use `InitializeWithSpeed(1000.0)`
+2. In the **Details Panel**, under **World Scroll | Config**:
+   - **Default Scroll Speed**: `1000.0` (units per second)
+   - **Scroll Direction**: `(-1, 0, 0)` (already set by default)
+   - **Is Scroll Enabled**: ✓ (checked)
+
+That's it! The component will auto-initialize with these values on BeginPlay.
+
+**Option B: Data Table Configuration (Advanced)**
+
+If you want to use a data table for configuration:
+1. Add `UWorldScrollComponent`
+2. In the **Details Panel**, under **World Scroll | Config**:
+   - **World Scroll Data Table**: Select `DT_WorldScrollData`
+   - **Data Table Row Name**: "Default"
+   - **Default Scroll Speed**: `1000.0` (fallback if data table fails)
+
+The component will prioritize data table settings, falling back to Default Scroll Speed if the table is unavailable.
+
+**Runtime Properties** (visible during Play in Editor):
+- Under **World Scroll | Runtime**, you'll see:
+  - **Scroll Speed**: Current active scroll speed
+  - **Distance Traveled**: Total distance traveled (for win condition tracking)
+  - **Is Initialized**: Whether the component has been initialized
 
 ### 4. Setup Ground Tile Pool
 

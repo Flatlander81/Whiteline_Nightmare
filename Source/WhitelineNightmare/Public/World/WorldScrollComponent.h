@@ -122,23 +122,35 @@ private:
 	 */
 	void UpdateDistanceTraveled(float DeltaTime);
 
+	// Default scroll speed (units per second) - configurable in editor
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll|Config", meta = (AllowPrivateAccess = "true"))
+	float DefaultScrollSpeed;
+
+	// Optional: Data table for world scroll configuration
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll|Config", meta = (AllowPrivateAccess = "true"))
+	UDataTable* WorldScrollDataTable;
+
+	// Optional: Row name in data table
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll|Config", meta = (AllowPrivateAccess = "true"))
+	FName DataTableRowName;
+
 	// Current scroll speed in units per second
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Scroll", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Scroll|Runtime", meta = (AllowPrivateAccess = "true"))
 	float ScrollSpeed;
 
 	// Total distance traveled (virtual)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Scroll", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Scroll|Runtime", meta = (AllowPrivateAccess = "true"))
 	float DistanceTraveled;
 
 	// Direction of scroll (normalized, typically -X)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll|Config", meta = (AllowPrivateAccess = "true"))
 	FVector ScrollDirection;
 
 	// Whether scrolling is enabled
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll|Config", meta = (AllowPrivateAccess = "true"))
 	bool bIsScrollEnabled;
 
 	// Whether the component has been initialized
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Scroll", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Scroll|Runtime", meta = (AllowPrivateAccess = "true"))
 	bool bIsInitialized;
 };
