@@ -21,9 +21,6 @@ class WHITELINENIGHTMARE_API AWarRigPlayerController : public APlayerController
 public:
 	AWarRigPlayerController();
 
-	// Called every frame (for fallback input polling)
-	virtual void Tick(float DeltaTime) override;
-
 	// Called when the controller possesses a pawn
 	virtual void OnPossess(APawn* InPawn) override;
 
@@ -114,32 +111,22 @@ protected:
 	void SetupEnhancedInput();
 
 	/**
-	 * Handle move left input (Started event)
-	 */
-	void OnMoveLeft();
-
-	/**
-	 * Handle move left input (Triggered event) - diagnostic only
+	 * Handle move left input (Triggered event with edge detection)
 	 */
 	void OnMoveLeftTriggered();
 
 	/**
-	 * Handle move left input (Completed event) - diagnostic only
+	 * Handle move left input complete (resets edge detection flag)
 	 */
 	void OnMoveLeftCompleted();
 
 	/**
-	 * Handle move right input (Started event)
-	 */
-	void OnMoveRight();
-
-	/**
-	 * Handle move right input (Triggered event) - diagnostic only
+	 * Handle move right input (Triggered event with edge detection)
 	 */
 	void OnMoveRightTriggered();
 
 	/**
-	 * Handle move right input (Completed event) - diagnostic only
+	 * Handle move right input complete (resets edge detection flag)
 	 */
 	void OnMoveRightCompleted();
 

@@ -21,76 +21,8 @@ AWarRigPlayerController::AWarRigPlayerController()
 	, MoveLeftAction(nullptr)
 	, MoveRightAction(nullptr)
 {
-	// Enable ticking for fallback input AND Enhanced Input diagnostics
-	PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.bStartWithTickEnabled = true;
-}
-
-void AWarRigPlayerController::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	// FALLBACK INPUT - Active to ensure input works
-	// This also lets us compare when Tick fires vs when Enhanced Input fires
-	static bool bAKeyWasDown = false;
-	if (IsInputKeyDown(EKeys::A))
-	{
-		if (!bAKeyWasDown)
-		{
-			bAKeyWasDown = true;
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK TICK: A key pressed <<<"));
-			OnMoveLeft();
-		}
-	}
-	else
-	{
-		bAKeyWasDown = false;
-	}
-
-	static bool bDKeyWasDown = false;
-	if (IsInputKeyDown(EKeys::D))
-	{
-		if (!bDKeyWasDown)
-		{
-			bDKeyWasDown = true;
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK TICK: D key pressed <<<"));
-			OnMoveRight();
-		}
-	}
-	else
-	{
-		bDKeyWasDown = false;
-	}
-
-	static bool bLeftKeyWasDown = false;
-	if (IsInputKeyDown(EKeys::Left))
-	{
-		if (!bLeftKeyWasDown)
-		{
-			bLeftKeyWasDown = true;
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK TICK: Left key pressed <<<"));
-			OnMoveLeft();
-		}
-	}
-	else
-	{
-		bLeftKeyWasDown = false;
-	}
-
-	static bool bRightKeyWasDown = false;
-	if (IsInputKeyDown(EKeys::Right))
-	{
-		if (!bRightKeyWasDown)
-		{
-			bRightKeyWasDown = true;
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> FALLBACK TICK: Right key pressed <<<"));
-			OnMoveRight();
-		}
-	}
-	else
-	{
-		bRightKeyWasDown = false;
-	}
+	// Ticking not needed - using Enhanced Input exclusively
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 void AWarRigPlayerController::BeginPlay()
@@ -154,11 +86,10 @@ void AWarRigPlayerController::SetupInputComponent()
 	{
 		if (MoveLeftAction)
 		{
-			// Bind to multiple trigger events to diagnose which one fires
-			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Started, this, &AWarRigPlayerController::OnMoveLeft);
+			// Bind to Triggered (with edge detection) and Completed (to reset flag)
 			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Triggered, this, &AWarRigPlayerController::OnMoveLeftTriggered);
 			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Completed, this, &AWarRigPlayerController::OnMoveLeftCompleted);
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupInputComponent: Bound MoveLeft action to Started, Triggered, and Completed events"));
+			UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound MoveLeft action"));
 		}
 		else
 		{
@@ -167,18 +98,17 @@ void AWarRigPlayerController::SetupInputComponent()
 
 		if (MoveRightAction)
 		{
-			// Bind to multiple trigger events to diagnose which one fires
-			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Started, this, &AWarRigPlayerController::OnMoveRight);
+			// Bind to Triggered (with edge detection) and Completed (to reset flag)
 			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &AWarRigPlayerController::OnMoveRightTriggered);
 			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Completed, this, &AWarRigPlayerController::OnMoveRightCompleted);
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupInputComponent: Bound MoveRight action to Started, Triggered, and Completed events"));
+			UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Bound MoveRight action"));
 		}
 		else
 		{
 			UE_LOG(LogWarRigPlayerController, Error, TEXT("SetupInputComponent: MoveRightAction is null - Enhanced Input will not work!"));
 		}
 
-		UE_LOG(LogWarRigPlayerController, Warning, TEXT("SetupInputComponent: Enhanced Input bindings complete - press A or D and watch for callback logs"));
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Enhanced Input bindings complete"));
 	}
 	else
 	{
@@ -347,38 +277,12 @@ void AWarRigPlayerController::SetupEnhancedInput()
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupEnhancedInput: Added mapping context to Enhanced Input Subsystem with priority 0"));
 }
 
-void AWarRigPlayerController::OnMoveLeft()
-{
-	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft (Started) FIRED <<<"));
-
-	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
-	if (WarRig)
-	{
-		bool bSuccess = WarRig->RequestLaneChange(-1);
-		if (bSuccess)
-		{
-			UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveLeft: Lane change LEFT successful"));
-		}
-		else
-		{
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveLeft: Lane change LEFT failed (already at leftmost lane or transitioning)"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveLeft: No War Rig pawn possessed"));
-	}
-}
-
 void AWarRigPlayerController::OnMoveLeftTriggered()
 {
-	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft (Triggered) FIRED <<<"));
-
 	// Edge detection: only fire once per key press
 	if (!bMoveLeftWasTriggered)
 	{
 		bMoveLeftWasTriggered = true;
-		UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft (Triggered WITH EDGE DETECTION) - PERFORMING LANE CHANGE <<<"));
 
 		AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
 		if (WarRig)
@@ -390,7 +294,7 @@ void AWarRigPlayerController::OnMoveLeftTriggered()
 			}
 			else
 			{
-				UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveLeftTriggered: Lane change LEFT failed (already at leftmost lane or transitioning)"));
+				UE_LOG(LogWarRigPlayerController, Verbose, TEXT("OnMoveLeftTriggered: Lane change LEFT failed (already transitioning)"));
 			}
 		}
 		else
@@ -402,42 +306,16 @@ void AWarRigPlayerController::OnMoveLeftTriggered()
 
 void AWarRigPlayerController::OnMoveLeftCompleted()
 {
-	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveLeft (Completed) FIRED - RESETTING EDGE DETECTION FLAG <<<"));
+	// Reset edge detection flag on key release
 	bMoveLeftWasTriggered = false;
-}
-
-void AWarRigPlayerController::OnMoveRight()
-{
-	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight (Started) FIRED <<<"));
-
-	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
-	if (WarRig)
-	{
-		bool bSuccess = WarRig->RequestLaneChange(1);
-		if (bSuccess)
-		{
-			UE_LOG(LogWarRigPlayerController, Log, TEXT("OnMoveRight: Lane change RIGHT successful"));
-		}
-		else
-		{
-			UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveRight: Lane change RIGHT failed (already at rightmost lane or transitioning)"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveRight: No War Rig pawn possessed"));
-	}
 }
 
 void AWarRigPlayerController::OnMoveRightTriggered()
 {
-	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight (Triggered) FIRED <<<"));
-
 	// Edge detection: only fire once per key press
 	if (!bMoveRightWasTriggered)
 	{
 		bMoveRightWasTriggered = true;
-		UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight (Triggered WITH EDGE DETECTION) - PERFORMING LANE CHANGE <<<"));
 
 		AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetPawn());
 		if (WarRig)
@@ -449,7 +327,7 @@ void AWarRigPlayerController::OnMoveRightTriggered()
 			}
 			else
 			{
-				UE_LOG(LogWarRigPlayerController, Warning, TEXT("OnMoveRightTriggered: Lane change RIGHT failed (already at rightmost lane or transitioning)"));
+				UE_LOG(LogWarRigPlayerController, Verbose, TEXT("OnMoveRightTriggered: Lane change RIGHT failed (already transitioning)"));
 			}
 		}
 		else
@@ -461,7 +339,7 @@ void AWarRigPlayerController::OnMoveRightTriggered()
 
 void AWarRigPlayerController::OnMoveRightCompleted()
 {
-	UE_LOG(LogWarRigPlayerController, Warning, TEXT(">>> OnMoveRight (Completed) FIRED - RESETTING EDGE DETECTION FLAG <<<"));
+	// Reset edge detection flag on key release
 	bMoveRightWasTriggered = false;
 }
 
