@@ -130,7 +130,7 @@ void AGroundTile::DrawDebugInfo()
 	DrawDebugBox(World, TileCenter, BoxExtent, FColor::Green, false, 0.0f, 0, 3.0f);
 
 	// Draw a cross at the tile center for easy visibility
-	DrawDebugCrosshairs(World, TileCenter, FRotator::ZeroRotator, 200.0f, FColor::Yellow, false, 0.0f, 0, 2.0f);
+	DrawDebugCrosshairs(World, TileCenter, FRotator::ZeroRotator, 200.0f, FColor::Yellow, false, 0.0f, 0);
 
 	// Draw position text above the tile
 	DrawDebugString(World, TileCenter + FVector(0, 0, 150),
