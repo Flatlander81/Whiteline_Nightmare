@@ -66,6 +66,14 @@ public:
 	UFUNCTION(Exec, Category = "Debug|Ground Tiles")
 	void DebugShowTileInfo();
 
+	/** Set spawn distance at runtime */
+	UFUNCTION(Exec, Category = "Debug|Ground Tiles")
+	void DebugSetSpawnDistance(float NewDistance);
+
+	/** Set despawn distance at runtime */
+	UFUNCTION(Exec, Category = "Debug|Ground Tiles")
+	void DebugSetDespawnDistance(float NewDistance);
+
 protected:
 	// Data table reference for tile configuration
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Manager|Config")

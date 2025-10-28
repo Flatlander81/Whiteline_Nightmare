@@ -166,6 +166,18 @@ void UGroundTileManager::DebugShowTileInfo()
 	LogManagerState();
 }
 
+void UGroundTileManager::DebugSetSpawnDistance(float NewDistance)
+{
+	TileSpawnDistance = NewDistance;
+	UE_LOG(LogGroundTileManager, Log, TEXT("Set TileSpawnDistance to %.0f"), NewDistance);
+}
+
+void UGroundTileManager::DebugSetDespawnDistance(float NewDistance)
+{
+	TileDespawnDistance = NewDistance;
+	UE_LOG(LogGroundTileManager, Log, TEXT("Set TileDespawnDistance to %.0f"), NewDistance);
+}
+
 bool UGroundTileManager::LoadConfigFromDataTable()
 {
 	if (!TileDataTable)
