@@ -62,6 +62,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ground Tile")
 	void SetTileLength(float Length) { TileLength = Length; }
 
+	// Debug: Show tile bounds
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile|Debug")
+	bool bShowDebugBounds;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -72,10 +76,6 @@ protected:
 	// Length of the tile along the X axis (for spawning)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile|Config")
 	float TileLength;
-
-	// Debug: Show tile bounds
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile|Debug")
-	bool bShowDebugBounds;
 
 private:
 	/**

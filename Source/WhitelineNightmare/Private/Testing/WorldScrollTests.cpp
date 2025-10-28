@@ -8,43 +8,46 @@
 
 #if !UE_BUILD_SHIPPING
 
-// Helper function to get a valid world for testing
-static UWorld* GetTestWorld()
+namespace
 {
-	for (const FWorldContext& Context : GEngine->GetWorldContexts())
+	// Helper function to get a valid world for testing
+	UWorld* GetTestWorld()
 	{
-		if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+		for (const FWorldContext& Context : GEngine->GetWorldContexts())
 		{
-			return Context.World();
+			if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+			{
+				return Context.World();
+			}
 		}
-	}
-	return nullptr;
-}
-
-// Helper function to create a world scroll component for testing
-static UWorldScrollComponent* CreateTestWorldScrollComponent()
-{
-	UWorld* World = GetTestWorld();
-	if (!World)
-	{
 		return nullptr;
 	}
 
-	// Create a dummy actor to hold the component
-	AActor* DummyActor = World->SpawnActor<AActor>();
-	if (!DummyActor)
+	// Helper function to create a world scroll component for testing
+	UWorldScrollComponent* CreateTestWorldScrollComponent()
 	{
-		return nullptr;
-	}
+		UWorld* World = GetTestWorld();
+		if (!World)
+		{
+			return nullptr;
+		}
 
-	// Create and attach the world scroll component
-	UWorldScrollComponent* ScrollComponent = NewObject<UWorldScrollComponent>(DummyActor);
-	if (ScrollComponent)
-	{
-		ScrollComponent->RegisterComponent();
-	}
+		// Create a dummy actor to hold the component
+		AActor* DummyActor = World->SpawnActor<AActor>();
+		if (!DummyActor)
+		{
+			return nullptr;
+		}
 
-	return ScrollComponent;
+		// Create and attach the world scroll component
+		UWorldScrollComponent* ScrollComponent = NewObject<UWorldScrollComponent>(DummyActor);
+		if (ScrollComponent)
+		{
+			ScrollComponent->RegisterComponent();
+		}
+
+		return ScrollComponent;
+	}
 }
 
 /**
