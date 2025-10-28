@@ -527,6 +527,123 @@ bool ULaneSystemComponent::TestStationaryInOtherAxes()
 	TEST_SUCCESS("TestStationaryInOtherAxes");
 }
 
+void ULaneSystemComponent::TestLaneSystemAll()
+{
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("================================================================================"));
+	UE_LOG(LogTemp, Log, TEXT("                    LANE SYSTEM COMPREHENSIVE TEST SUITE"));
+	UE_LOG(LogTemp, Log, TEXT("================================================================================"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("Component: ULaneSystemComponent"));
+	UE_LOG(LogTemp, Log, TEXT("Owner: %s"), GetOwner() ? *GetOwner()->GetName() : TEXT("NONE"));
+	UE_LOG(LogTemp, Log, TEXT("Configuration:"));
+	UE_LOG(LogTemp, Log, TEXT("  - Num Lanes: %d"), NumLanes);
+	UE_LOG(LogTemp, Log, TEXT("  - Lane Spacing: %.2f units"), LaneSpacing);
+	UE_LOG(LogTemp, Log, TEXT("  - Center Lane Index: %d"), CenterLaneIndex);
+	UE_LOG(LogTemp, Log, TEXT("  - Lane Change Speed: %.2f units/sec"), LaneChangeSpeed);
+	UE_LOG(LogTemp, Log, TEXT("  - Current Lane: %d"), CurrentLaneIndex);
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Test tracking
+	struct FTestResult
+	{
+		FString TestName;
+		bool bPassed;
+		FString Duration;
+	};
+
+	TArray<FTestResult> TestResults;
+	int32 PassedCount = 0;
+	int32 FailedCount = 0;
+	double TotalStartTime = FPlatformTime::Seconds();
+
+	// Helper lambda to run a test and record results
+	auto RunTest = [&](const FString& TestName, TFunction<bool()> TestFunc)
+	{
+		double StartTime = FPlatformTime::Seconds();
+		bool bResult = TestFunc();
+		double EndTime = FPlatformTime::Seconds();
+		double Duration = (EndTime - StartTime) * 1000.0; // Convert to milliseconds
+
+		FTestResult Result;
+		Result.TestName = TestName;
+		Result.bPassed = bResult;
+		Result.Duration = FString::Printf(TEXT("%.2fms"), Duration);
+		TestResults.Add(Result);
+
+		if (bResult)
+		{
+			PassedCount++;
+		}
+		else
+		{
+			FailedCount++;
+		}
+
+		UE_LOG(LogTemp, Log, TEXT(""));
+	};
+
+	// Run all tests in sequence
+	UE_LOG(LogTemp, Log, TEXT("Running Test Suite..."));
+	UE_LOG(LogTemp, Log, TEXT("--------------------------------------------------------------------------------"));
+
+	RunTest(TEXT("TestLaneSystemBounds"), [this]() { return TestLaneSystemBounds(); });
+	RunTest(TEXT("TestLaneTransitionSpeed"), [this]() { return TestLaneTransitionSpeed(); });
+	RunTest(TEXT("TestLaneChangeValidation"), [this]() { return TestLaneChangeValidation(); });
+	RunTest(TEXT("TestCurrentLaneTracking"), [this]() { return TestCurrentLaneTracking(); });
+	RunTest(TEXT("TestStationaryInOtherAxes"), [this]() { return TestStationaryInOtherAxes(); });
+
+	double TotalEndTime = FPlatformTime::Seconds();
+	double TotalDuration = (TotalEndTime - TotalStartTime) * 1000.0; // Convert to milliseconds
+
+	// Print summary report
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("================================================================================"));
+	UE_LOG(LogTemp, Log, TEXT("                           TEST SUMMARY REPORT"));
+	UE_LOG(LogTemp, Log, TEXT("================================================================================"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Print individual test results
+	for (const FTestResult& Result : TestResults)
+	{
+		FString Status = Result.bPassed ? TEXT("[PASS]") : TEXT("[FAIL]");
+		FColor Color = Result.bPassed ? FColor::Green : FColor::Red;
+		UE_LOG(LogTemp, Log, TEXT("  %s  %-35s  %s"), *Status, *Result.TestName, *Result.Duration);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("--------------------------------------------------------------------------------"));
+	UE_LOG(LogTemp, Log, TEXT("Total Tests:    %d"), TestResults.Num());
+	UE_LOG(LogTemp, Log, TEXT("Passed:         %d"), PassedCount);
+	UE_LOG(LogTemp, Log, TEXT("Failed:         %d"), FailedCount);
+	UE_LOG(LogTemp, Log, TEXT("Success Rate:   %.1f%%"), TestResults.Num() > 0 ? (PassedCount * 100.0f / TestResults.Num()) : 0.0f);
+	UE_LOG(LogTemp, Log, TEXT("Total Duration: %.2fms"), TotalDuration);
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Print final verdict
+	if (FailedCount == 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("  *** ALL TESTS PASSED ***"));
+		UE_LOG(LogTemp, Log, TEXT("  Lane System is functioning correctly!"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("  *** %d TEST(S) FAILED ***"), FailedCount);
+		UE_LOG(LogTemp, Error, TEXT("  Please review the test output above for details."));
+	}
+
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("================================================================================"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Print usage instructions
+	UE_LOG(LogTemp, Log, TEXT("To test lane changes visually:"));
+	UE_LOG(LogTemp, Log, TEXT("  1. Run: DebugShowLanes (to enable visualization)"));
+	UE_LOG(LogTemp, Log, TEXT("  2. Call ChangeLaneLeft() or ChangeLaneRight() from Blueprint/C++"));
+	UE_LOG(LogTemp, Log, TEXT("  3. Observe smooth Y-axis interpolation between lanes"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+}
+
 #else
 
 // Stub implementations for shipping builds
@@ -535,5 +652,6 @@ bool ULaneSystemComponent::TestLaneTransitionSpeed() { return true; }
 bool ULaneSystemComponent::TestLaneChangeValidation() { return true; }
 bool ULaneSystemComponent::TestCurrentLaneTracking() { return true; }
 bool ULaneSystemComponent::TestStationaryInOtherAxes() { return true; }
+void ULaneSystemComponent::TestLaneSystemAll() {}
 
 #endif // !UE_BUILD_SHIPPING

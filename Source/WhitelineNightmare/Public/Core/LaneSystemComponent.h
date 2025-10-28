@@ -110,6 +110,10 @@ public:
 	UFUNCTION(Exec, Category = "Testing|Movement")
 	bool TestStationaryInOtherAxes();
 
+	/** Run all lane system tests in sequence with comprehensive summary */
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	void TestLaneSystemAll();
+
 	// === DEBUG FUNCTIONS ===
 
 	/** Toggle debug visualization of lanes */
