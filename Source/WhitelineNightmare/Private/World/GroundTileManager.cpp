@@ -22,8 +22,8 @@ UGroundTileManager::UGroundTileManager()
 	, TilePool(nullptr)
 	, TileSize(2000.0f)
 	, TilePoolSize(10)
-	, TileSpawnDistance(3000.0f)
-	, TileDespawnDistance(1000.0f)
+	, TileSpawnDistance(15000.0f)  // Spawn far ahead (off-screen)
+	, TileDespawnDistance(6000.0f)  // Despawn far behind (off-screen)
 	, bShowDebugVisualization(false)
 {
 	PrimaryComponentTick.bCanEverTick = true;

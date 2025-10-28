@@ -6,6 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "UObject/ConstructorHelpers.h"
 
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogGroundTile, Log, All);
@@ -25,6 +26,16 @@ AGroundTile::AGroundTile()
 	TileMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	TileMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 	TileMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+
+	// Use a simple cube mesh as default (can be overridden in Blueprint)
+	// In production, assign a proper road mesh asset in the Blueprint subclass
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube"));
+	if (CubeMesh.Succeeded())
+	{
+		TileMesh->SetStaticMesh(CubeMesh.Object);
+		// Scale to make a flat road segment: 2000 long x 2000 wide x 100 tall
+		TileMesh->SetRelativeScale3D(FVector(20.0f, 20.0f, 1.0f));
+	}
 }
 
 void AGroundTile::BeginPlay()
