@@ -389,11 +389,12 @@ Key methods:
 - `ValidateWarRigData()`: Validate configuration data
 
 Testing commands:
+- `TestWarRigAll()`: **Run all tests** - Comprehensive suite with formatted summary
 - `TestWarRigDataLoading()`: Test data table loading
 - `TestWarRigSpawn()`: Test mesh spawning
 - `TestMountPointSetup()`: Test mount point creation
 - `TestCameraSetup()`: Test camera configuration
-- `TestStationaryPosition()`: Verify rig stays at origin
+- `TestStationaryPosition()`: Verify rig stays at origin (X/Z only, Y varies for lanes)
 
 Debug commands:
 - `DebugShowWarRigBounds()`: Toggle bounds visualization

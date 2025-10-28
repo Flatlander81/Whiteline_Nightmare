@@ -592,3 +592,56 @@ void AWarRigPawn::TestStationaryPosition()
 
 	UE_LOG(LogTemp, Log, TEXT("============================================"));
 }
+
+void AWarRigPawn::TestWarRigAll()
+{
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("╔═══════════════════════════════════════════════════════════════╗"));
+	UE_LOG(LogTemp, Log, TEXT("║          WAR RIG COMPREHENSIVE TEST SUITE                     ║"));
+	UE_LOG(LogTemp, Log, TEXT("╚═══════════════════════════════════════════════════════════════╝"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("Running all war rig tests in sequence..."));
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Test 1: Data Loading
+	UE_LOG(LogTemp, Log, TEXT("► Test 1/5: Data Loading"));
+	TestWarRigDataLoading();
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Test 2: Mesh Spawning
+	UE_LOG(LogTemp, Log, TEXT("► Test 2/5: Mesh Spawning"));
+	TestWarRigSpawn();
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Test 3: Mount Point Setup
+	UE_LOG(LogTemp, Log, TEXT("► Test 3/5: Mount Point Setup"));
+	TestMountPointSetup();
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Test 4: Camera Setup
+	UE_LOG(LogTemp, Log, TEXT("► Test 4/5: Camera Setup"));
+	TestCameraSetup();
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Test 5: Stationary Position
+	UE_LOG(LogTemp, Log, TEXT("► Test 5/5: Stationary Position (Movement Model)"));
+	TestStationaryPosition();
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Summary
+	UE_LOG(LogTemp, Log, TEXT("╔═══════════════════════════════════════════════════════════════╗"));
+	UE_LOG(LogTemp, Log, TEXT("║                    TEST SUITE COMPLETE                        ║"));
+	UE_LOG(LogTemp, Log, TEXT("╚═══════════════════════════════════════════════════════════════╝"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("All 5 war rig tests have been executed."));
+	UE_LOG(LogTemp, Log, TEXT("Review the output above for SUCCESS/FAILED messages."));
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("Key Components Tested:"));
+	UE_LOG(LogTemp, Log, TEXT("  ✓ Data Table Loading (DT_WarRigData)"));
+	UE_LOG(LogTemp, Log, TEXT("  ✓ Dynamic Mesh Spawning (cab + trailers)"));
+	UE_LOG(LogTemp, Log, TEXT("  ✓ Mount Point Creation (10 points)"));
+	UE_LOG(LogTemp, Log, TEXT("  ✓ Camera Configuration (SpringArm + Camera)"));
+	UE_LOG(LogTemp, Log, TEXT("  ✓ Movement Model (X/Z locked, Y for lane changes)"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("═══════════════════════════════════════════════════════════════"));
+}

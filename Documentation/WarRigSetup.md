@@ -227,6 +227,14 @@ All mount points in the default configuration already have their appropriate tag
 
 Open the console (~ key) and run these commands:
 
+**⚡ RECOMMENDED: Run All Tests (Comprehensive)**:
+```
+TestWarRigAll
+```
+This runs all 5 tests in sequence with a nice formatted summary. Use this for quick verification.
+
+**Individual Tests** (if you need to debug specific components):
+
 **Data Loading Test**:
 ```
 TestWarRigDataLoading

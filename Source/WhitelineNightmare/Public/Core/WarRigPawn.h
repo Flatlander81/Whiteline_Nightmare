@@ -68,6 +68,10 @@ public:
 	UFUNCTION(Exec, Category = "Testing|Movement")
 	void TestStationaryPosition();
 
+	/** Run all war rig tests in sequence with comprehensive summary */
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	void TestWarRigAll();
+
 	// Debug commands
 	UFUNCTION(Exec, Category = "Debug|War Rig")
 	void DebugShowWarRigBounds();
