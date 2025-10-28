@@ -19,7 +19,7 @@ AWarRigPawn::AWarRigPawn()
 	WarRigRoot = CreateDefaultSubobject<USceneComponent>(TEXT("WarRigRoot"));
 	RootComponent = WarRigRoot;
 	WarRigRoot->SetWorldLocation(FVector::ZeroVector);
-	WarRigRoot->SetMobility(EComponentMobility::Static); // STATIONARY - never moves
+	WarRigRoot->SetMobility(EComponentMobility::Movable); // Movable to allow lane changes (lateral Y-axis movement)
 
 	// Create Ability System Component
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
@@ -76,13 +76,35 @@ void AWarRigPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// CRITICAL: Ensure war rig stays at origin (defensive programming)
+	// CRITICAL: Ensure war rig stays at origin in X and Z (defensive programming)
+	// Y-axis is allowed to change for lane changes
 	FVector CurrentLocation = GetActorLocation();
-	if (!CurrentLocation.IsNearlyZero(0.1f))
+	const float Tolerance = 0.1f;
+
+	bool bNeedsCorrection = false;
+	FVector CorrectedLocation = CurrentLocation;
+
+	// Check X-axis (forward/backward) - should always be 0
+	if (!FMath::IsNearlyZero(CurrentLocation.X, Tolerance))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AWarRigPawn::Tick - War rig drifted from origin! Resetting to (0,0,0). Was at: %s"),
-			*CurrentLocation.ToString());
-		SetActorLocation(FVector::ZeroVector);
+		UE_LOG(LogTemp, Warning, TEXT("AWarRigPawn::Tick - War rig drifted in X! Resetting X to 0. Was at: %.2f"), CurrentLocation.X);
+		CorrectedLocation.X = 0.0f;
+		bNeedsCorrection = true;
+	}
+
+	// Check Z-axis (vertical) - should always be 0
+	if (!FMath::IsNearlyZero(CurrentLocation.Z, Tolerance))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AWarRigPawn::Tick - War rig drifted in Z! Resetting Z to 0. Was at: %.2f"), CurrentLocation.Z);
+		CorrectedLocation.Z = 0.0f;
+		bNeedsCorrection = true;
+	}
+
+	// Y-axis (lateral/lane movement) is allowed - don't check it
+
+	if (bNeedsCorrection)
+	{
+		SetActorLocation(CorrectedLocation);
 	}
 
 	// Debug visualization
@@ -516,22 +538,56 @@ void AWarRigPawn::TestStationaryPosition()
 	UE_LOG(LogTemp, Log, TEXT("Root Component Location: %s"), *RootLocation.ToString());
 
 	const float Tolerance = 0.1f;
-	if (ActorLocation.IsNearlyZero(Tolerance))
+	bool bPassedTests = true;
+
+	// Check X-axis (forward/backward) - should always be 0
+	if (FMath::IsNearlyZero(ActorLocation.X, Tolerance))
 	{
-		UE_LOG(LogTemp, Log, TEXT("SUCCESS: War rig is at origin"));
+		UE_LOG(LogTemp, Log, TEXT("SUCCESS: War rig X position is at origin (%.2f)"), ActorLocation.X);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("FAILED: War rig is NOT at origin! Distance from origin: %.2f"), ActorLocation.Size());
+		UE_LOG(LogTemp, Error, TEXT("FAILED: War rig X position is NOT at origin! X = %.2f"), ActorLocation.X);
+		bPassedTests = false;
 	}
 
-	if (WarRigRoot && WarRigRoot->Mobility == EComponentMobility::Static)
+	// Y-axis (lateral/lane) - can be any value (lane changes)
+	UE_LOG(LogTemp, Log, TEXT("INFO: War rig Y position (lateral/lane): %.2f (allowed to vary)"), ActorLocation.Y);
+
+	// Check Z-axis (vertical) - should always be 0
+	if (FMath::IsNearlyZero(ActorLocation.Z, Tolerance))
 	{
-		UE_LOG(LogTemp, Log, TEXT("SUCCESS: Root component mobility is Static"));
+		UE_LOG(LogTemp, Log, TEXT("SUCCESS: War rig Z position is at origin (%.2f)"), ActorLocation.Z);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("WARNING: Root component mobility is not Static"));
+		UE_LOG(LogTemp, Error, TEXT("FAILED: War rig Z position is NOT at origin! Z = %.2f"), ActorLocation.Z);
+		bPassedTests = false;
+	}
+
+	// Check mobility - should be Movable to allow lane changes
+	if (WarRigRoot && WarRigRoot->Mobility == EComponentMobility::Movable)
+	{
+		UE_LOG(LogTemp, Log, TEXT("SUCCESS: Root component mobility is Movable (allows lane changes)"));
+	}
+	else if (WarRigRoot)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: Root component mobility is not Movable! Mobility: %d"), (int32)WarRigRoot->Mobility);
+		bPassedTests = false;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: WarRigRoot is null!"));
+		bPassedTests = false;
+	}
+
+	if (bPassedTests)
+	{
+		UE_LOG(LogTemp, Log, TEXT("OVERALL: All stationary position tests PASSED"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("OVERALL: Some stationary position tests FAILED"));
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("============================================"));

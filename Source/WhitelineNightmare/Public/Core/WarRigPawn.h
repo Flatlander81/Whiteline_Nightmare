@@ -18,10 +18,15 @@ class ULaneSystemComponent;
 class USceneComponent;
 
 /**
- * AWarRigPawn - The player's stationary war rig vehicle
+ * AWarRigPawn - The player's war rig vehicle
  *
- * CRITICAL DESIGN: The war rig is STATIONARY at world origin (0,0,0). It does NOT move.
- * The world scrolls past the war rig to create the illusion of movement.
+ * CRITICAL DESIGN: The war rig is STATIONARY in forward/backward movement.
+ * - X-axis (forward/backward): Always at 0 - does NOT move forward or backward
+ * - Y-axis (lateral): Moves between lanes for lane changes
+ * - Z-axis (vertical): Always at 0 - does NOT move up or down
+ *
+ * The world scrolls past the war rig to create the illusion of forward movement.
+ * Lane changes are the ONLY player-controlled movement (lateral Y-axis).
  *
  * Configuration is loaded from a data table (DT_WarRigData) which supports multiple rig types.
  * MVP uses only the "SemiTruck" configuration.
@@ -90,7 +95,7 @@ protected:
 protected:
 	// === COMPONENTS ===
 
-	/** Root component - always at world origin (0,0,0) */
+	/** Root component - always at X=0, Z=0 (Y varies for lane changes) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "War Rig")
 	TObjectPtr<USceneComponent> WarRigRoot;
 
