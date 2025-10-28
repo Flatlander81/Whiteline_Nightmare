@@ -113,7 +113,9 @@ struct FWarRigData : public FTableRowBase
 	int32 UnlockCost;
 
 	FWarRigData()
-		: MaxHull(100.0f)
+		: DisplayName(FText::FromString("Semi Truck"))
+		, Description(FText::FromString("A classic highway semi-truck configured for wasteland combat"))
+		, MaxHull(100.0f)
 		, LaneChangeFuelCost(0.0f)
 		, LaneChangeSpeed(500.0f)
 		, MaxFuel(100.0f)
@@ -124,6 +126,104 @@ struct FWarRigData : public FTableRowBase
 		, CameraPitch(-75.0f)
 		, UnlockCost(0)
 	{
+		// Default mesh sections for SemiTruck configuration (3 total: cab + 2 trailers)
+		// Note: These will be null soft object pointers by default
+		// Set actual mesh references in the data table in Unreal Editor
+		MeshSections.SetNum(3);
+
+		// Default mount points for SemiTruck configuration (10 total)
+		// 2 on cab + 4 on trailer 1 + 4 on trailer 2
+
+		// Mount Point 0: Cab - Left Side
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(0.0f, -100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {0, 1, 2, 6, 7}; // Forward, Forward-Right, Right, Left, Forward-Left
+			MountPoint.DisplayName = FText::FromString("Cab Left");
+			// Note: MountTags will need to be set in data table (requires gameplay tag setup)
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 1: Cab - Right Side
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(0.0f, 100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {0, 1, 2, 3, 4}; // Forward, Forward-Right, Right, Back-Right, Back
+			MountPoint.DisplayName = FText::FromString("Cab Right");
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 2: Trailer 1 - Front Left
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-200.0f, -100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {}; // All directions allowed
+			MountPoint.DisplayName = FText::FromString("Trailer 1 Front Left");
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 3: Trailer 1 - Front Right
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-200.0f, 100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {}; // All directions allowed
+			MountPoint.DisplayName = FText::FromString("Trailer 1 Front Right");
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 4: Trailer 1 - Rear Left
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-300.0f, -100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {2, 3, 4, 5, 6}; // Right, Back-Right, Back, Back-Left, Left
+			MountPoint.DisplayName = FText::FromString("Trailer 1 Rear Left");
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 5: Trailer 1 - Rear Right
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-300.0f, 100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {2, 3, 4, 5, 6}; // Right, Back-Right, Back, Back-Left, Left
+			MountPoint.DisplayName = FText::FromString("Trailer 1 Rear Right");
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 6: Trailer 2 - Front Left
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-400.0f, -100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {}; // All directions allowed
+			MountPoint.DisplayName = FText::FromString("Trailer 2 Front Left");
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 7: Trailer 2 - Front Right
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-400.0f, 100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {}; // All directions allowed
+			MountPoint.DisplayName = FText::FromString("Trailer 2 Front Right");
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 8: Trailer 2 - Rear Left
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-500.0f, -100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {3, 4, 5}; // Back-Right, Back, Back-Left
+			MountPoint.DisplayName = FText::FromString("Trailer 2 Rear Left");
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 9: Trailer 2 - Rear Right
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-500.0f, 100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {3, 4, 5}; // Back-Right, Back, Back-Left
+			MountPoint.DisplayName = FText::FromString("Trailer 2 Rear Right");
+			MountPoints.Add(MountPoint);
+		}
 	}
 };
 

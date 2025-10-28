@@ -24,19 +24,31 @@ The War Rig Pawn is the player's stationary vehicle that stays at the world orig
 
 ### Step 2: Configure the "SemiTruck" Row
 
-Open `DT_WarRigData` and add a new row with the following configuration:
+Open `DT_WarRigData` and add a new row:
+
+**⚡ QUICK SETUP**: Just create a row named `SemiTruck` and you're 90% done! The FWarRigData constructor automatically populates sensible defaults for everything. You only need to:
+1. Set the row name to `SemiTruck`
+2. Assign 3 mesh references (or use default cubes)
+3. Optionally adjust mount point tags in the data table
+
+Here's what gets configured automatically:
 
 #### Row Name
 - **Row Name**: `SemiTruck`
 
 #### War Rig Properties
 
-**Display Name**: `Semi Truck`
-**Description**: `A classic highway semi-truck configured for wasteland combat`
+**GOOD NEWS**: Most properties come with sensible defaults! When you create a new row, it will automatically have:
+- **Display Name**: `Semi Truck`
+- **Description**: `A classic highway semi-truck configured for wasteland combat`
+- **3 Mesh Section slots** (ready to assign meshes)
+- **10 Mount Points** (pre-configured with transforms and facing directions)
+- **Default stats** (MaxHull: 100, Lane Change Speed: 500, etc.)
+- **Default camera settings** (Distance: 2000, Pitch: -75)
 
 #### Mesh Sections
 
-For MVP, add 3 mesh sections (you can use Engine primitive cubes or custom meshes):
+The data table row comes with **3 mesh section slots pre-allocated**. You just need to assign the actual meshes:
 
 1. **Mesh Section 0** (Cab):
    - Use: `/Engine/BasicShapes/Cube` (or custom cab mesh)
@@ -50,33 +62,38 @@ For MVP, add 3 mesh sections (you can use Engine primitive cubes or custom meshe
    - Use: `/Engine/BasicShapes/Cube` (or custom trailer mesh)
    - Position: Handled automatically by code (-400, 0, 0)
 
-#### Stats
+#### Stats (Pre-configured)
 
-- **Max Hull**: `100.0`
-- **Lane Change Fuel Cost**: `0.0` (free for MVP)
-- **Lane Change Speed**: `500.0` (units per second)
-- **Max Fuel**: `100.0` (legacy)
-- **Max Armor**: `100.0` (legacy)
+These are automatically set to sensible defaults:
+- **Max Hull**: `100.0` ✓
+- **Lane Change Fuel Cost**: `0.0` (free for MVP) ✓
+- **Lane Change Speed**: `500.0` (units per second) ✓
+- **Max Fuel**: `100.0` (legacy) ✓
+- **Max Armor**: `100.0` (legacy) ✓
 
-#### Visual Properties
+#### Visual Properties (Pre-configured)
 
-- **Primary Color**: `Red (1.0, 0.0, 0.0, 1.0)`
-- **Secondary Color**: `Dark Gray (0.2, 0.2, 0.2, 1.0)`
-- **Primary Material**: Leave empty for MVP (uses default materials)
-- **Secondary Material**: Leave empty for MVP
+These have automatic defaults:
+- **Primary Color**: `Red (1.0, 0.0, 0.0, 1.0)` ✓
+- **Secondary Color**: `Gray (0.5, 0.5, 0.5, 1.0)` ✓
+- **Primary Material**: Empty (uses default materials) ✓
+- **Secondary Material**: Empty ✓
 
-#### Camera Settings
+#### Camera Settings (Pre-configured)
 
-- **Camera Distance**: `2000.0`
-- **Camera Pitch**: `-75.0` (negative = looking down)
+Automatically configured for top-down view:
+- **Camera Distance**: `2000.0` ✓
+- **Camera Pitch**: `-75.0` (negative = looking down) ✓
 
-#### Economy
+#### Economy (Pre-configured)
 
-- **Unlock Cost**: `0` (free for MVP)
+- **Unlock Cost**: `0` (free for MVP) ✓
 
 #### Mount Points
 
-Add 10 mount points with the following configurations:
+**GOOD NEWS**: Mount points are **automatically populated** with default values when you create a new data table row! The FWarRigData constructor pre-populates all 10 mount points with the configurations below.
+
+You can use them as-is or modify them in the data table editor if needed. Here are the default configurations:
 
 ##### Cab Mount Points (2 total)
 
@@ -174,18 +191,17 @@ Add 10 mount points with the following configurations:
 - **Display Name**: `Trailer 2 Rear Right`
 - **Mount Tags**: `Mount.Trailer`, `Mount.Rear`
 
-### Step 3: Set Up Gameplay Tags
+### Step 3: Set Up Gameplay Tags (Optional for MVP)
 
-Create the following gameplay tags in your project:
-- `Mount.Cab`
-- `Mount.Trailer`
-- `Mount.Rear`
+**Note**: Mount point tags are optional for MVP since the mount points are already configured with transforms and facing directions. Tags will be used later for filtering turret types (e.g., only heavy turrets on specific mounts).
 
+If you want to set up the tags now:
 1. Go to: Project Settings → Project → Gameplay Tags
 2. Add new tag sources or add directly:
    - `Mount.Cab`
    - `Mount.Trailer`
    - `Mount.Rear`
+3. In the data table, you can then assign these tags to the mount points' `MountTags` property
 
 ### Step 4: Configure the War Rig Pawn
 
