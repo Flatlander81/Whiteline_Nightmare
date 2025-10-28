@@ -22,8 +22,8 @@ UGroundTileManager::UGroundTileManager()
 	, TilePool(nullptr)
 	, TileSize(2000.0f)
 	, TilePoolSize(10)
-	, TileSpawnDistance(15000.0f)  // Spawn far ahead (off-screen)
-	, TileDespawnDistance(6000.0f)  // Despawn far behind (off-screen)
+	, TileSpawnDistance(50000.0f)  // Spawn very far ahead (well off-screen)
+	, TileDespawnDistance(15000.0f)  // Despawn very far behind (well off-screen)
 	, bShowDebugVisualization(false)
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -260,8 +260,13 @@ void UGroundTileManager::SpawnInitialTiles()
 	UE_LOG(LogGroundTileManager, Log, TEXT("Spawning %d initial tiles (VisibleDist=%.0f, TileSize=%.0f)"),
 		NumTilesToSpawn, VisibleDistance, TileSize);
 
-	// Spawn tiles from behind to ahead
-	const float StartX = WarRigX - TileDespawnDistance;
+	// Spawn tiles from well behind to ahead
+	// Add extra margin (10000 units) behind despawn distance to ensure road looks complete from any camera angle
+	const float ExtraBackMargin = 10000.0f;
+	const float StartX = WarRigX - TileDespawnDistance - ExtraBackMargin;
+
+	UE_LOG(LogGroundTileManager, Log, TEXT("Starting initial tiles at X=%.0f (WarRig=%.0f, ExtraMargin=%.0f)"),
+		StartX, WarRigX, ExtraBackMargin);
 
 	for (int32 i = 0; i < NumTilesToSpawn; ++i)
 	{

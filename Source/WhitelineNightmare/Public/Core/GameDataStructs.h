@@ -465,8 +465,8 @@ struct FWorldTileData : public FTableRowBase
 	FWorldTileData()
 		: TileSize(2000.0f)
 		, TilePoolSize(10)
-		, TileSpawnDistance(15000.0f)  // Spawn far ahead (off-screen) - assumes camera sees ~10000 units
-		, TileDespawnDistance(6000.0f)  // Despawn far behind (off-screen) - assumes camera 2000-3000 units behind player
+		, TileSpawnDistance(50000.0f)  // Spawn very far ahead (well off-screen)
+		, TileDespawnDistance(15000.0f)  // Despawn very far behind (well off-screen)
 		, EnemyPoolSize(50)
 		, ObstaclePoolSize(30)
 		, PickupPoolSize(20)
