@@ -30,7 +30,8 @@ void AWarRigHUD::BeginPlay()
 
 	UE_LOG(LogWarRigHUD, Log, TEXT("WarRigHUD: Initialized"));
 
-	// TODO: Create UI widgets programmatically using UMG
+	// Show debug lane UI by default
+	ShowDebugLaneUI();
 }
 
 void AWarRigHUD::DrawHUD()

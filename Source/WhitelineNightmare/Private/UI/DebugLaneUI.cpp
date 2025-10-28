@@ -3,6 +3,10 @@
 #include "UI/DebugLaneUI.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Core/WarRigPawn.h"
 #include "Core/LaneSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -21,25 +25,105 @@ void UDebugLaneUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// Bind button click events if buttons exist
+	// If widgets aren't bound from Blueprint, create them programmatically
+	if (!LeftButton || !RightButton || !LaneInfoText)
+	{
+		UE_LOG(LogTemp, Log, TEXT("DebugLaneUI: Widgets not bound from Blueprint, creating programmatically"));
+
+		// Get or create root canvas panel
+		UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(GetRootWidget());
+		if (!RootCanvas)
+		{
+			RootCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("RootCanvas"));
+			WidgetTree->RootWidget = RootCanvas;
+		}
+
+		// Create horizontal box for button layout
+		UHorizontalBox* ButtonContainer = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("ButtonContainer"));
+
+		// Create lane info text
+		if (!LaneInfoText)
+		{
+			LaneInfoText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("LaneInfoText"));
+			LaneInfoText->SetText(FText::FromString(TEXT("Lane: --")));
+
+			FSlateFontInfo FontInfo = LaneInfoText->GetFont();
+			FontInfo.Size = 24;
+			LaneInfoText->SetFont(FontInfo);
+			LaneInfoText->SetColorAndOpacity(FLinearColor::White);
+
+			UHorizontalBoxSlot* InfoSlot = ButtonContainer->AddChildToHorizontalBox(LaneInfoText);
+			InfoSlot->SetPadding(FMargin(10.0f, 5.0f));
+			InfoSlot->SetHorizontalAlignment(HAlign_Center);
+			InfoSlot->SetVerticalAlignment(VAlign_Center);
+		}
+
+		// Create left button
+		if (!LeftButton)
+		{
+			LeftButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("LeftButton"));
+
+			// Create text for button
+			UTextBlock* LeftButtonText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("LeftButtonText"));
+			LeftButtonText->SetText(FText::FromString(TEXT("<< Lane Left")));
+
+			FSlateFontInfo FontInfo = LeftButtonText->GetFont();
+			FontInfo.Size = 20;
+			LeftButtonText->SetFont(FontInfo);
+			LeftButtonText->SetJustification(ETextJustify::Center);
+
+			LeftButton->AddChild(LeftButtonText);
+
+			UHorizontalBoxSlot* LeftSlot = ButtonContainer->AddChildToHorizontalBox(LeftButton);
+			LeftSlot->SetPadding(FMargin(10.0f, 5.0f));
+			LeftSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+		}
+
+		// Create right button
+		if (!RightButton)
+		{
+			RightButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("RightButton"));
+
+			// Create text for button
+			UTextBlock* RightButtonText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("RightButtonText"));
+			RightButtonText->SetText(FText::FromString(TEXT("Lane Right >>")));
+
+			FSlateFontInfo FontInfo = RightButtonText->GetFont();
+			FontInfo.Size = 20;
+			RightButtonText->SetFont(FontInfo);
+			RightButtonText->SetJustification(ETextJustify::Center);
+
+			RightButton->AddChild(RightButtonText);
+
+			UHorizontalBoxSlot* RightSlot = ButtonContainer->AddChildToHorizontalBox(RightButton);
+			RightSlot->SetPadding(FMargin(10.0f, 5.0f));
+			RightSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+		}
+
+		// Add horizontal box to canvas panel at bottom center
+		UCanvasPanelSlot* CanvasSlot = RootCanvas->AddChildToCanvas(ButtonContainer);
+		if (CanvasSlot)
+		{
+			CanvasSlot->SetAnchors(FAnchors(0.5f, 1.0f, 0.5f, 1.0f)); // Bottom center
+			CanvasSlot->SetAlignment(FVector2D(0.5f, 1.0f)); // Align from center-bottom
+			CanvasSlot->SetPosition(FVector2D(0.0f, -50.0f)); // 50 pixels from bottom
+			CanvasSlot->SetAutoSize(true);
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("DebugLaneUI: Programmatic widgets created"));
+	}
+
+	// Bind button click events
 	if (LeftButton)
 	{
 		LeftButton->OnClicked.AddDynamic(this, &UDebugLaneUI::OnLaneLeftClicked);
 		UE_LOG(LogTemp, Log, TEXT("DebugLaneUI: Left button bound"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("DebugLaneUI: LeftButton not found - make sure widget is named 'LeftButton' in Blueprint"));
 	}
 
 	if (RightButton)
 	{
 		RightButton->OnClicked.AddDynamic(this, &UDebugLaneUI::OnLaneRightClicked);
 		UE_LOG(LogTemp, Log, TEXT("DebugLaneUI: Right button bound"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("DebugLaneUI: RightButton not found - make sure widget is named 'RightButton' in Blueprint"));
 	}
 
 	// Find the war rig pawn
