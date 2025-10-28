@@ -72,6 +72,26 @@ public:
 	UFUNCTION(Exec, Category = "Testing|Movement")
 	void TestWarRigAll();
 
+	// Lane System Testing Functions (wrappers for LaneSystemComponent)
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	void TestLaneSystemBounds();
+
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	void TestLaneTransitionSpeed();
+
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	void TestLaneChangeValidation();
+
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	void TestCurrentLaneTracking();
+
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	void TestStationaryInOtherAxes();
+
+	/** Run all lane system tests with comprehensive report */
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	void TestLaneSystemAll();
+
 	// Debug commands
 	UFUNCTION(Exec, Category = "Debug|War Rig")
 	void DebugShowWarRigBounds();
@@ -81,6 +101,10 @@ public:
 
 	UFUNCTION(Exec, Category = "Debug|War Rig")
 	void DebugReloadWarRigData();
+
+	/** Toggle lane debug visualization (wrapper for LaneSystemComponent) */
+	UFUNCTION(Exec, Category = "Debug|Lane System")
+	void DebugShowLanes();
 
 protected:
 	// Component creation and setup

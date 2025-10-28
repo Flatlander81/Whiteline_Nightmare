@@ -386,6 +386,17 @@ void AWarRigPawn::DebugReloadWarRigData()
 	LoadWarRigConfiguration(CurrentRigID);
 }
 
+void AWarRigPawn::DebugShowLanes()
+{
+	if (!LaneSystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugShowLanes - LaneSystemComponent is null!"));
+		return;
+	}
+
+	LaneSystemComponent->DebugShowLanes();
+}
+
 // ===== TESTING FUNCTIONS =====
 
 void AWarRigPawn::TestWarRigDataLoading()
@@ -644,4 +655,74 @@ void AWarRigPawn::TestWarRigAll()
 	UE_LOG(LogTemp, Log, TEXT("  ✓ Movement Model (X/Z locked, Y for lane changes)"));
 	UE_LOG(LogTemp, Log, TEXT(""));
 	UE_LOG(LogTemp, Log, TEXT("═══════════════════════════════════════════════════════════════"));
+}
+
+// === LANE SYSTEM TEST WRAPPERS ===
+// These functions forward test calls to the LaneSystemComponent
+// Exec functions must be on Pawn/PlayerController/GameMode to be accessible from console
+
+void AWarRigPawn::TestLaneSystemBounds()
+{
+	if (!LaneSystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestLaneSystemBounds - LaneSystemComponent is null!"));
+		return;
+	}
+
+	LaneSystemComponent->TestLaneSystemBounds();
+}
+
+void AWarRigPawn::TestLaneTransitionSpeed()
+{
+	if (!LaneSystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestLaneTransitionSpeed - LaneSystemComponent is null!"));
+		return;
+	}
+
+	LaneSystemComponent->TestLaneTransitionSpeed();
+}
+
+void AWarRigPawn::TestLaneChangeValidation()
+{
+	if (!LaneSystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestLaneChangeValidation - LaneSystemComponent is null!"));
+		return;
+	}
+
+	LaneSystemComponent->TestLaneChangeValidation();
+}
+
+void AWarRigPawn::TestCurrentLaneTracking()
+{
+	if (!LaneSystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestCurrentLaneTracking - LaneSystemComponent is null!"));
+		return;
+	}
+
+	LaneSystemComponent->TestCurrentLaneTracking();
+}
+
+void AWarRigPawn::TestStationaryInOtherAxes()
+{
+	if (!LaneSystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestStationaryInOtherAxes - LaneSystemComponent is null!"));
+		return;
+	}
+
+	LaneSystemComponent->TestStationaryInOtherAxes();
+}
+
+void AWarRigPawn::TestLaneSystemAll()
+{
+	if (!LaneSystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestLaneSystemAll - LaneSystemComponent is null!"));
+		return;
+	}
+
+	LaneSystemComponent->TestLaneSystemAll();
 }
