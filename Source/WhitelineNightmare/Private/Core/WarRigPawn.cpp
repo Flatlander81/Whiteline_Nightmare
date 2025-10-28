@@ -1,6 +1,7 @@
 // Copyright Flatlander81. All Rights Reserved.
 
 #include "Core/WarRigPawn.h"
+#include "Core/LaneSystemComponent.h"
 #include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -24,6 +25,9 @@ AWarRigPawn::AWarRigPawn()
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+	// Create Lane System Component
+	LaneSystemComponent = CreateDefaultSubobject<ULaneSystemComponent>(TEXT("LaneSystemComponent"));
 
 	// Create Spring Arm Component
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
