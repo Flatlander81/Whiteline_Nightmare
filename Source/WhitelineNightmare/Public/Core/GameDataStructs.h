@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
 #include "GameplayTagContainer.h"
+#include "Core/WhitelineNightmareGameplayTags.h"
 #include "GameDataStructs.generated.h"
 
 /**
@@ -140,7 +141,7 @@ struct FWarRigData : public FTableRowBase
 			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(0.0f, -100.0f, 50.0f), FVector::OneVector);
 			MountPoint.AllowedFacingDirections = {0, 1, 2, 6, 7}; // Forward, Forward-Right, Right, Left, Forward-Left
 			MountPoint.DisplayName = FText::FromString("Cab Left");
-			// Note: MountTags will need to be set in data table (requires gameplay tag setup)
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Cab);
 			MountPoints.Add(MountPoint);
 		}
 
@@ -150,6 +151,7 @@ struct FWarRigData : public FTableRowBase
 			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(0.0f, 100.0f, 50.0f), FVector::OneVector);
 			MountPoint.AllowedFacingDirections = {0, 1, 2, 3, 4}; // Forward, Forward-Right, Right, Back-Right, Back
 			MountPoint.DisplayName = FText::FromString("Cab Right");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Cab);
 			MountPoints.Add(MountPoint);
 		}
 
@@ -159,6 +161,7 @@ struct FWarRigData : public FTableRowBase
 			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-200.0f, -100.0f, 50.0f), FVector::OneVector);
 			MountPoint.AllowedFacingDirections = {}; // All directions allowed
 			MountPoint.DisplayName = FText::FromString("Trailer 1 Front Left");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
 			MountPoints.Add(MountPoint);
 		}
 
@@ -168,6 +171,7 @@ struct FWarRigData : public FTableRowBase
 			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-200.0f, 100.0f, 50.0f), FVector::OneVector);
 			MountPoint.AllowedFacingDirections = {}; // All directions allowed
 			MountPoint.DisplayName = FText::FromString("Trailer 1 Front Right");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
 			MountPoints.Add(MountPoint);
 		}
 
@@ -177,6 +181,7 @@ struct FWarRigData : public FTableRowBase
 			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-300.0f, -100.0f, 50.0f), FVector::OneVector);
 			MountPoint.AllowedFacingDirections = {2, 3, 4, 5, 6}; // Right, Back-Right, Back, Back-Left, Left
 			MountPoint.DisplayName = FText::FromString("Trailer 1 Rear Left");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
 			MountPoints.Add(MountPoint);
 		}
 
@@ -186,6 +191,7 @@ struct FWarRigData : public FTableRowBase
 			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-300.0f, 100.0f, 50.0f), FVector::OneVector);
 			MountPoint.AllowedFacingDirections = {2, 3, 4, 5, 6}; // Right, Back-Right, Back, Back-Left, Left
 			MountPoint.DisplayName = FText::FromString("Trailer 1 Rear Right");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
 			MountPoints.Add(MountPoint);
 		}
 
@@ -195,6 +201,8 @@ struct FWarRigData : public FTableRowBase
 			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-400.0f, -100.0f, 50.0f), FVector::OneVector);
 			MountPoint.AllowedFacingDirections = {}; // All directions allowed
 			MountPoint.DisplayName = FText::FromString("Trailer 2 Front Left");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Rear);
 			MountPoints.Add(MountPoint);
 		}
 
@@ -204,6 +212,8 @@ struct FWarRigData : public FTableRowBase
 			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-400.0f, 100.0f, 50.0f), FVector::OneVector);
 			MountPoint.AllowedFacingDirections = {}; // All directions allowed
 			MountPoint.DisplayName = FText::FromString("Trailer 2 Front Right");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Rear);
 			MountPoints.Add(MountPoint);
 		}
 
@@ -213,6 +223,8 @@ struct FWarRigData : public FTableRowBase
 			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-500.0f, -100.0f, 50.0f), FVector::OneVector);
 			MountPoint.AllowedFacingDirections = {3, 4, 5}; // Back-Right, Back, Back-Left
 			MountPoint.DisplayName = FText::FromString("Trailer 2 Rear Left");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Rear);
 			MountPoints.Add(MountPoint);
 		}
 
@@ -222,6 +234,8 @@ struct FWarRigData : public FTableRowBase
 			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-500.0f, 100.0f, 50.0f), FVector::OneVector);
 			MountPoint.AllowedFacingDirections = {3, 4, 5}; // Back-Right, Back, Back-Left
 			MountPoint.DisplayName = FText::FromString("Trailer 2 Rear Right");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Rear);
 			MountPoints.Add(MountPoint);
 		}
 	}

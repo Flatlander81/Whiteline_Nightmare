@@ -210,21 +210,61 @@ Turret mount point definition:
 - GameplayTasks
 
 ### Gameplay Tags
-Defined in `Config/DefaultGameplayTags.ini`:
+
+**Native Tags** - Automatically registered via C++ (no manual setup required!):
+
+Defined in `Source/WhitelineNightmare/Public/Core/WhitelineNightmareGameplayTags.h`:
+
+**Ability Tags**:
 - `Ability.LaneChange`: Lane change ability
 - `Ability.TurretFire`: Turret firing ability
 - `Ability.RaiderAttack`: Raider attack ability
 - `Ability.GameOver`: Game over state
+
+**State Tags**:
 - `State.Moving`: War rig moving state
 - `State.Dead`: Entity dead state
+- `State.LaneChanging`: Lane changing state
+
+**Damage Tags**:
 - `Damage.Direct`: Direct damage type
+- `Damage.Explosive`: Explosive damage type
+- `Damage.Collision`: Collision damage type
+
+**Effect Tags**:
 - `Effect.FuelDrain`: Fuel drain effect
 - `Effect.FuelRestore`: Fuel restore effect
+- `Effect.ArmorRestore`: Armor restore effect
+- `Effect.SpeedBoost`: Speed boost effect
+
+**Mount Point Tags** (auto-assigned to mount points):
+- `Mount.Cab`: Cab mount points
+- `Mount.Trailer`: Trailer mount points
+- `Mount.Rear`: Rear mount points
+- `Mount.Heavy`: Heavy turret support
+- `Mount.AntiAir`: Anti-air turret support
+
+**Enemy Tags**:
+- `Enemy.Ground`: Ground enemies
+- `Enemy.Air`: Air enemies
+- `Enemy.Boss`: Boss enemies
+
+**Pickup Tags**:
+- `Pickup.Fuel`: Fuel pickups
+- `Pickup.Scrap`: Scrap pickups
+- `Pickup.Armor`: Armor pickups
+
+**Turret Tags**:
+- `Turret.Ballistic`: Ballistic turrets
+- `Turret.Energy`: Energy turrets
+- `Turret.Explosive`: Explosive turrets
+- `Turret.Support`: Support turrets
 
 ### GAS Structure
 - **Attributes**: Define in `Public/GAS/Attributes/`
 - **Abilities**: Define in `Public/GAS/Abilities/`
 - **Effects**: Create as data assets in Content/Data/
+- **Tags**: Native tags in `WhitelineNightmareGameplayTags.h` (already set up)
 
 ## Automated Testing Framework
 

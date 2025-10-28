@@ -191,17 +191,19 @@ You can use them as-is or modify them in the data table editor if needed. Here a
 - **Display Name**: `Trailer 2 Rear Right`
 - **Mount Tags**: `Mount.Trailer`, `Mount.Rear`
 
-### Step 3: Set Up Gameplay Tags (Optional for MVP)
+### Step 3: Gameplay Tags (Automatic!)
 
-**Note**: Mount point tags are optional for MVP since the mount points are already configured with transforms and facing directions. Tags will be used later for filtering turret types (e.g., only heavy turrets on specific mounts).
+**GREAT NEWS**: Gameplay tags are now **automatically registered** via native C++ tags! No manual setup required!
 
-If you want to set up the tags now:
-1. Go to: Project Settings → Project → Gameplay Tags
-2. Add new tag sources or add directly:
-   - `Mount.Cab`
-   - `Mount.Trailer`
-   - `Mount.Rear`
-3. In the data table, you can then assign these tags to the mount points' `MountTags` property
+The following tags are automatically available:
+- ✅ `Mount.Cab` - Auto-assigned to cab mount points
+- ✅ `Mount.Trailer` - Auto-assigned to trailer mount points
+- ✅ `Mount.Rear` - Auto-assigned to rear trailer mount points
+- Plus 30+ other tags for abilities, states, damage types, effects, enemies, pickups, and turrets
+
+All mount points in the default configuration already have their appropriate tags assigned. You can view and modify them in the data table if needed.
+
+**Tags are defined in**: `Source/WhitelineNightmare/Public/Core/WhitelineNightmareGameplayTags.h`
 
 ### Step 4: Configure the War Rig Pawn
 
