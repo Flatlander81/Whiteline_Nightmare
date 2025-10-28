@@ -29,8 +29,13 @@ struct FMountPointData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mount Point")
 	FGameplayTagContainer MountTags;
 
+	// Display name for UI
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mount Point")
+	FText DisplayName;
+
 	FMountPointData()
 		: MountTransform(FTransform::Identity)
+		, DisplayName(FText::FromString("Mount Point"))
 	{
 	}
 };
@@ -51,29 +56,72 @@ struct FWarRigData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig")
 	FText Description;
 
-	// Reference to the skeletal mesh asset
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig")
-	TSoftObjectPtr<USkeletalMesh> RigMesh;
+	// Array of mesh sections (cab + trailers) - each mesh spawned as a separate component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Mesh")
+	TArray<TSoftObjectPtr<UStaticMesh>> MeshSections;
 
 	// Array of mount points for turrets
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Mount Points")
 	TArray<FMountPointData> MountPoints;
 
-	// Base maximum fuel capacity
+	// Base maximum hull/health
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Stats")
+	float MaxHull;
+
+	// Fuel cost to change lanes
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Stats")
+	float LaneChangeFuelCost;
+
+	// Speed of lane change movement (units per second)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Stats")
+	float LaneChangeSpeed;
+
+	// Base maximum fuel capacity (legacy - may be removed)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Stats")
 	float MaxFuel;
 
-	// Base maximum armor/health
+	// Base maximum armor/health (legacy - use MaxHull instead)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Stats")
 	float MaxArmor;
+
+	// Primary material for the rig
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Visual")
+	TSoftObjectPtr<UMaterialInterface> PrimaryMaterial;
+
+	// Secondary material for the rig
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Visual")
+	TSoftObjectPtr<UMaterialInterface> SecondaryMaterial;
+
+	// Primary color tint
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Visual")
+	FLinearColor PrimaryColor;
+
+	// Secondary color tint
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Visual")
+	FLinearColor SecondaryColor;
+
+	// Camera distance from war rig
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Camera")
+	float CameraDistance;
+
+	// Camera pitch angle (negative = looking down)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Camera")
+	float CameraPitch;
 
 	// Cost in scrap to unlock this rig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Economy")
 	int32 UnlockCost;
 
 	FWarRigData()
-		: MaxFuel(100.0f)
+		: MaxHull(100.0f)
+		, LaneChangeFuelCost(0.0f)
+		, LaneChangeSpeed(500.0f)
+		, MaxFuel(100.0f)
 		, MaxArmor(100.0f)
+		, PrimaryColor(FLinearColor::Red)
+		, SecondaryColor(FLinearColor::Gray)
+		, CameraDistance(2000.0f)
+		, CameraPitch(-75.0f)
 		, UnlockCost(0)
 	{
 	}

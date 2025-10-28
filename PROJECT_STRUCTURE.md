@@ -40,8 +40,10 @@ Source/WhitelineNightmare/
 │   │   ├── GameDataStructs.h      # Data table structures
 │   │   ├── WhitelineNightmareGameMode.h
 │   │   ├── WarRigPlayerController.h
-│   │   └── WarRigHUD.h
-│   ├── Vehicles/                  # War rig and components
+│   │   ├── WarRigHUD.h
+│   │   ├── WarRigPawn.h           # War rig pawn (stationary vehicle)
+│   │   └── ObjectPoolComponent.h  # Object pooling system
+│   ├── Vehicles/                  # War rig components
 │   ├── Turrets/                   # Turret base and types
 │   ├── Enemies/                   # Raider base and spawner
 │   ├── Obstacles/                 # Obstacle base and spawner
@@ -111,6 +113,8 @@ WhitelineNightmare/
 │   └── DefaultGameplayTags.ini
 ├── Content/                       # [See Content Organization above]
 ├── Documentation/                 # Additional documentation and design docs
+│   ├── README.md                  # Documentation overview
+│   └── WarRigSetup.md            # War rig setup guide
 ├── Plugins/                       # Project-specific plugins
 ├── Source/                        # [See Source Code Organization above]
 ├── .gitignore                     # Git ignore file
@@ -165,16 +169,21 @@ World scrolling and pooling settings:
 ### FWarRigData
 War rig configurations:
 - Display name and description
-- Skeletal mesh reference
+- **Mesh sections** (TArray<UStaticMesh*>) - cab + trailers
 - Mount points for turrets
-- Max fuel and armor
+- Base stats (MaxHull, LaneChangeFuelCost, LaneChangeSpeed)
+- Visual properties (materials, colors)
+- Camera settings (distance, pitch)
 - Unlock cost
+
+**CRITICAL**: Supports multiple rig types via data table rows. MVP uses "SemiTruck" configuration.
 
 ### FMountPointData
 Turret mount point definition:
 - Transform (position and rotation)
 - Allowed facing directions (0-7 compass)
 - Mount tags for restrictions
+- Display name for UI
 
 ## World Movement System
 
@@ -318,6 +327,40 @@ Key methods:
 - `UpdateScrapDisplay(int32)`: Update scrap UI
 - `UpdateDistanceDisplay(float, float)`: Update progress UI
 - `ShowGameOverScreen(bool)`: Show game over
+
+### AWarRigPawn
+The player's stationary war rig vehicle that stays at world origin (0,0,0).
+
+**CRITICAL DESIGN**: The war rig NEVER moves. The world scrolls past it.
+
+Key features:
+- **Data-driven configuration** from DT_WarRigData
+- **AbilitySystemComponent** for GAS integration
+- **Dynamic mesh spawning** (cab + trailers from data table)
+- **Mount point system** for turret attachment
+- **Camera setup** (SpringArm + Camera, top-down view)
+- **Lane system integration** (to be implemented)
+
+Key methods:
+- `LoadWarRigConfiguration(FName)`: Load rig from data table
+- `CreateMeshComponents()`: Spawn mesh sections
+- `CreateMountPoints()`: Spawn mount point components
+- `SetupCamera()`: Configure camera from data
+- `ValidateWarRigData()`: Validate configuration data
+
+Testing commands:
+- `TestWarRigDataLoading()`: Test data table loading
+- `TestWarRigSpawn()`: Test mesh spawning
+- `TestMountPointSetup()`: Test mount point creation
+- `TestCameraSetup()`: Test camera configuration
+- `TestStationaryPosition()`: Verify rig stays at origin
+
+Debug commands:
+- `DebugShowWarRigBounds()`: Toggle bounds visualization
+- `DebugShowMountPoints()`: Toggle mount point visualization
+- `DebugReloadWarRigData()`: Reload configuration
+
+See `Documentation/WarRigSetup.md` for detailed setup instructions.
 
 ## Development Workflow
 
