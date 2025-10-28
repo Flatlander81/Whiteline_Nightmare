@@ -3,6 +3,8 @@
 #include "Core/WhitelineNightmareGameMode.h"
 #include "Core/WarRigPlayerController.h"
 #include "Core/WarRigHUD.h"
+#include "Core/WorldScrollComponent.h"
+#include "World/GroundTileManager.h"
 #include "Kismet/GameplayStatics.h"
 
 #if !UE_BUILD_SHIPPING
@@ -10,13 +12,16 @@
 
 // Forward declaration of test registration functions
 void RegisterObjectPoolTests(class UTestManager* TestManager);
+void RegisterWorldScrollTests(class UTestManager* TestManager);
 #endif
 
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogWhitelineNightmare, Log, All);
 
 AWhitelineNightmareGameMode::AWhitelineNightmareGameMode()
-	: DistanceTraveled(0.0f)
+	: WorldScrollComponent(nullptr)
+	, GroundTileManager(nullptr)
+	, DistanceTraveled(0.0f)
 	, WinDistance(10000.0f)
 	, bIsGameOver(false)
 	, bPlayerWon(false)
@@ -28,6 +33,12 @@ AWhitelineNightmareGameMode::AWhitelineNightmareGameMode()
 	// Set default pawn and controller classes (will be set in Blueprints)
 	PlayerControllerClass = AWarRigPlayerController::StaticClass();
 	HUDClass = AWarRigHUD::StaticClass();
+
+	// Create world scroll component
+	WorldScrollComponent = CreateDefaultSubobject<UWorldScrollComponent>(TEXT("WorldScrollComponent"));
+
+	// Create ground tile manager
+	GroundTileManager = CreateDefaultSubobject<UGroundTileManager>(TEXT("GroundTileManager"));
 }
 
 void AWhitelineNightmareGameMode::BeginPlay()
@@ -45,7 +56,8 @@ void AWhitelineNightmareGameMode::BeginPlay()
 	if (TestManager)
 	{
 		RegisterObjectPoolTests(TestManager);
-		UE_LOG(LogWhitelineNightmare, Log, TEXT("WhitelineNightmareGameMode: Registered ObjectPool tests"));
+		RegisterWorldScrollTests(TestManager);
+		UE_LOG(LogWhitelineNightmare, Log, TEXT("WhitelineNightmareGameMode: Registered ObjectPool and WorldScroll tests"));
 	}
 #endif
 
@@ -155,4 +167,177 @@ void AWhitelineNightmareGameMode::LogGameState() const
 	UE_LOG(LogWhitelineNightmare, Log, TEXT("Game Over: %s"), bIsGameOver ? TEXT("Yes") : TEXT("No"));
 	UE_LOG(LogWhitelineNightmare, Log, TEXT("Player Won: %s"), bPlayerWon ? TEXT("Yes") : TEXT("No"));
 	UE_LOG(LogWhitelineNightmare, Log, TEXT("=================="));
+}
+
+// === DEBUG COMMANDS ===
+
+void AWhitelineNightmareGameMode::DebugSetScrollSpeed(float NewSpeed)
+{
+	if (!WorldScrollComponent)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugSetScrollSpeed: WorldScrollComponent is null"));
+		return;
+	}
+
+	WorldScrollComponent->SetScrollSpeed(NewSpeed);
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("DebugSetScrollSpeed: Set scroll speed to %.2f"), NewSpeed);
+}
+
+void AWhitelineNightmareGameMode::DebugToggleScroll()
+{
+	if (!WorldScrollComponent)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugToggleScroll: WorldScrollComponent is null"));
+		return;
+	}
+
+	const bool bNewState = !WorldScrollComponent->IsScrolling();
+	WorldScrollComponent->SetScrolling(bNewState);
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("DebugToggleScroll: Scrolling is now %s"),
+		bNewState ? TEXT("ENABLED") : TEXT("DISABLED"));
+}
+
+void AWhitelineNightmareGameMode::DebugShowScrollInfo()
+{
+	if (!WorldScrollComponent)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugShowScrollInfo: WorldScrollComponent is null"));
+		return;
+	}
+
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("=== World Scroll Info ==="));
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("Scroll Speed: %.2f units/second"), WorldScrollComponent->GetScrollSpeed());
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("Scroll Direction: %s"), *WorldScrollComponent->GetScrollDirection().ToString());
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("Scroll Velocity: %s"), *WorldScrollComponent->GetScrollVelocity().ToString());
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("Is Scrolling: %s"), WorldScrollComponent->IsScrolling() ? TEXT("Yes") : TEXT("No"));
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("Distance Traveled: %.2f units"), WorldScrollComponent->GetDistanceTraveled());
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("========================"));
+}
+
+void AWhitelineNightmareGameMode::DebugResetDistance()
+{
+	if (!WorldScrollComponent)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugResetDistance: WorldScrollComponent is null"));
+		return;
+	}
+
+	const float OldDistance = WorldScrollComponent->GetDistanceTraveled();
+	WorldScrollComponent->ResetDistance();
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("DebugResetDistance: Reset distance from %.2f to 0.0"), OldDistance);
+}
+
+void AWhitelineNightmareGameMode::DebugShowTiles()
+{
+	if (!GroundTileManager)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugShowTiles: GroundTileManager is null"));
+		return;
+	}
+
+	GroundTileManager->DebugShowTiles();
+}
+
+void AWhitelineNightmareGameMode::DebugShowTileInfo()
+{
+	if (!GroundTileManager)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugShowTileInfo: GroundTileManager is null"));
+		return;
+	}
+
+	GroundTileManager->DebugShowTileInfo();
+}
+
+void AWhitelineNightmareGameMode::RunTest(const FString& TestName)
+{
+#if !UE_BUILD_SHIPPING
+	UTestManager* TestManager = UTestManager::Get(this);
+	if (!TestManager)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("RunTest: TestManager is null"));
+		return;
+	}
+
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("RunTest: Running test '%s'"), *TestName);
+	bool bSuccess = TestManager->RunTest(TestName);
+
+	if (!bSuccess)
+	{
+		UE_LOG(LogWhitelineNightmare, Warning, TEXT("RunTest: Test '%s' not found or failed"), *TestName);
+	}
+#else
+	UE_LOG(LogWhitelineNightmare, Warning, TEXT("RunTest: Tests are only available in non-shipping builds"));
+#endif
+}
+
+void AWhitelineNightmareGameMode::RunTests(const FString& CategoryName)
+{
+#if !UE_BUILD_SHIPPING
+	UTestManager* TestManager = UTestManager::Get(this);
+	if (!TestManager)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("RunTests: TestManager is null"));
+		return;
+	}
+
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("RunTests: Running tests for category '%s'"), *CategoryName);
+
+	// Map category name to enum
+	ETestCategory Category = ETestCategory::All;
+	if (CategoryName.Equals(TEXT("Movement"), ESearchCase::IgnoreCase))
+	{
+		Category = ETestCategory::Movement;
+	}
+	else if (CategoryName.Equals(TEXT("Combat"), ESearchCase::IgnoreCase))
+	{
+		Category = ETestCategory::Combat;
+	}
+	else if (CategoryName.Equals(TEXT("Economy"), ESearchCase::IgnoreCase))
+	{
+		Category = ETestCategory::Economy;
+	}
+	else if (CategoryName.Equals(TEXT("Spawning"), ESearchCase::IgnoreCase))
+	{
+		Category = ETestCategory::Spawning;
+	}
+	else if (CategoryName.Equals(TEXT("ObjectPool"), ESearchCase::IgnoreCase))
+	{
+		Category = ETestCategory::ObjectPool;
+	}
+	else if (CategoryName.Equals(TEXT("GAS"), ESearchCase::IgnoreCase))
+	{
+		Category = ETestCategory::GAS;
+	}
+	else if (CategoryName.Equals(TEXT("All"), ESearchCase::IgnoreCase))
+	{
+		Category = ETestCategory::All;
+	}
+	else
+	{
+		UE_LOG(LogWhitelineNightmare, Warning, TEXT("RunTests: Unknown category '%s'. Valid categories: Movement, Combat, Economy, Spawning, ObjectPool, GAS, All"), *CategoryName);
+		return;
+	}
+
+	TestManager->RunTestCategory(Category);
+#else
+	UE_LOG(LogWhitelineNightmare, Warning, TEXT("RunTests: Tests are only available in non-shipping builds"));
+#endif
+}
+
+void AWhitelineNightmareGameMode::RunAllTests()
+{
+#if !UE_BUILD_SHIPPING
+	UTestManager* TestManager = UTestManager::Get(this);
+	if (!TestManager)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("RunAllTests: TestManager is null"));
+		return;
+	}
+
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("RunAllTests: Running all registered tests"));
+	TestManager->RunAllTests();
+#else
+	UE_LOG(LogWhitelineNightmare, Warning, TEXT("RunAllTests: Tests are only available in non-shipping builds"));
+#endif
 }

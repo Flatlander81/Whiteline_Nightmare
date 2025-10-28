@@ -69,6 +69,52 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Whiteline Nightmare|Game State")
 	bool IsGameOver() const { return bIsGameOver; }
 
+	// === DEBUG COMMANDS ===
+
+	/** Debug command: Set scroll speed */
+	UFUNCTION(Exec, Category = "Debug|World Scroll")
+	void DebugSetScrollSpeed(float NewSpeed);
+
+	/** Debug command: Toggle scrolling on/off */
+	UFUNCTION(Exec, Category = "Debug|World Scroll")
+	void DebugToggleScroll();
+
+	/** Debug command: Show scroll info in log */
+	UFUNCTION(Exec, Category = "Debug|World Scroll")
+	void DebugShowScrollInfo();
+
+	/** Debug command: Reset distance counter */
+	UFUNCTION(Exec, Category = "Debug|World Scroll")
+	void DebugResetDistance();
+
+	/** Debug command: Show tile debug visualization */
+	UFUNCTION(Exec, Category = "Debug|Ground Tiles")
+	void DebugShowTiles();
+
+	/** Debug command: Show tile manager info */
+	UFUNCTION(Exec, Category = "Debug|Ground Tiles")
+	void DebugShowTileInfo();
+
+	/** Debug command: Run a specific test by name */
+	UFUNCTION(Exec, Category = "Debug|Testing")
+	void RunTest(const FString& TestName);
+
+	/** Debug command: Run all tests in a category (Movement, Combat, Economy, etc.) */
+	UFUNCTION(Exec, Category = "Debug|Testing")
+	void RunTests(const FString& CategoryName);
+
+	/** Debug command: Run all registered tests */
+	UFUNCTION(Exec, Category = "Debug|Testing")
+	void RunAllTests();
+
+	// World scroll component (manages world scrolling)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
+	class UWorldScrollComponent* WorldScrollComponent;
+
+	// Ground tile manager (manages scrolling road tiles)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
+	class UGroundTileManager* GroundTileManager;
+
 protected:
 	// Current distance traveled
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Game Progress")

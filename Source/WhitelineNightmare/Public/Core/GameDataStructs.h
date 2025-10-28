@@ -427,10 +427,10 @@ struct FPickupData : public FTableRowBase
 };
 
 /**
- * World Scroll Data - Data table row for world scrolling and object pooling settings
+ * World Tile Data - Data table row for tile management and object pooling settings
  */
 USTRUCT(BlueprintType)
-struct FWorldScrollData : public FTableRowBase
+struct FWorldTileData : public FTableRowBase
 {
 	GENERATED_BODY()
 
@@ -462,14 +462,43 @@ struct FWorldScrollData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World|Object Pooling")
 	int32 PickupPoolSize;
 
-	FWorldScrollData()
+	FWorldTileData()
 		: TileSize(2000.0f)
 		, TilePoolSize(10)
-		, TileSpawnDistance(3000.0f)
-		, TileDespawnDistance(1000.0f)
+		, TileSpawnDistance(50000.0f)  // Spawn very far ahead (well off-screen)
+		, TileDespawnDistance(15000.0f)  // Despawn very far behind (well off-screen)
 		, EnemyPoolSize(50)
 		, ObstaclePoolSize(30)
 		, PickupPoolSize(20)
+	{
+	}
+};
+
+/**
+ * World Scroll Data - Data table row for world scrolling velocity configuration
+ * Controls the speed and direction of world scrolling to simulate forward movement
+ */
+USTRUCT(BlueprintType)
+struct FWorldScrollData : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	// Scroll speed in units per second (how fast the world moves backward)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll")
+	float ScrollSpeed;
+
+	// Whether scrolling is enabled (can pause world movement)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll")
+	bool bScrollEnabled;
+
+	// Direction of scroll (normalized) - default (-1, 0, 0) for backward along X axis
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Scroll")
+	FVector ScrollDirection;
+
+	FWorldScrollData()
+		: ScrollSpeed(1000.0f)
+		, bScrollEnabled(true)
+		, ScrollDirection(-1.0f, 0.0f, 0.0f)
 	{
 	}
 };
