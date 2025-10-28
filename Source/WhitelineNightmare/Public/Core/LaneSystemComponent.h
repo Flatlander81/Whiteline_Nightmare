@@ -6,15 +6,33 @@
 #include "Components/ActorComponent.h"
 #include "LaneSystemComponent.generated.h"
 
+// Forward declarations
+class UDataTable;
+struct FLaneSystemData;
+
 /**
- * ULaneSystemComponent - Handles lateral lane-based movement for the war rig
+ * Lane transition state
+ */
+UENUM(BlueprintType)
+enum class ELaneTransitionState : uint8
+{
+	Idle UMETA(DisplayName = "Idle"),
+	Transitioning UMETA(DisplayName = "Transitioning")
+};
+
+/**
+ * ULaneSystemComponent - Manages lane positions and transitions for the war rig
  *
  * The war rig is stationary in forward/backward movement but can move laterally
- * between discrete lanes. This component manages lane changes, lane positions,
- * and lane change costs/speeds.
+ * between discrete lanes (Y-axis only). This component manages:
+ * - 5 fixed lane positions (configurable via data table)
+ * - Lane positions are Y-axis offsets from center (0)
+ * - Default lane positions: -400, -200, 0, 200, 400 (units)
+ * - Current lane index (0-4, starts at 2 = center)
+ * - Smooth lane transitions using interpolation
+ * - Lane change validation (boundaries, already transitioning)
  *
- * NOTE: This is a stub implementation. Full functionality will be implemented
- * in a future task.
+ * Lane indexing: 0 = leftmost, 2 = center, 4 = rightmost
  */
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class WHITELINENIGHTMARE_API ULaneSystemComponent : public UActorComponent
@@ -30,50 +48,137 @@ protected:
 public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	// Lane management functions (to be implemented)
+	// === LANE CHANGE FUNCTIONS ===
 
-	/** Get the current lane index (0 = center) */
+	/**
+	 * Attempt to change lane by direction
+	 * @param Direction -1 for left, +1 for right
+	 * @return true if lane change initiated successfully
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Lane System")
-	int32 GetCurrentLane() const { return CurrentLane; }
+	bool ChangeLane(int32 Direction);
 
-	/** Attempt to change to a specific lane */
+	/** Attempt to move one lane to the left */
 	UFUNCTION(BlueprintCallable, Category = "Lane System")
-	bool ChangeLane(int32 TargetLane);
+	void ChangeLaneLeft();
 
-	/** Move one lane to the left */
+	/** Attempt to move one lane to the right */
 	UFUNCTION(BlueprintCallable, Category = "Lane System")
-	bool MoveLaneLeft();
+	void ChangeLaneRight();
 
-	/** Move one lane to the right */
-	UFUNCTION(BlueprintCallable, Category = "Lane System")
-	bool MoveLaneRight();
+	// === LANE QUERY FUNCTIONS ===
 
-	/** Check if currently changing lanes */
+	/** Check if can change lane to the left */
 	UFUNCTION(BlueprintCallable, Category = "Lane System")
-	bool IsChangingLanes() const { return bIsChangingLanes; }
+	bool CanChangeLaneLeft() const;
+
+	/** Check if can change lane to the right */
+	UFUNCTION(BlueprintCallable, Category = "Lane System")
+	bool CanChangeLaneRight() const;
+
+	/** Get the current lane index (0-4, 2 = center) */
+	UFUNCTION(BlueprintCallable, Category = "Lane System")
+	int32 GetCurrentLane() const { return CurrentLaneIndex; }
+
+	/** Get the Y offset for a specific lane index */
+	UFUNCTION(BlueprintCallable, Category = "Lane System")
+	float GetLaneYPosition(int32 LaneIndex) const;
+
+	/** Check if currently transitioning between lanes */
+	UFUNCTION(BlueprintCallable, Category = "Lane System")
+	bool IsTransitioning() const { return TransitionState == ELaneTransitionState::Transitioning; }
+
+	// === TESTING FUNCTIONS ===
+
+	/** Test that lane changes are blocked at boundaries */
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	bool TestLaneSystemBounds();
+
+	/** Test that lane transitions use correct speed */
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	bool TestLaneTransitionSpeed();
+
+	/** Test that invalid lane changes are rejected */
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	bool TestLaneChangeValidation();
+
+	/** Test that lane index updates correctly after transitions */
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	bool TestCurrentLaneTracking();
+
+	/** Test that only Y axis changes during lane transitions */
+	UFUNCTION(Exec, Category = "Testing|Movement")
+	bool TestStationaryInOtherAxes();
+
+	// === DEBUG FUNCTIONS ===
+
+	/** Toggle debug visualization of lanes */
+	UFUNCTION(Exec, Category = "Debug|Lane System")
+	void DebugShowLanes();
 
 protected:
-	/** Current lane index (0 = center, negative = left, positive = right) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lane System")
-	int32 CurrentLane;
+	// === INTERNAL FUNCTIONS ===
 
-	/** Target lane when changing lanes */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lane System")
-	int32 TargetLane;
+	/** Initialize lane configuration from data table */
+	void InitializeLaneConfiguration();
 
-	/** Whether currently changing lanes */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lane System")
-	bool bIsChangingLanes;
+	/** Validate lane index is within bounds */
+	bool IsValidLaneIndex(int32 LaneIndex) const;
 
-	/** Total number of lanes available (center + left/right) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System")
-	int32 TotalLanes;
+	/** Update war rig Y position during lane transition */
+	void UpdateLaneTransition(float DeltaTime);
 
-	/** Distance between lanes (units) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System")
-	float LaneWidth;
+	/** Draw debug visualization for lanes */
+	void DrawDebugLanes() const;
 
-	/** Speed of lane change movement (units per second) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System")
+protected:
+	// === LANE CONFIGURATION ===
+
+	/** Reference to lane system data table */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System|Configuration")
+	TObjectPtr<UDataTable> LaneSystemDataTable;
+
+	/** Number of lanes (default 5) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System|Configuration")
+	int32 NumLanes;
+
+	/** Distance between lanes (default 200) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System|Configuration")
+	float LaneSpacing;
+
+	/** Center lane index (default 2 for 5 lanes) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System|Configuration")
+	int32 CenterLaneIndex;
+
+	/** Precalculated Y positions for each lane */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lane System|Configuration")
+	TArray<float> LaneYPositions;
+
+	/** Speed of lane change movement (units per second) - loaded from war rig data */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System|Configuration")
 	float LaneChangeSpeed;
+
+	// === LANE STATE ===
+
+	/** Current lane index (0-4, starts at 2 = center) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lane System|State")
+	int32 CurrentLaneIndex;
+
+	/** Target lane index (for smooth transitions) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lane System|State")
+	int32 TargetLaneIndex;
+
+	/** Current lane transition state */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lane System|State")
+	ELaneTransitionState TransitionState;
+
+	/** Current Y position during transition */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lane System|State")
+	float CurrentYPosition;
+
+	// === DEBUG ===
+
+	/** Show lane debug visualization */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System|Debug")
+	bool bShowLaneDebug;
 };

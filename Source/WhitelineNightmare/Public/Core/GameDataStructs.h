@@ -473,3 +473,41 @@ struct FWorldScrollData : public FTableRowBase
 	{
 	}
 };
+
+/**
+ * Lane System Data - Configuration for lane-based movement system
+ *
+ * Defines the number of lanes and their Y-axis positions for lateral war rig movement.
+ * Can either specify lane count + spacing (automatic calculation) or provide explicit positions.
+ */
+USTRUCT(BlueprintType)
+struct FLaneSystemData : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	// Number of lanes (default 5)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System")
+	int32 NumLanes;
+
+	// Distance between lanes (units) - used to auto-calculate positions
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System")
+	float LaneSpacing;
+
+	// Index of center lane (default 2 for 5 lanes, 0-indexed)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System")
+	int32 CenterLaneIndex;
+
+	// Optional: Explicitly specify Y positions for each lane
+	// If empty, positions are auto-calculated from NumLanes and LaneSpacing
+	// Example for 5 lanes: [-400, -200, 0, 200, 400]
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lane System")
+	TArray<float> LaneYPositions;
+
+	FLaneSystemData()
+		: NumLanes(5)
+		, LaneSpacing(200.0f)
+		, CenterLaneIndex(2)
+	{
+		// Default positions will be auto-calculated if LaneYPositions is empty
+	}
+};
