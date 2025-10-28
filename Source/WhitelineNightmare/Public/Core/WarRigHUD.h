@@ -25,6 +25,9 @@ public:
 	// Called every frame to draw the HUD
 	virtual void DrawHUD() override;
 
+	// Handle hit box clicks (for debug lane UI buttons)
+	virtual void NotifyHitBoxClick(FName BoxName) override;
+
 	/**
 	 * Update fuel display
 	 * @param CurrentFuel - Current fuel amount
@@ -69,6 +72,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|HUD")
 	void HideGameOverScreen();
 
+	/**
+	 * Show debug lane UI (for testing lane system)
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|HUD|Debug")
+	void ShowDebugLaneUI();
+
+	/**
+	 * Hide debug lane UI
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|HUD|Debug")
+	void HideDebugLaneUI();
+
+	/**
+	 * Toggle debug lane UI visibility
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|HUD|Debug")
+	void ToggleDebugLaneUI();
+
 protected:
 	// Current fuel percentage (0-1)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|HUD|State")
@@ -94,6 +115,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|HUD|State")
 	bool bPlayerWonGame;
 
+	// Debug lane UI enabled
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|HUD|Debug")
+	bool bShowDebugLaneUI;
+
+	// Button hit boxes for lane controls
+	FBox2D LeftLaneButtonBox;
+	FBox2D RightLaneButtonBox;
+
 private:
 	/**
 	 * Validate percentage values
@@ -106,4 +135,9 @@ private:
 	 * Draw debug HUD (temporary until UI widgets are implemented)
 	 */
 	void DrawDebugHUD();
+
+	/**
+	 * Draw debug lane UI buttons
+	 */
+	void DrawDebugLaneUI();
 };
