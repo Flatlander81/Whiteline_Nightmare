@@ -69,6 +69,24 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Whiteline Nightmare|Game State")
 	bool IsGameOver() const { return bIsGameOver; }
 
+	// === DEBUG COMMANDS ===
+
+	/** Debug command: Set scroll speed */
+	UFUNCTION(Exec, Category = "Debug|World Scroll")
+	void DebugSetScrollSpeed(float NewSpeed);
+
+	/** Debug command: Toggle scrolling on/off */
+	UFUNCTION(Exec, Category = "Debug|World Scroll")
+	void DebugToggleScroll();
+
+	/** Debug command: Show scroll info in log */
+	UFUNCTION(Exec, Category = "Debug|World Scroll")
+	void DebugShowScrollInfo();
+
+	/** Debug command: Reset distance counter */
+	UFUNCTION(Exec, Category = "Debug|World Scroll")
+	void DebugResetDistance();
+
 protected:
 	// Current distance traveled
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Game Progress")
@@ -85,6 +103,10 @@ protected:
 	// Whether the player won
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Game State")
 	bool bPlayerWon;
+
+	// World scroll component (manages world scrolling)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
+	class UWorldScrollComponent* WorldScrollComponent;
 
 private:
 	/**

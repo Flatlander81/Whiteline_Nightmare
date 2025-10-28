@@ -3,6 +3,7 @@
 #include "Core/WhitelineNightmareGameMode.h"
 #include "Core/WarRigPlayerController.h"
 #include "Core/WarRigHUD.h"
+#include "Core/WorldScrollComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 #if !UE_BUILD_SHIPPING
@@ -10,6 +11,7 @@
 
 // Forward declaration of test registration functions
 void RegisterObjectPoolTests(class UTestManager* TestManager);
+void RegisterWorldScrollTests(class UTestManager* TestManager);
 #endif
 
 // Define logging category
@@ -20,6 +22,7 @@ AWhitelineNightmareGameMode::AWhitelineNightmareGameMode()
 	, WinDistance(10000.0f)
 	, bIsGameOver(false)
 	, bPlayerWon(false)
+	, WorldScrollComponent(nullptr)
 {
 	// Enable ticking
 	PrimaryActorTick.bCanEverTick = true;
@@ -28,6 +31,9 @@ AWhitelineNightmareGameMode::AWhitelineNightmareGameMode()
 	// Set default pawn and controller classes (will be set in Blueprints)
 	PlayerControllerClass = AWarRigPlayerController::StaticClass();
 	HUDClass = AWarRigHUD::StaticClass();
+
+	// Create world scroll component
+	WorldScrollComponent = CreateDefaultSubobject<UWorldScrollComponent>(TEXT("WorldScrollComponent"));
 }
 
 void AWhitelineNightmareGameMode::BeginPlay()
@@ -45,7 +51,8 @@ void AWhitelineNightmareGameMode::BeginPlay()
 	if (TestManager)
 	{
 		RegisterObjectPoolTests(TestManager);
-		UE_LOG(LogWhitelineNightmare, Log, TEXT("WhitelineNightmareGameMode: Registered ObjectPool tests"));
+		RegisterWorldScrollTests(TestManager);
+		UE_LOG(LogWhitelineNightmare, Log, TEXT("WhitelineNightmareGameMode: Registered ObjectPool and WorldScroll tests"));
 	}
 #endif
 
@@ -155,4 +162,62 @@ void AWhitelineNightmareGameMode::LogGameState() const
 	UE_LOG(LogWhitelineNightmare, Log, TEXT("Game Over: %s"), bIsGameOver ? TEXT("Yes") : TEXT("No"));
 	UE_LOG(LogWhitelineNightmare, Log, TEXT("Player Won: %s"), bPlayerWon ? TEXT("Yes") : TEXT("No"));
 	UE_LOG(LogWhitelineNightmare, Log, TEXT("=================="));
+}
+
+// === DEBUG COMMANDS ===
+
+void AWhitelineNightmareGameMode::DebugSetScrollSpeed(float NewSpeed)
+{
+	if (!WorldScrollComponent)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugSetScrollSpeed: WorldScrollComponent is null"));
+		return;
+	}
+
+	WorldScrollComponent->SetScrollSpeed(NewSpeed);
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("DebugSetScrollSpeed: Set scroll speed to %.2f"), NewSpeed);
+}
+
+void AWhitelineNightmareGameMode::DebugToggleScroll()
+{
+	if (!WorldScrollComponent)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugToggleScroll: WorldScrollComponent is null"));
+		return;
+	}
+
+	const bool bNewState = !WorldScrollComponent->IsScrolling();
+	WorldScrollComponent->SetScrolling(bNewState);
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("DebugToggleScroll: Scrolling is now %s"),
+		bNewState ? TEXT("ENABLED") : TEXT("DISABLED"));
+}
+
+void AWhitelineNightmareGameMode::DebugShowScrollInfo()
+{
+	if (!WorldScrollComponent)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugShowScrollInfo: WorldScrollComponent is null"));
+		return;
+	}
+
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("=== World Scroll Info ==="));
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("Scroll Speed: %.2f units/second"), WorldScrollComponent->GetScrollSpeed());
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("Scroll Direction: %s"), *WorldScrollComponent->GetScrollDirection().ToString());
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("Scroll Velocity: %s"), *WorldScrollComponent->GetScrollVelocity().ToString());
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("Is Scrolling: %s"), WorldScrollComponent->IsScrolling() ? TEXT("Yes") : TEXT("No"));
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("Distance Traveled: %.2f units"), WorldScrollComponent->GetDistanceTraveled());
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("========================"));
+}
+
+void AWhitelineNightmareGameMode::DebugResetDistance()
+{
+	if (!WorldScrollComponent)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugResetDistance: WorldScrollComponent is null"));
+		return;
+	}
+
+	const float OldDistance = WorldScrollComponent->GetDistanceTraveled();
+	WorldScrollComponent->ResetDistance();
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("DebugResetDistance: Reset distance from %.2f to 0.0"), OldDistance);
 }
