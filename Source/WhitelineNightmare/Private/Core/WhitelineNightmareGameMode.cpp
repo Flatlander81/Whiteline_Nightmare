@@ -19,12 +19,12 @@ void RegisterWorldScrollTests(class UTestManager* TestManager);
 DEFINE_LOG_CATEGORY_STATIC(LogWhitelineNightmare, Log, All);
 
 AWhitelineNightmareGameMode::AWhitelineNightmareGameMode()
-	: DistanceTraveled(0.0f)
+	: WorldScrollComponent(nullptr)
+	, GroundTileManager(nullptr)
+	, DistanceTraveled(0.0f)
 	, WinDistance(10000.0f)
 	, bIsGameOver(false)
 	, bPlayerWon(false)
-	, WorldScrollComponent(nullptr)
-	, GroundTileManager(nullptr)
 {
 	// Enable ticking
 	PrimaryActorTick.bCanEverTick = true;
