@@ -21,7 +21,19 @@ void AWarRigPlayerController::BeginPlay()
 	// Initialize resources
 	CurrentScrap = StartingScrap;
 
+	// Enable mouse cursor for UI interaction
+	bShowMouseCursor = true;
+	bEnableClickEvents = true;
+	bEnableMouseOverEvents = true;
+
+	// Set input mode to allow both game and UI input
+	FInputModeGameAndUI InputMode;
+	InputMode.SetHideCursorDuringCapture(false);
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	SetInputMode(InputMode);
+
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("WarRigPlayerController: Initialized with %d starting scrap"), StartingScrap);
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("WarRigPlayerController: Mouse cursor enabled for UI interaction"));
 	LogPlayerState();
 }
 
