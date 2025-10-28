@@ -11,8 +11,8 @@
 DEFINE_LOG_CATEGORY_STATIC(LogGroundTile, Log, All);
 
 AGroundTile::AGroundTile()
-	: TileLength(2000.0f)
-	, bShowDebugBounds(false)
+	: bShowDebugBounds(false)
+	, TileLength(2000.0f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 

@@ -230,7 +230,6 @@ bool UGroundTileManager::InitializeTilePool()
 	PoolConfig.PoolSize = TilePoolSize;
 	PoolConfig.bAutoExpand = true;
 	PoolConfig.MaxPoolSize = TilePoolSize * 2;
-	PoolConfig.bPreSpawn = true;
 
 	// Initialize pool
 	bool bSuccess = TilePool->Initialize(TileClass, PoolConfig);

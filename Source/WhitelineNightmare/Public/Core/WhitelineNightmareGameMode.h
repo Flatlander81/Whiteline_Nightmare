@@ -95,6 +95,14 @@ public:
 	UFUNCTION(Exec, Category = "Debug|Ground Tiles")
 	void DebugShowTileInfo();
 
+	// World scroll component (manages world scrolling)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
+	class UWorldScrollComponent* WorldScrollComponent;
+
+	// Ground tile manager (manages scrolling road tiles)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
+	class UGroundTileManager* GroundTileManager;
+
 protected:
 	// Current distance traveled
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Game Progress")
@@ -111,14 +119,6 @@ protected:
 	// Whether the player won
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Game State")
 	bool bPlayerWon;
-
-	// World scroll component (manages world scrolling)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
-	class UWorldScrollComponent* WorldScrollComponent;
-
-	// Ground tile manager (manages scrolling road tiles)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
-	class UGroundTileManager* GroundTileManager;
 
 private:
 	/**
