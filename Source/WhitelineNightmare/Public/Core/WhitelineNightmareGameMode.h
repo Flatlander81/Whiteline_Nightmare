@@ -87,6 +87,14 @@ public:
 	UFUNCTION(Exec, Category = "Debug|World Scroll")
 	void DebugResetDistance();
 
+	/** Debug command: Show tile debug visualization */
+	UFUNCTION(Exec, Category = "Debug|Ground Tiles")
+	void DebugShowTiles();
+
+	/** Debug command: Show tile manager info */
+	UFUNCTION(Exec, Category = "Debug|Ground Tiles")
+	void DebugShowTileInfo();
+
 protected:
 	// Current distance traveled
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Game Progress")
@@ -107,6 +115,10 @@ protected:
 	// World scroll component (manages world scrolling)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
 	class UWorldScrollComponent* WorldScrollComponent;
+
+	// Ground tile manager (manages scrolling road tiles)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
+	class UGroundTileManager* GroundTileManager;
 
 private:
 	/**

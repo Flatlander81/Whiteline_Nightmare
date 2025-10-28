@@ -4,6 +4,7 @@
 #include "Core/WarRigPlayerController.h"
 #include "Core/WarRigHUD.h"
 #include "Core/WorldScrollComponent.h"
+#include "World/GroundTileManager.h"
 #include "Kismet/GameplayStatics.h"
 
 #if !UE_BUILD_SHIPPING
@@ -23,6 +24,7 @@ AWhitelineNightmareGameMode::AWhitelineNightmareGameMode()
 	, bIsGameOver(false)
 	, bPlayerWon(false)
 	, WorldScrollComponent(nullptr)
+	, GroundTileManager(nullptr)
 {
 	// Enable ticking
 	PrimaryActorTick.bCanEverTick = true;
@@ -34,6 +36,9 @@ AWhitelineNightmareGameMode::AWhitelineNightmareGameMode()
 
 	// Create world scroll component
 	WorldScrollComponent = CreateDefaultSubobject<UWorldScrollComponent>(TEXT("WorldScrollComponent"));
+
+	// Create ground tile manager
+	GroundTileManager = CreateDefaultSubobject<UGroundTileManager>(TEXT("GroundTileManager"));
 }
 
 void AWhitelineNightmareGameMode::BeginPlay()
@@ -220,4 +225,26 @@ void AWhitelineNightmareGameMode::DebugResetDistance()
 	const float OldDistance = WorldScrollComponent->GetDistanceTraveled();
 	WorldScrollComponent->ResetDistance();
 	UE_LOG(LogWhitelineNightmare, Log, TEXT("DebugResetDistance: Reset distance from %.2f to 0.0"), OldDistance);
+}
+
+void AWhitelineNightmareGameMode::DebugShowTiles()
+{
+	if (!GroundTileManager)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugShowTiles: GroundTileManager is null"));
+		return;
+	}
+
+	GroundTileManager->DebugShowTiles();
+}
+
+void AWhitelineNightmareGameMode::DebugShowTileInfo()
+{
+	if (!GroundTileManager)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugShowTileInfo: GroundTileManager is null"));
+		return;
+	}
+
+	GroundTileManager->DebugShowTileInfo();
 }

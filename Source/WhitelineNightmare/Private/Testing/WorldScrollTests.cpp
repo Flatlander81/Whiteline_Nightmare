@@ -339,6 +339,104 @@ static bool WorldScrollTest_DistanceReset()
 }
 
 /**
+ * Test: Run All World Scroll Tests
+ * Comprehensive test that runs all world scroll tests and provides a detailed summary
+ */
+static bool WorldScrollTest_TestAll()
+{
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("========================================"));
+	UE_LOG(LogTemp, Log, TEXT("  WORLD SCROLL SYSTEM - ALL TESTS"));
+	UE_LOG(LogTemp, Log, TEXT("========================================"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	int32 PassedTests = 0;
+	int32 TotalTests = 0;
+
+	// Define test structure
+	struct FTestInfo
+	{
+		FString Name;
+		bool (*Function)();
+		bool bPassed;
+	};
+
+	TArray<FTestInfo> Tests = {
+		{ TEXT("Scroll Speed Consistency"), &WorldScrollTest_ScrollSpeedConsistency, false },
+		{ TEXT("Distance Accumulation"), &WorldScrollTest_DistanceAccumulation, false },
+		{ TEXT("Scroll Pause/Resume"), &WorldScrollTest_ScrollPause, false },
+		{ TEXT("Scroll Velocity Calculation"), &WorldScrollTest_ScrollVelocity, false },
+		{ TEXT("Runtime Speed Changes"), &WorldScrollTest_ScrollSpeedChange, false },
+		{ TEXT("Direction Normalization"), &WorldScrollTest_DirectionNormalization, false },
+		{ TEXT("Distance Counter Reset"), &WorldScrollTest_DistanceReset, false }
+	};
+
+	TotalTests = Tests.Num();
+
+	// Run each test
+	for (int32 i = 0; i < Tests.Num(); ++i)
+	{
+		FTestInfo& Test = Tests[i];
+
+		UE_LOG(LogTemp, Log, TEXT("  [%d/%d] Running: %s..."), i + 1, TotalTests, *Test.Name);
+
+		// Run the test
+		Test.bPassed = Test.Function();
+
+		if (Test.bPassed)
+		{
+			PassedTests++;
+			UE_LOG(LogTemp, Log, TEXT("        [PASS] %s"), *Test.Name);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("        [FAIL] %s"), *Test.Name);
+		}
+
+		UE_LOG(LogTemp, Log, TEXT(""));
+	}
+
+	// Print summary
+	UE_LOG(LogTemp, Log, TEXT("========================================"));
+	UE_LOG(LogTemp, Log, TEXT("  TEST SUMMARY"));
+	UE_LOG(LogTemp, Log, TEXT("========================================"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Individual test results
+	for (const FTestInfo& Test : Tests)
+	{
+		FString Status = Test.bPassed ? TEXT("[PASS]") : TEXT("[FAIL]");
+		FColor Color = Test.bPassed ? FColor::Green : FColor::Red;
+
+		UE_LOG(LogTemp, Log, TEXT("  %s %s"), *Status, *Test.Name);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("  Total Tests: %d"), TotalTests);
+	UE_LOG(LogTemp, Log, TEXT("  Passed: %d"), PassedTests);
+	UE_LOG(LogTemp, Log, TEXT("  Failed: %d"), TotalTests - PassedTests);
+
+	const float PassPercentage = (float)PassedTests / (float)TotalTests * 100.0f;
+	UE_LOG(LogTemp, Log, TEXT("  Pass Rate: %.1f%%"), PassPercentage);
+
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("========================================"));
+
+	if (PassedTests == TotalTests)
+	{
+		UE_LOG(LogTemp, Log, TEXT("  ALL TESTS PASSED!"));
+		UE_LOG(LogTemp, Log, TEXT("========================================"));
+		return true;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("  SOME TESTS FAILED!"));
+		UE_LOG(LogTemp, Log, TEXT("========================================"));
+		return false;
+	}
+}
+
+/**
  * Register all world scroll tests with the test manager
  * This function should be called from WhitelineNightmareGameMode::BeginPlay()
  */
@@ -356,6 +454,9 @@ void RegisterWorldScrollTests(UTestManager* TestManager)
 	TestManager->RegisterTest(TEXT("WorldScroll_ScrollSpeedChange"), ETestCategory::Movement, &WorldScrollTest_ScrollSpeedChange);
 	TestManager->RegisterTest(TEXT("WorldScroll_DirectionNormalization"), ETestCategory::Movement, &WorldScrollTest_DirectionNormalization);
 	TestManager->RegisterTest(TEXT("WorldScroll_DistanceReset"), ETestCategory::Movement, &WorldScrollTest_DistanceReset);
+
+	// Register comprehensive test-all function
+	TestManager->RegisterTest(TEXT("WorldScroll_TestAll"), ETestCategory::Movement, &WorldScrollTest_TestAll);
 }
 
 #endif // !UE_BUILD_SHIPPING
