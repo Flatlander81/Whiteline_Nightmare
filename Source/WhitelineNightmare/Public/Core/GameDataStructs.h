@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
 #include "GameplayTagContainer.h"
+#include "Core/WhitelineNightmareGameplayTags.h"
 #include "GameDataStructs.generated.h"
 
 /**
@@ -29,8 +30,13 @@ struct FMountPointData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mount Point")
 	FGameplayTagContainer MountTags;
 
+	// Display name for UI
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mount Point")
+	FText DisplayName;
+
 	FMountPointData()
 		: MountTransform(FTransform::Identity)
+		, DisplayName(FText::FromString("Mount Point"))
 	{
 	}
 };
@@ -51,31 +57,187 @@ struct FWarRigData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig")
 	FText Description;
 
-	// Reference to the skeletal mesh asset
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig")
-	TSoftObjectPtr<USkeletalMesh> RigMesh;
+	// Array of mesh sections (cab + trailers) - each mesh spawned as a separate component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Mesh")
+	TArray<TSoftObjectPtr<UStaticMesh>> MeshSections;
 
 	// Array of mount points for turrets
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Mount Points")
 	TArray<FMountPointData> MountPoints;
 
-	// Base maximum fuel capacity
+	// Base maximum hull/health
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Stats")
+	float MaxHull;
+
+	// Fuel cost to change lanes
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Stats")
+	float LaneChangeFuelCost;
+
+	// Speed of lane change movement (units per second)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Stats")
+	float LaneChangeSpeed;
+
+	// Base maximum fuel capacity (legacy - may be removed)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Stats")
 	float MaxFuel;
 
-	// Base maximum armor/health
+	// Base maximum armor/health (legacy - use MaxHull instead)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Stats")
 	float MaxArmor;
+
+	// Primary material for the rig
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Visual")
+	TSoftObjectPtr<UMaterialInterface> PrimaryMaterial;
+
+	// Secondary material for the rig
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Visual")
+	TSoftObjectPtr<UMaterialInterface> SecondaryMaterial;
+
+	// Primary color tint
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Visual")
+	FLinearColor PrimaryColor;
+
+	// Secondary color tint
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Visual")
+	FLinearColor SecondaryColor;
+
+	// Camera distance from war rig
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Camera")
+	float CameraDistance;
+
+	// Camera pitch angle (negative = looking down)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Camera")
+	float CameraPitch;
 
 	// Cost in scrap to unlock this rig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Economy")
 	int32 UnlockCost;
 
 	FWarRigData()
-		: MaxFuel(100.0f)
+		: DisplayName(FText::FromString("Semi Truck"))
+		, Description(FText::FromString("A classic highway semi-truck configured for wasteland combat"))
+		, MaxHull(100.0f)
+		, LaneChangeFuelCost(0.0f)
+		, LaneChangeSpeed(500.0f)
+		, MaxFuel(100.0f)
 		, MaxArmor(100.0f)
+		, PrimaryColor(FLinearColor::Red)
+		, SecondaryColor(FLinearColor::Gray)
+		, CameraDistance(2000.0f)
+		, CameraPitch(-75.0f)
 		, UnlockCost(0)
 	{
+		// Default mesh sections for SemiTruck configuration (3 total: cab + 2 trailers)
+		// Note: These will be null soft object pointers by default
+		// Set actual mesh references in the data table in Unreal Editor
+		MeshSections.SetNum(3);
+
+		// Default mount points for SemiTruck configuration (10 total)
+		// 2 on cab + 4 on trailer 1 + 4 on trailer 2
+
+		// Mount Point 0: Cab - Left Side
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(0.0f, -100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {0, 1, 2, 6, 7}; // Forward, Forward-Right, Right, Left, Forward-Left
+			MountPoint.DisplayName = FText::FromString("Cab Left");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Cab);
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 1: Cab - Right Side
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(0.0f, 100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {0, 1, 2, 3, 4}; // Forward, Forward-Right, Right, Back-Right, Back
+			MountPoint.DisplayName = FText::FromString("Cab Right");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Cab);
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 2: Trailer 1 - Front Left
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-200.0f, -100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {}; // All directions allowed
+			MountPoint.DisplayName = FText::FromString("Trailer 1 Front Left");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 3: Trailer 1 - Front Right
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-200.0f, 100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {}; // All directions allowed
+			MountPoint.DisplayName = FText::FromString("Trailer 1 Front Right");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 4: Trailer 1 - Rear Left
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-300.0f, -100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {2, 3, 4, 5, 6}; // Right, Back-Right, Back, Back-Left, Left
+			MountPoint.DisplayName = FText::FromString("Trailer 1 Rear Left");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 5: Trailer 1 - Rear Right
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-300.0f, 100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {2, 3, 4, 5, 6}; // Right, Back-Right, Back, Back-Left, Left
+			MountPoint.DisplayName = FText::FromString("Trailer 1 Rear Right");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 6: Trailer 2 - Front Left
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-400.0f, -100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {}; // All directions allowed
+			MountPoint.DisplayName = FText::FromString("Trailer 2 Front Left");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Rear);
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 7: Trailer 2 - Front Right
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-400.0f, 100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {}; // All directions allowed
+			MountPoint.DisplayName = FText::FromString("Trailer 2 Front Right");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Rear);
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 8: Trailer 2 - Rear Left
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-500.0f, -100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {3, 4, 5}; // Back-Right, Back, Back-Left
+			MountPoint.DisplayName = FText::FromString("Trailer 2 Rear Left");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Rear);
+			MountPoints.Add(MountPoint);
+		}
+
+		// Mount Point 9: Trailer 2 - Rear Right
+		{
+			FMountPointData MountPoint;
+			MountPoint.MountTransform = FTransform(FRotator::ZeroRotator, FVector(-500.0f, 100.0f, 50.0f), FVector::OneVector);
+			MountPoint.AllowedFacingDirections = {3, 4, 5}; // Back-Right, Back, Back-Left
+			MountPoint.DisplayName = FText::FromString("Trailer 2 Rear Right");
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Trailer);
+			MountPoint.MountTags.AddTag(WhitelineNightmareGameplayTags::Mount_Rear);
+			MountPoints.Add(MountPoint);
+		}
 	}
 };
 
