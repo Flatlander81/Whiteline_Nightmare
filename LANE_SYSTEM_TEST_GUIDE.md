@@ -285,6 +285,55 @@ This means you **cannot** run them via `RunTests Movement`. You must run them di
 
 ---
 
+## Important: Console Command Architecture
+
+**Why Wrapper Functions?**
+
+Unreal Engine's console command system (Exec functions) only works for functions declared on:
+- **Pawn** ✓
+- **PlayerController** ✓
+- **GameMode** ✓
+- **HUD** ✓
+- **CheatManager** ✓
+
+**ActorComponents do NOT support Exec functions from console!**
+
+**Our Solution:**
+
+The lane system tests are implemented on `ULaneSystemComponent`, but we added **wrapper functions** on `AWarRigPawn` that forward the calls:
+
+```cpp
+// WarRigPawn.h
+UFUNCTION(Exec, Category = "Testing|Movement")
+void TestLaneSystemAll();
+
+// WarRigPawn.cpp
+void AWarRigPawn::TestLaneSystemAll()
+{
+    if (LaneSystemComponent)
+    {
+        LaneSystemComponent->TestLaneSystemAll();
+    }
+}
+```
+
+When you type `TestLaneSystemAll` in console:
+1. Unreal finds the Exec function on WarRigPawn (the possessed pawn)
+2. WarRigPawn forwards the call to LaneSystemComponent
+3. LaneSystemComponent runs the actual test logic
+
+This pattern allows us to:
+- ✓ Keep test logic in the component (where it belongs)
+- ✓ Make tests accessible from console (via pawn wrappers)
+- ✓ Follow Unreal's architecture requirements
+
+**If you get "Command not found":**
+- Make sure you're in Play mode (PIE)
+- Make sure the war rig is possessed by the player
+- Recompile if you just pulled the latest code
+
+---
+
 ## Summary Checklist
 
 ✅ Open Unreal Engine 5.6
