@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Core/ObjectPoolTypes.h"
 #include "GroundTile.generated.h"
 
 /**
@@ -11,15 +12,16 @@
  *
  * This actor is pooled and recycled to create an infinite scrolling road.
  * It moves backward at the world scroll velocity to simulate forward movement.
+ * Implements IPoolableActor interface for object pooling integration.
  *
  * Usage:
- * 1. Created by GroundTileManager using object pool
+ * 1. Created by GroundTilePoolComponent using object pool
  * 2. Positioned ahead of the war rig
  * 3. Scrolls backward each tick at scroll velocity
  * 4. Recycled when it passes behind the war rig
  */
 UCLASS()
-class WHITELINENIGHTMARE_API AGroundTile : public AActor
+class WHITELINENIGHTMARE_API AGroundTile : public AActor, public IPoolableActor
 {
 	GENERATED_BODY()
 
@@ -28,25 +30,24 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	// IPoolableActor interface implementation
 	/**
 	 * Called when tile is activated from pool
-	 * Sets initial position and makes visible
+	 * Sets initial position, makes visible, begins scrolling
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Ground Tile")
-	void OnActivated();
+	virtual void OnActivated_Implementation() override;
 
 	/**
 	 * Called when tile is returned to pool
-	 * Hides tile and resets state
+	 * Stops scrolling, makes invisible, hides tile
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Ground Tile")
-	void OnDeactivated();
+	virtual void OnDeactivated_Implementation() override;
 
 	/**
 	 * Reset tile state (for pool reset)
+	 * Clears any runtime modifications
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Ground Tile")
-	void ResetState();
+	virtual void ResetState_Implementation() override;
 
 	/**
 	 * Get tile length (for spawning calculations)

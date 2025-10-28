@@ -321,7 +321,13 @@ AGroundTile* UGroundTileManager::SpawnTile(const FVector& Position)
 
 	// Configure tile
 	Tile->SetTileLength(TileSize);
-	Tile->OnActivated();
+
+	// Activate tile using IPoolableActor interface
+	if (Tile->Implements<UPoolableActor>())
+	{
+		IPoolableActor::Execute_OnActivated(Tile);
+	}
+
 	Tile->bShowDebugBounds = bShowDebugVisualization;
 
 	// Add to active tiles
@@ -337,8 +343,11 @@ void UGroundTileManager::RecycleTile(AGroundTile* Tile)
 		return;
 	}
 
-	// Deactivate tile
-	Tile->OnDeactivated();
+	// Deactivate tile using IPoolableActor interface
+	if (Tile->Implements<UPoolableActor>())
+	{
+		IPoolableActor::Execute_OnDeactivated(Tile);
+	}
 
 	// Return to pool
 	TilePool->ReturnToPool(Tile);

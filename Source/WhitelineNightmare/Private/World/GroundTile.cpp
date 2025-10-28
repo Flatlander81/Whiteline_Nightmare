@@ -43,7 +43,7 @@ void AGroundTile::BeginPlay()
 	Super::BeginPlay();
 
 	// Initial state: deactivated (will be activated by pool manager)
-	OnDeactivated();
+	Execute_OnDeactivated(this);
 }
 
 void AGroundTile::Tick(float DeltaTime)
@@ -60,7 +60,7 @@ void AGroundTile::Tick(float DeltaTime)
 	}
 }
 
-void AGroundTile::OnActivated()
+void AGroundTile::OnActivated_Implementation()
 {
 	// Make visible
 	SetActorHiddenInGame(false);
@@ -70,7 +70,7 @@ void AGroundTile::OnActivated()
 	UE_LOG(LogGroundTile, Verbose, TEXT("GroundTile activated at: %s"), *GetActorLocation().ToString());
 }
 
-void AGroundTile::OnDeactivated()
+void AGroundTile::OnDeactivated_Implementation()
 {
 	// Hide and disable
 	SetActorHiddenInGame(true);
@@ -80,12 +80,12 @@ void AGroundTile::OnDeactivated()
 	UE_LOG(LogGroundTile, Verbose, TEXT("GroundTile deactivated"));
 }
 
-void AGroundTile::ResetState()
+void AGroundTile::ResetState_Implementation()
 {
 	// Reset to default state
 	SetActorLocation(FVector::ZeroVector);
 	SetActorRotation(FRotator::ZeroRotator);
-	OnDeactivated();
+	Execute_OnDeactivated(this);
 
 	UE_LOG(LogGroundTile, Verbose, TEXT("GroundTile state reset"));
 }

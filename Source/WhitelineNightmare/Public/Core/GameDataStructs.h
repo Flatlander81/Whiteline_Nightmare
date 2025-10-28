@@ -540,3 +540,47 @@ struct FLaneSystemData : public FTableRowBase
 		// Default positions will be auto-calculated if LaneYPositions is empty
 	}
 };
+
+/**
+ * Ground Tile Data - Data table row for ground tile visual configuration
+ *
+ * Defines the mesh, material, and size for scrolling ground tiles.
+ * Used by GroundTilePoolComponent to configure tile appearance.
+ */
+USTRUCT(BlueprintType)
+struct FGroundTileData : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	// Static mesh to use for the tile
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile")
+	TSoftObjectPtr<UStaticMesh> TileMesh;
+
+	// Length of tile along X axis (forward direction)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile")
+	float TileSize;
+
+	// Material for the road texture
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile")
+	TSoftObjectPtr<UMaterialInterface> TileMaterial;
+
+	// Number of tiles to keep in the pool
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile|Pool")
+	int32 PoolSize;
+
+	// Distance ahead of war rig where new tiles spawn
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile|Spawning")
+	float SpawnDistanceAhead;
+
+	// Distance behind war rig where tiles despawn
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile|Despawning")
+	float DespawnDistanceBehind;
+
+	FGroundTileData()
+		: TileSize(2000.0f)
+		, PoolSize(5)
+		, SpawnDistanceAhead(3000.0f)
+		, DespawnDistanceBehind(1000.0f)
+	{
+	}
+};
