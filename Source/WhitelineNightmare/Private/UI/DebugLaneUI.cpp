@@ -7,6 +7,7 @@
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Blueprint/WidgetTree.h"
 #include "Core/WarRigPawn.h"
 #include "Core/LaneSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
