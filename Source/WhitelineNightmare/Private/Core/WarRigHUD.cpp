@@ -3,8 +3,8 @@
 #include "Core/WarRigHUD.h"
 #include "Engine/Canvas.h"
 #include "Engine/Font.h"
-#include "UI/DebugLaneUI.h"
-#include "Blueprint/UserWidget.h"
+#include "Core/WarRigPawn.h"
+#include "Core/LaneSystemComponent.h"
 
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogWarRigHUD, Log, All);
@@ -16,8 +16,7 @@ AWarRigHUD::AWarRigHUD()
 	, DistancePercentage(0.0f)
 	, bShowingGameOver(false)
 	, bPlayerWonGame(false)
-	, DebugLaneUIClass(nullptr)
-	, DebugLaneUIWidget(nullptr)
+	, bShowDebugLaneUI(true) // Show by default
 {
 	// Enable ticking
 	PrimaryActorTick.bCanEverTick = true;
@@ -28,10 +27,8 @@ void AWarRigHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogWarRigHUD, Log, TEXT("WarRigHUD: Initialized"));
-
-	// Show debug lane UI by default
-	ShowDebugLaneUI();
+	UE_LOG(LogWarRigHUD, Log, TEXT("WarRigHUD: Initialized (Debug Lane UI: %s)"),
+		bShowDebugLaneUI ? TEXT("Enabled") : TEXT("Disabled"));
 }
 
 void AWarRigHUD::DrawHUD()
@@ -40,6 +37,12 @@ void AWarRigHUD::DrawHUD()
 
 	// Draw debug HUD until proper UI widgets are implemented
 	DrawDebugHUD();
+
+	// Draw debug lane UI buttons
+	if (bShowDebugLaneUI)
+	{
+		DrawDebugLaneUI();
+	}
 }
 
 void AWarRigHUD::UpdateFuelDisplay(float CurrentFuel, float MaxFuel)
@@ -217,60 +220,132 @@ void AWarRigHUD::DrawDebugHUD()
 
 void AWarRigHUD::ShowDebugLaneUI()
 {
-	// Create widget if it doesn't exist
-	if (!DebugLaneUIWidget)
-	{
-		if (!DebugLaneUIClass)
-		{
-			// Use default C++ class if no Blueprint is specified
-			DebugLaneUIClass = UDebugLaneUI::StaticClass();
-		}
-
-		if (DebugLaneUIClass)
-		{
-			DebugLaneUIWidget = CreateWidget<UDebugLaneUI>(GetWorld(), DebugLaneUIClass);
-			if (DebugLaneUIWidget)
-			{
-				UE_LOG(LogWarRigHUD, Log, TEXT("ShowDebugLaneUI: Created debug lane UI widget"));
-			}
-			else
-			{
-				UE_LOG(LogWarRigHUD, Error, TEXT("ShowDebugLaneUI: Failed to create debug lane UI widget"));
-				return;
-			}
-		}
-		else
-		{
-			UE_LOG(LogWarRigHUD, Error, TEXT("ShowDebugLaneUI: DebugLaneUIClass is null"));
-			return;
-		}
-	}
-
-	// Add to viewport if not already visible
-	if (DebugLaneUIWidget && !DebugLaneUIWidget->IsInViewport())
-	{
-		DebugLaneUIWidget->AddToViewport();
-		UE_LOG(LogWarRigHUD, Log, TEXT("ShowDebugLaneUI: Added debug lane UI to viewport"));
-	}
+	bShowDebugLaneUI = true;
+	UE_LOG(LogWarRigHUD, Log, TEXT("ShowDebugLaneUI: Debug lane UI enabled"));
 }
 
 void AWarRigHUD::HideDebugLaneUI()
 {
-	if (DebugLaneUIWidget && DebugLaneUIWidget->IsInViewport())
-	{
-		DebugLaneUIWidget->RemoveFromParent();
-		UE_LOG(LogWarRigHUD, Log, TEXT("HideDebugLaneUI: Removed debug lane UI from viewport"));
-	}
+	bShowDebugLaneUI = false;
+	UE_LOG(LogWarRigHUD, Log, TEXT("HideDebugLaneUI: Debug lane UI disabled"));
 }
 
 void AWarRigHUD::ToggleDebugLaneUI()
 {
-	if (DebugLaneUIWidget && DebugLaneUIWidget->IsInViewport())
+	bShowDebugLaneUI = !bShowDebugLaneUI;
+	UE_LOG(LogWarRigHUD, Log, TEXT("ToggleDebugLaneUI: Debug lane UI %s"),
+		bShowDebugLaneUI ? TEXT("enabled") : TEXT("disabled"));
+}
+
+void AWarRigHUD::NotifyHitBoxClick(FName BoxName)
+{
+	Super::NotifyHitBoxClick(BoxName);
+
+	if (BoxName == "LaneLeftButton")
 	{
-		HideDebugLaneUI();
+		// Get war rig pawn
+		AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetOwningPawn());
+		if (WarRig)
+		{
+			ULaneSystemComponent* LaneSystem = WarRig->FindComponentByClass<ULaneSystemComponent>();
+			if (LaneSystem && LaneSystem->CanChangeLaneLeft())
+			{
+				LaneSystem->ChangeLaneLeft();
+				UE_LOG(LogWarRigHUD, Log, TEXT("NotifyHitBoxClick: Changed to left lane"));
+			}
+		}
 	}
-	else
+	else if (BoxName == "LaneRightButton")
 	{
-		ShowDebugLaneUI();
+		// Get war rig pawn
+		AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetOwningPawn());
+		if (WarRig)
+		{
+			ULaneSystemComponent* LaneSystem = WarRig->FindComponentByClass<ULaneSystemComponent>();
+			if (LaneSystem && LaneSystem->CanChangeLaneRight())
+			{
+				LaneSystem->ChangeLaneRight();
+				UE_LOG(LogWarRigHUD, Log, TEXT("NotifyHitBoxClick: Changed to right lane"));
+			}
+		}
 	}
+}
+
+void AWarRigHUD::DrawDebugLaneUI()
+{
+	if (!Canvas)
+	{
+		return;
+	}
+
+	// Get war rig and lane system
+	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetOwningPawn());
+	ULaneSystemComponent* LaneSystem = WarRig ? WarRig->FindComponentByClass<ULaneSystemComponent>() : nullptr;
+
+	if (!LaneSystem)
+	{
+		return;
+	}
+
+	// Button dimensions
+	const float ButtonWidth = 150.0f;
+	const float ButtonHeight = 50.0f;
+	const float ButtonSpacing = 20.0f;
+	const float BottomMargin = 100.0f;
+
+	// Calculate button positions (bottom center of screen)
+	const float CenterX = Canvas->SizeX * 0.5f;
+	const float ButtonY = Canvas->SizeY - BottomMargin;
+
+	// Left button position
+	const float LeftButtonX = CenterX - ButtonWidth - ButtonSpacing;
+	const float RightButtonX = CenterX + ButtonSpacing;
+
+	// Update hit boxes for click detection
+	LeftLaneButtonBox = FBox2D(
+		FVector2D(LeftButtonX, ButtonY),
+		FVector2D(LeftButtonX + ButtonWidth, ButtonY + ButtonHeight)
+	);
+
+	RightLaneButtonBox = FBox2D(
+		FVector2D(RightButtonX, ButtonY),
+		FVector2D(RightButtonX + ButtonWidth, ButtonY + ButtonHeight)
+	);
+
+	// Draw left button
+	{
+		FLinearColor ButtonColor = LaneSystem->CanChangeLaneLeft() ?
+			FLinearColor(0.2f, 0.6f, 0.2f, 0.8f) : // Green if enabled
+			FLinearColor(0.3f, 0.3f, 0.3f, 0.5f);   // Gray if disabled
+
+		DrawRect(ButtonColor, LeftButtonX, ButtonY, ButtonWidth, ButtonHeight);
+
+		// Draw button text
+		FString ButtonText = TEXT("<< Lane Left");
+		DrawText(ButtonText, FLinearColor::White, LeftButtonX + 10, ButtonY + 15);
+
+		// Add hit box
+		AddHitBox(LeftLaneButtonBox.Min, LeftLaneButtonBox.GetSize(), "LaneLeftButton", false, 0);
+	}
+
+	// Draw right button
+	{
+		FLinearColor ButtonColor = LaneSystem->CanChangeLaneRight() ?
+			FLinearColor(0.2f, 0.6f, 0.2f, 0.8f) : // Green if enabled
+			FLinearColor(0.3f, 0.3f, 0.3f, 0.5f);   // Gray if disabled
+
+		DrawRect(ButtonColor, RightButtonX, ButtonY, ButtonWidth, ButtonHeight);
+
+		// Draw button text
+		FString ButtonText = TEXT("Lane Right >>");
+		DrawText(ButtonText, FLinearColor::White, RightButtonX + 10, ButtonY + 15);
+
+		// Add hit box
+		AddHitBox(RightLaneButtonBox.Min, RightLaneButtonBox.GetSize(), "LaneRightButton", false, 0);
+	}
+
+	// Draw current lane info above buttons
+	const int32 CurrentLane = LaneSystem->GetCurrentLane();
+	const FString LaneText = FString::Printf(TEXT("Current Lane: %d"), CurrentLane);
+	DrawText(LaneText, FLinearColor::Yellow, CenterX - 60, ButtonY - 30, nullptr, 1.2f);
 }
