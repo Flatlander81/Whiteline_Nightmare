@@ -122,14 +122,22 @@ void AGroundTile::DrawDebugInfo()
 		return;
 	}
 
-	// Draw tile bounds
+	// Draw tile bounds as a box
 	FVector TileCenter = GetActorLocation();
-	FVector BoxExtent(TileLength / 2.0f, 1000.0f, 50.0f); // Assume width 2000, height 100
+	FVector BoxExtent(TileLength / 2.0f, 1000.0f, 50.0f); // Half-extents: length/2, width 1000, height 50
 
-	DrawDebugBox(World, TileCenter, BoxExtent, FColor::Green, false, -1.0f, 0, 2.0f);
+	// Draw persistent box (visible each frame)
+	DrawDebugBox(World, TileCenter, BoxExtent, FColor::Green, false, 0.0f, 0, 3.0f);
 
-	// Draw position text
-	DrawDebugString(World, TileCenter + FVector(0, 0, 100),
-		FString::Printf(TEXT("Tile X: %.0f"), TileCenter.X),
-		nullptr, FColor::White, 0.0f, true);
+	// Draw a cross at the tile center for easy visibility
+	DrawDebugCrosshairs(World, TileCenter, FRotator::ZeroRotator, 200.0f, FColor::Yellow, false, 0.0f, 0, 2.0f);
+
+	// Draw position text above the tile
+	DrawDebugString(World, TileCenter + FVector(0, 0, 150),
+		FString::Printf(TEXT("Tile\nX: %.0f\nLength: %.0f"), TileCenter.X, TileLength),
+		nullptr, FColor::White, 0.0f, true, 1.5f);
+
+	// Draw line showing scroll direction
+	FVector ScrollEnd = TileCenter + FVector(-500.0f, 0.0f, 0.0f);
+	DrawDebugDirectionalArrow(World, TileCenter, ScrollEnd, 50.0f, FColor::Cyan, false, 0.0f, 0, 2.0f);
 }

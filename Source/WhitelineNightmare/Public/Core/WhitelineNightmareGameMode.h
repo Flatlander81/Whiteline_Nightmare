@@ -95,6 +95,18 @@ public:
 	UFUNCTION(Exec, Category = "Debug|Ground Tiles")
 	void DebugShowTileInfo();
 
+	/** Debug command: Run a specific test by name */
+	UFUNCTION(Exec, Category = "Debug|Testing")
+	void RunTest(const FString& TestName);
+
+	/** Debug command: Run all tests in a category (Movement, Combat, Economy, etc.) */
+	UFUNCTION(Exec, Category = "Debug|Testing")
+	void RunTests(const FString& CategoryName);
+
+	/** Debug command: Run all registered tests */
+	UFUNCTION(Exec, Category = "Debug|Testing")
+	void RunAllTests();
+
 	// World scroll component (manages world scrolling)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
 	class UWorldScrollComponent* WorldScrollComponent;

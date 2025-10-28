@@ -415,6 +415,7 @@ void UGroundTileManager::LogManagerState() const
 	UE_LOG(LogGroundTileManager, Log, TEXT("Spawn Distance: %.0f"), TileSpawnDistance);
 	UE_LOG(LogGroundTileManager, Log, TEXT("Despawn Distance: %.0f"), TileDespawnDistance);
 	UE_LOG(LogGroundTileManager, Log, TEXT("Furthest Tile: %.0f"), GetFurthestTilePosition());
+	UE_LOG(LogGroundTileManager, Log, TEXT("Debug Visualization: %s"), bShowDebugVisualization ? TEXT("ENABLED") : TEXT("DISABLED"));
 
 	if (WarRig)
 	{
@@ -427,5 +428,21 @@ void UGroundTileManager::LogManagerState() const
 			TilePool->GetActiveCount(), TilePool->GetAvailableCount(), TilePool->GetTotalPoolSize());
 	}
 
+	// List all active tile positions
+	if (ActiveTiles.Num() > 0)
+	{
+		UE_LOG(LogGroundTileManager, Log, TEXT("Active Tile Positions:"));
+		for (int32 i = 0; i < ActiveTiles.Num(); ++i)
+		{
+			if (ActiveTiles[i])
+			{
+				FVector Pos = ActiveTiles[i]->GetActorLocation();
+				UE_LOG(LogGroundTileManager, Log, TEXT("  [%d] X: %.0f, Y: %.0f, Z: %.0f"),
+					i, Pos.X, Pos.Y, Pos.Z);
+			}
+		}
+	}
+
 	UE_LOG(LogGroundTileManager, Log, TEXT("=================================="));
+	UE_LOG(LogGroundTileManager, Log, TEXT("TIP: Use 'DebugShowTiles' to toggle visual debug display"));
 }
