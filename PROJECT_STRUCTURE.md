@@ -64,13 +64,61 @@ Source/WhitelineNightmare/
 ### Content Organization
 ```
 Content/
-└── Data/                          # Data tables and tuning assets
-    ├── DT_GameplayBalance.uasset
-    ├── DT_TurretData.uasset
-    ├── DT_EnemyData.uasset
-    ├── DT_PickupData.uasset
-    ├── DT_WorldScrollData.uasset
-    └── DT_WarRigData.uasset
+├── Art/                           # Art assets
+│   ├── Meshes/                    # 3D mesh assets
+│   ├── Textures/                  # Texture assets
+│   └── Materials/                 # Material assets and instances
+├── Audio/                         # Audio assets
+│   ├── Music/                     # Background music and ambient audio
+│   └── SFX/                       # Sound effects
+├── Blueprints/                    # Blueprint classes (data-only, C++ parents)
+│   ├── Vehicles/                  # Vehicle blueprint classes
+│   ├── Turrets/                   # Turret blueprint classes
+│   ├── Enemies/                   # Enemy blueprint classes
+│   ├── Obstacles/                 # Obstacle blueprint classes
+│   ├── Pickups/                   # Pickup blueprint classes
+│   └── UI/                        # UI widget blueprints
+├── Characters/                    # Character-specific assets
+├── Data/                          # Data tables and tuning assets
+│   ├── DT_GameplayBalance.uasset
+│   ├── DT_TurretData.uasset
+│   ├── DT_EnemyData.uasset
+│   ├── DT_PickupData.uasset
+│   ├── DT_WorldScrollData.uasset
+│   └── DT_WarRigData.uasset
+├── Environment/                   # Environment assets (landscape, props)
+├── Maps/                          # Level maps
+│   ├── TestMap.umap              # Test map for automated testing
+│   └── TestMap_2.umap            # Additional test map
+├── UI/                            # UI-specific assets
+│   ├── Widgets/                   # UMG widget assets
+│   ├── Textures/                  # UI textures (icons, backgrounds)
+│   └── Fonts/                     # Font assets
+├── VFX/                           # Visual effects
+│   ├── Particles/                 # Cascade particle systems
+│   └── Niagara/                   # Niagara particle systems
+├── Vehicles/                      # Vehicle-specific assets (war rig)
+└── Weapons/                       # Weapon and turret assets
+```
+
+### Root Level Organization
+```
+WhitelineNightmare/
+├── Config/                        # Configuration files
+│   ├── DefaultEngine.ini
+│   ├── DefaultGame.ini
+│   ├── DefaultInput.ini
+│   └── DefaultGameplayTags.ini
+├── Content/                       # [See Content Organization above]
+├── Documentation/                 # Additional documentation and design docs
+├── Plugins/                       # Project-specific plugins
+├── Source/                        # [See Source Code Organization above]
+├── .gitignore                     # Git ignore file
+├── .vsconfig                      # Visual Studio configuration
+├── PROJECT_STRUCTURE.md           # This file
+├── README.md                      # Project overview
+├── TEST_INSTRUCTIONS.md           # Testing framework guide
+└── WhitelineNightmare.uproject    # Unreal project file
 ```
 
 ## Data Table Structures

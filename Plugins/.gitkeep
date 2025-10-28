@@ -1,0 +1,4 @@
+# Plugins
+This folder contains project-specific Unreal Engine plugins.
+
+Note: Third-party plugins should be placed here if they need to be tracked in version control.

@@ -1,0 +1,10 @@
+# Data Assets
+This folder contains data tables, curves, and gameplay data assets.
+
+Expected files:
+- DT_GameplayBalance.uasset
+- DT_TurretData.uasset
+- DT_EnemyData.uasset
+- DT_PickupData.uasset
+- DT_WorldScrollData.uasset
+- DT_WarRigData.uasset
