@@ -69,6 +69,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|HUD")
 	void HideGameOverScreen();
 
+	/**
+	 * Show debug lane UI (for testing lane system)
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|HUD|Debug")
+	void ShowDebugLaneUI();
+
+	/**
+	 * Hide debug lane UI
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|HUD|Debug")
+	void HideDebugLaneUI();
+
+	/**
+	 * Toggle debug lane UI visibility
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|HUD|Debug")
+	void ToggleDebugLaneUI();
+
 protected:
 	// Current fuel percentage (0-1)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|HUD|State")
@@ -93,6 +111,14 @@ protected:
 	// Whether player won (only valid if bShowingGameOver is true)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|HUD|State")
 	bool bPlayerWonGame;
+
+	// Debug lane UI widget class (can be set to a Blueprint widget)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Whiteline Nightmare|HUD|Debug")
+	TSubclassOf<class UDebugLaneUI> DebugLaneUIClass;
+
+	// Debug lane UI widget instance
+	UPROPERTY()
+	class UDebugLaneUI* DebugLaneUIWidget;
 
 private:
 	/**

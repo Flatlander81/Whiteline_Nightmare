@@ -2,6 +2,7 @@
 
 #include "Core/WarRigPawn.h"
 #include "Core/LaneSystemComponent.h"
+#include "Core/WarRigHUD.h"
 #include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -395,6 +396,27 @@ void AWarRigPawn::DebugShowLanes()
 	}
 
 	LaneSystemComponent->DebugShowLanes();
+}
+
+void AWarRigPawn::ToggleDebugLaneUI()
+{
+	// Get the HUD
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::ToggleDebugLaneUI - No player controller found!"));
+		return;
+	}
+
+	AWarRigHUD* WarRigHUD = Cast<AWarRigHUD>(PC->GetHUD());
+	if (!WarRigHUD)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::ToggleDebugLaneUI - No WarRigHUD found!"));
+		return;
+	}
+
+	WarRigHUD->ToggleDebugLaneUI();
+	UE_LOG(LogTemp, Log, TEXT("AWarRigPawn::ToggleDebugLaneUI - Toggled debug lane UI"));
 }
 
 // ===== TESTING FUNCTIONS =====

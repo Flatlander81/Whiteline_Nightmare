@@ -106,6 +106,10 @@ public:
 	UFUNCTION(Exec, Category = "Debug|Lane System")
 	void DebugShowLanes();
 
+	/** Toggle debug lane UI widget (shows lane change buttons) */
+	UFUNCTION(Exec, Category = "Debug|Lane System")
+	void ToggleDebugLaneUI();
+
 protected:
 	// Component creation and setup
 	void CreateMeshComponents(const FWarRigData& RigData);

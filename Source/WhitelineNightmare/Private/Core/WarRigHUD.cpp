@@ -3,6 +3,8 @@
 #include "Core/WarRigHUD.h"
 #include "Engine/Canvas.h"
 #include "Engine/Font.h"
+#include "UI/DebugLaneUI.h"
+#include "Blueprint/UserWidget.h"
 
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogWarRigHUD, Log, All);
@@ -14,6 +16,8 @@ AWarRigHUD::AWarRigHUD()
 	, DistancePercentage(0.0f)
 	, bShowingGameOver(false)
 	, bPlayerWonGame(false)
+	, DebugLaneUIClass(nullptr)
+	, DebugLaneUIWidget(nullptr)
 {
 	// Enable ticking
 	PrimaryActorTick.bCanEverTick = true;
@@ -207,5 +211,65 @@ void AWarRigHUD::DrawDebugHUD()
 		FString GameOverText = bPlayerWonGame ? TEXT("YOU WIN!") : TEXT("GAME OVER");
 		FLinearColor GameOverColor = bPlayerWonGame ? FLinearColor::Green : FLinearColor::Red;
 		DrawText(GameOverText, GameOverColor, Canvas->SizeX * 0.5f - 100.0f, Canvas->SizeY * 0.5f, nullptr, 2.0f);
+	}
+}
+
+void AWarRigHUD::ShowDebugLaneUI()
+{
+	// Create widget if it doesn't exist
+	if (!DebugLaneUIWidget)
+	{
+		if (!DebugLaneUIClass)
+		{
+			// Use default C++ class if no Blueprint is specified
+			DebugLaneUIClass = UDebugLaneUI::StaticClass();
+		}
+
+		if (DebugLaneUIClass)
+		{
+			DebugLaneUIWidget = CreateWidget<UDebugLaneUI>(GetWorld(), DebugLaneUIClass);
+			if (DebugLaneUIWidget)
+			{
+				UE_LOG(LogWarRigHUD, Log, TEXT("ShowDebugLaneUI: Created debug lane UI widget"));
+			}
+			else
+			{
+				UE_LOG(LogWarRigHUD, Error, TEXT("ShowDebugLaneUI: Failed to create debug lane UI widget"));
+				return;
+			}
+		}
+		else
+		{
+			UE_LOG(LogWarRigHUD, Error, TEXT("ShowDebugLaneUI: DebugLaneUIClass is null"));
+			return;
+		}
+	}
+
+	// Add to viewport if not already visible
+	if (DebugLaneUIWidget && !DebugLaneUIWidget->IsInViewport())
+	{
+		DebugLaneUIWidget->AddToViewport();
+		UE_LOG(LogWarRigHUD, Log, TEXT("ShowDebugLaneUI: Added debug lane UI to viewport"));
+	}
+}
+
+void AWarRigHUD::HideDebugLaneUI()
+{
+	if (DebugLaneUIWidget && DebugLaneUIWidget->IsInViewport())
+	{
+		DebugLaneUIWidget->RemoveFromParent();
+		UE_LOG(LogWarRigHUD, Log, TEXT("HideDebugLaneUI: Removed debug lane UI from viewport"));
+	}
+}
+
+void AWarRigHUD::ToggleDebugLaneUI()
+{
+	if (DebugLaneUIWidget && DebugLaneUIWidget->IsInViewport())
+	{
+		HideDebugLaneUI();
+	}
+	else
+	{
+		ShowDebugLaneUI();
 	}
 }
