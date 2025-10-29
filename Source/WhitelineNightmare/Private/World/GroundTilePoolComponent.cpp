@@ -102,15 +102,15 @@ bool UGroundTilePoolComponent::InitializeTilePool(TSubclassOf<AGroundTile> TileC
 	}
 
 	// Configure pool
-	FObjectPoolConfig PoolConfig;
-	PoolConfig.PoolSize = 5; // Default pool size from spec
-	PoolConfig.bAutoExpand = true;
-	PoolConfig.MaxPoolSize = 10;
-	PoolConfig.SpawnDistanceAhead = SpawnDistanceAhead;
-	PoolConfig.DespawnDistanceBehind = DespawnDistanceBehind;
+	FObjectPoolConfig TilePoolConfig;
+	TilePoolConfig.PoolSize = 5; // Default pool size from spec
+	TilePoolConfig.bAutoExpand = true;
+	TilePoolConfig.MaxPoolSize = 10;
+	TilePoolConfig.SpawnDistanceAhead = SpawnDistanceAhead;
+	TilePoolConfig.DespawnDistanceBehind = DespawnDistanceBehind;
 
 	// Initialize base pool component
-	bool bSuccess = Initialize(TileClass, PoolConfig);
+	bool bSuccess = Initialize(TileClass, TilePoolConfig);
 	if (!bSuccess)
 	{
 		UE_LOG(LogGroundTilePool, Error, TEXT("Failed to initialize base pool component"));
