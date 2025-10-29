@@ -21,9 +21,9 @@ UGroundTileManager::UGroundTileManager()
 	, WarRig(nullptr)
 	, TilePool(nullptr)
 	, TileSize(2000.0f)
-	, TilePoolSize(10)
-	, TileSpawnDistance(50000.0f)  // Spawn very far ahead (well off-screen)
-	, TileDespawnDistance(15000.0f)  // Despawn very far behind (well off-screen)
+	, TilePoolSize(15)
+	, TileSpawnDistance(10000.0f)  // Spawn 10000 units ahead (5 tiles)
+	, TileDespawnDistance(5000.0f)  // Despawn 5000 units behind (2.5 tiles)
 	, bShowDebugVisualization(false)
 {
 	PrimaryComponentTick.bCanEverTick = true;
