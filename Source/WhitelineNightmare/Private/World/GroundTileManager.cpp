@@ -218,8 +218,21 @@ bool UGroundTileManager::LoadConfigFromDataTable()
 	TileSpawnDistance = RowData->TileSpawnDistance;
 	TileDespawnDistance = RowData->TileDespawnDistance;
 
+	// Load optional visual overrides
+	ConfiguredTileMesh = RowData->TileMesh;
+	ConfiguredTileMaterial = RowData->TileMaterial;
+
 	UE_LOG(LogGroundTileManager, Log, TEXT("Loaded config: TileSize=%.0f, PoolSize=%d, SpawnDist=%.0f, DespawnDist=%.0f"),
 		TileSize, TilePoolSize, TileSpawnDistance, TileDespawnDistance);
+
+	if (!ConfiguredTileMesh.IsNull())
+	{
+		UE_LOG(LogGroundTileManager, Log, TEXT("  TileMesh override: %s"), *ConfiguredTileMesh.ToString());
+	}
+	if (!ConfiguredTileMaterial.IsNull())
+	{
+		UE_LOG(LogGroundTileManager, Log, TEXT("  TileMaterial override: %s"), *ConfiguredTileMaterial.ToString());
+	}
 
 	// Validate configuration
 	bool bConfigValid = true;
@@ -421,6 +434,30 @@ AGroundTile* UGroundTileManager::SpawnTile(const FVector& Position)
 	Tile->SetTileLength(TileSize);
 	IPoolableActor::Execute_OnActivated(Tile);
 	Tile->bShowDebugBounds = bShowDebugVisualization;
+
+	// Apply mesh override from data table if configured
+	if (!ConfiguredTileMesh.IsNull())
+	{
+		UStaticMesh* MeshToApply = ConfiguredTileMesh.LoadSynchronous();
+		UStaticMeshComponent* MeshComponent = Tile->GetTileMesh();
+		if (MeshToApply && MeshComponent)
+		{
+			MeshComponent->SetStaticMesh(MeshToApply);
+			UE_LOG(LogGroundTileManager, Verbose, TEXT("Applied mesh override to tile: %s"), *MeshToApply->GetName());
+		}
+	}
+
+	// Apply material override from data table if configured
+	if (!ConfiguredTileMaterial.IsNull())
+	{
+		UMaterialInterface* MaterialToApply = ConfiguredTileMaterial.LoadSynchronous();
+		UStaticMeshComponent* MeshComponent = Tile->GetTileMesh();
+		if (MaterialToApply && MeshComponent)
+		{
+			MeshComponent->SetMaterial(0, MaterialToApply);
+			UE_LOG(LogGroundTileManager, Verbose, TEXT("Applied material override to tile: %s"), *MaterialToApply->GetName());
+		}
+	}
 
 	// Add to active tiles
 	ActiveTiles.Add(Tile);

@@ -63,6 +63,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ground Tile")
 	void SetTileLength(float Length) { TileLength = Length; }
 
+	/**
+	 * Get the tile mesh component
+	 * @return Tile mesh component
+	 */
+	UFUNCTION(BlueprintPure, Category = "Ground Tile")
+	UStaticMeshComponent* GetTileMesh() const { return TileMesh; }
+
 	// Debug: Show tile bounds
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile|Debug")
 	bool bShowDebugBounds;

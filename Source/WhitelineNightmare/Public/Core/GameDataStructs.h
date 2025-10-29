@@ -450,6 +450,14 @@ struct FWorldTileData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World|Despawning")
 	float TileDespawnDistance;
 
+	// Optional: Static mesh to use for ground tiles (if set, overrides default cube mesh)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World|Tiles|Visual")
+	TSoftObjectPtr<UStaticMesh> TileMesh;
+
+	// Optional: Material to apply to ground tiles (if set, overrides default material)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World|Tiles|Visual")
+	TSoftObjectPtr<UMaterialInterface> TileMaterial;
+
 	// Pool size for enemies
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World|Object Pooling")
 	int32 EnemyPoolSize;
