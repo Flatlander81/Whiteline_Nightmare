@@ -95,6 +95,18 @@ public:
 	UFUNCTION(Exec, Category = "Debug|Ground Tiles")
 	void DebugShowTileInfo();
 
+	/** Debug command: Show tile pool bounds */
+	UFUNCTION(Exec, Category = "Debug|Ground Tiles")
+	void DebugShowTileBounds();
+
+	/** Debug command: Show tile pool stats */
+	UFUNCTION(Exec, Category = "Debug|Ground Tiles")
+	void DebugShowTilePoolStats();
+
+	/** Debug command: Run tile pool tests */
+	UFUNCTION(Exec, Category = "Debug|Testing")
+	void RunTilePoolTests();
+
 	/** Debug command: Run a specific test by name */
 	UFUNCTION(Exec, Category = "Debug|Testing")
 	void RunTest(const FString& TestName);
@@ -111,9 +123,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
 	class UWorldScrollComponent* WorldScrollComponent;
 
-	// Ground tile manager (manages scrolling road tiles)
+	// Ground tile manager (manages scrolling road tiles - legacy)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
 	class UGroundTileManager* GroundTileManager;
+
+	// Ground tile pool component (modern pooled tile system)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Components")
+	class UGroundTilePoolComponent* GroundTilePoolComponent;
 
 protected:
 	// Current distance traveled

@@ -5,6 +5,7 @@
 #include "Core/WarRigHUD.h"
 #include "Core/WorldScrollComponent.h"
 #include "World/GroundTileManager.h"
+#include "World/GroundTilePoolComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 #if !UE_BUILD_SHIPPING
@@ -21,6 +22,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogWhitelineNightmare, Log, All);
 AWhitelineNightmareGameMode::AWhitelineNightmareGameMode()
 	: WorldScrollComponent(nullptr)
 	, GroundTileManager(nullptr)
+	, GroundTilePoolComponent(nullptr)
 	, DistanceTraveled(0.0f)
 	, WinDistance(10000.0f)
 	, bIsGameOver(false)
@@ -37,8 +39,11 @@ AWhitelineNightmareGameMode::AWhitelineNightmareGameMode()
 	// Create world scroll component
 	WorldScrollComponent = CreateDefaultSubobject<UWorldScrollComponent>(TEXT("WorldScrollComponent"));
 
-	// Create ground tile manager
+	// Create ground tile manager (legacy)
 	GroundTileManager = CreateDefaultSubobject<UGroundTileManager>(TEXT("GroundTileManager"));
+
+	// Create ground tile pool component (modern pooled system)
+	GroundTilePoolComponent = CreateDefaultSubobject<UGroundTilePoolComponent>(TEXT("GroundTilePoolComponent"));
 }
 
 void AWhitelineNightmareGameMode::BeginPlay()
@@ -247,6 +252,47 @@ void AWhitelineNightmareGameMode::DebugShowTileInfo()
 	}
 
 	GroundTileManager->DebugShowTileInfo();
+}
+
+void AWhitelineNightmareGameMode::DebugShowTileBounds()
+{
+	if (!GroundTilePoolComponent)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugShowTileBounds: GroundTilePoolComponent is null"));
+		return;
+	}
+
+	GroundTilePoolComponent->DebugShowTileBounds();
+}
+
+void AWhitelineNightmareGameMode::DebugShowTilePoolStats()
+{
+	if (!GroundTilePoolComponent)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("DebugShowTilePoolStats: GroundTilePoolComponent is null"));
+		return;
+	}
+
+	GroundTilePoolComponent->DebugShowTilePool();
+}
+
+void AWhitelineNightmareGameMode::RunTilePoolTests()
+{
+	if (!GroundTilePoolComponent)
+	{
+		UE_LOG(LogWhitelineNightmare, Error, TEXT("RunTilePoolTests: GroundTilePoolComponent is null"));
+		return;
+	}
+
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("=== Running Tile Pool Tests ==="));
+
+	GroundTilePoolComponent->TestTilePoolRecycling();
+	GroundTilePoolComponent->TestSeamlessScrolling();
+	GroundTilePoolComponent->TestTilePositioning();
+	GroundTilePoolComponent->TestPoolSize();
+	GroundTilePoolComponent->TestTileDespawn();
+
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("=== Tile Pool Tests Complete ==="));
 }
 
 void AWhitelineNightmareGameMode::RunTest(const FString& TestName)
