@@ -11,64 +11,60 @@
 
 #if !UE_BUILD_SHIPPING
 
-// Anonymous namespace to avoid symbol conflicts with other test files
-namespace
+// Helper function to get a valid world for testing
+static UWorld* GetGroundTileTestWorld()
 {
-	// Helper function to get a valid world for testing
-	UWorld* GetGroundTileTestWorld()
+	for (const FWorldContext& Context : GEngine->GetWorldContexts())
 	{
-		for (const FWorldContext& Context : GEngine->GetWorldContexts())
+		if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
 		{
-			if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
-			{
-				return Context.World();
-			}
+			return Context.World();
 		}
+	}
+	return nullptr;
+}
+
+// Helper function to create a ground tile manager for testing
+static UGroundTileManager* CreateTestGroundTileManager()
+{
+	UWorld* World = GetGroundTileTestWorld();
+	if (!World)
+	{
 		return nullptr;
 	}
 
-	// Helper function to create a ground tile manager for testing
-	UGroundTileManager* CreateTestGroundTileManager()
+	// Create a dummy actor to hold the component
+	AActor* DummyActor = World->SpawnActor<AActor>();
+	if (!DummyActor)
 	{
-		UWorld* World = GetGroundTileTestWorld();
-		if (!World)
-		{
-			return nullptr;
-		}
-
-		// Create a dummy actor to hold the component
-		AActor* DummyActor = World->SpawnActor<AActor>();
-		if (!DummyActor)
-		{
-			return nullptr;
-		}
-
-		// Create and attach the tile manager component
-		UGroundTileManager* TileManager = NewObject<UGroundTileManager>(DummyActor);
-		if (TileManager)
-		{
-			TileManager->RegisterComponent();
-		}
-
-		return TileManager;
+		return nullptr;
 	}
 
-	// Helper function to create a simple war rig stand-in for testing
-	AActor* CreateTestWarRig(UWorld* World, const FVector& Location)
+	// Create and attach the tile manager component
+	UGroundTileManager* TileManager = NewObject<UGroundTileManager>(DummyActor);
+	if (TileManager)
 	{
-		if (!World)
-		{
-			return nullptr;
-		}
-
-		AActor* WarRig = World->SpawnActor<AActor>(AActor::StaticClass(), Location, FRotator::ZeroRotator);
-		if (WarRig)
-		{
-			WarRig->SetActorLabel(TEXT("WarRig"));
-		}
-		return WarRig;
+		TileManager->RegisterComponent();
 	}
-} // anonymous namespace
+
+	return TileManager;
+}
+
+// Helper function to create a simple war rig stand-in for testing
+static AActor* CreateTestWarRig(UWorld* World, const FVector& Location)
+{
+	if (!World)
+	{
+		return nullptr;
+	}
+
+	AActor* WarRig = World->SpawnActor<AActor>(AActor::StaticClass(), Location, FRotator::ZeroRotator);
+	if (WarRig)
+	{
+		WarRig->SetActorLabel(TEXT("WarRig"));
+	}
+	return WarRig;
+}
 
 /**
  * Test: Tile Pool Recycling
