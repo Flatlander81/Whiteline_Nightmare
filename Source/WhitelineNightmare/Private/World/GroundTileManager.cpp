@@ -205,6 +205,38 @@ bool UGroundTileManager::LoadConfigFromDataTable()
 	UE_LOG(LogGroundTileManager, Log, TEXT("Loaded config: TileSize=%.0f, PoolSize=%d, SpawnDist=%.0f, DespawnDist=%.0f"),
 		TileSize, TilePoolSize, TileSpawnDistance, TileDespawnDistance);
 
+	// Validate configuration
+	bool bConfigValid = true;
+
+	// Validate pool size (minimum 3 for seamless scrolling)
+	if (TilePoolSize < 3)
+	{
+		UE_LOG(LogGroundTileManager, Error, TEXT("TilePoolSize (%d) is less than minimum required (3). Seamless scrolling requires at least 3 tiles."), TilePoolSize);
+		TilePoolSize = 3; // Clamp to minimum
+		bConfigValid = false;
+	}
+
+	// Validate spawn/despawn distances
+	if (TileSpawnDistance <= TileDespawnDistance)
+	{
+		UE_LOG(LogGroundTileManager, Error, TEXT("TileSpawnDistance (%.0f) must be greater than TileDespawnDistance (%.0f). Tiles would spawn behind despawn threshold!"),
+			TileSpawnDistance, TileDespawnDistance);
+		bConfigValid = false;
+	}
+
+	// Validate tile size is positive
+	if (TileSize <= 0.0f)
+	{
+		UE_LOG(LogGroundTileManager, Error, TEXT("TileSize (%.0f) must be positive. Using default 2000.0f"), TileSize);
+		TileSize = 2000.0f;
+		bConfigValid = false;
+	}
+
+	if (!bConfigValid)
+	{
+		UE_LOG(LogGroundTileManager, Warning, TEXT("Configuration validation failed. Some values have been corrected. Please fix data table."));
+	}
+
 	return true;
 }
 
@@ -213,8 +245,14 @@ bool UGroundTileManager::InitializeTilePool()
 	// Validate tile class
 	if (!TileClass)
 	{
-		UE_LOG(LogGroundTileManager, Error, TEXT("TileClass not set"));
+		UE_LOG(LogGroundTileManager, Error, TEXT("TileClass not set. Please assign a valid AGroundTile class in the component properties."));
 		return false;
+	}
+
+	// Validate tile class implements IPoolableActor (warning only, not fatal)
+	if (!TileClass->ImplementsInterface(UPoolableActor::StaticClass()))
+	{
+		UE_LOG(LogGroundTileManager, Warning, TEXT("TileClass does not implement IPoolableActor interface. Pool lifecycle callbacks may not work correctly."));
 	}
 
 	// Create pool component if not exists
@@ -242,6 +280,12 @@ bool UGroundTileManager::InitializeTilePool()
 	PoolConfig.PoolSize = TilePoolSize;
 	PoolConfig.bAutoExpand = true;
 	PoolConfig.MaxPoolSize = TilePoolSize * 2;
+
+	// Validate pool configuration
+	if (PoolConfig.PoolSize < 3)
+	{
+		UE_LOG(LogGroundTileManager, Warning, TEXT("Pool size is %d, minimum recommended is 3 for seamless scrolling"), PoolConfig.PoolSize);
+	}
 
 	// Initialize pool
 	bool bSuccess = TilePool->Initialize(TileClass, PoolConfig);

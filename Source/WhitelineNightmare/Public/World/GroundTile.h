@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Core/ObjectPoolTypes.h"
 #include "GroundTile.generated.h"
 
 /**
@@ -17,9 +18,11 @@
  * 2. Positioned ahead of the war rig
  * 3. Scrolls backward each tick at scroll velocity
  * 4. Recycled when it passes behind the war rig
+ *
+ * Implements IPoolableActor interface for proper pool lifecycle management
  */
 UCLASS()
-class WHITELINENIGHTMARE_API AGroundTile : public AActor
+class WHITELINENIGHTMARE_API AGroundTile : public AActor, public IPoolableActor
 {
 	GENERATED_BODY()
 
@@ -28,25 +31,23 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	// IPoolableActor Interface Implementation
 	/**
 	 * Called when tile is activated from pool
 	 * Sets initial position and makes visible
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Ground Tile")
-	void OnActivated();
+	virtual void OnActivated_Implementation() override;
 
 	/**
 	 * Called when tile is returned to pool
 	 * Hides tile and resets state
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Ground Tile")
-	void OnDeactivated();
+	virtual void OnDeactivated_Implementation() override;
 
 	/**
 	 * Reset tile state (for pool reset)
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Ground Tile")
-	void ResetState();
+	virtual void ResetState_Implementation() override;
 
 	/**
 	 * Get tile length (for spawning calculations)

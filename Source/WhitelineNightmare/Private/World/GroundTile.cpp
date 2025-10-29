@@ -23,9 +23,8 @@ AGroundTile::AGroundTile()
 	// Create tile mesh
 	TileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TileMesh"));
 	TileMesh->SetupAttachment(RootComponent);
-	TileMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	TileMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
-	TileMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	// No collision needed - purely visual (per spec)
+	TileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// Use a simple cube mesh as default (can be overridden in Blueprint)
 	// In production, assign a proper road mesh asset in the Blueprint subclass
@@ -43,7 +42,7 @@ void AGroundTile::BeginPlay()
 	Super::BeginPlay();
 
 	// Initial state: deactivated (will be activated by pool manager)
-	OnDeactivated();
+	OnDeactivated_Implementation();
 }
 
 void AGroundTile::Tick(float DeltaTime)
@@ -60,7 +59,7 @@ void AGroundTile::Tick(float DeltaTime)
 	}
 }
 
-void AGroundTile::OnActivated()
+void AGroundTile::OnActivated_Implementation()
 {
 	// Make visible
 	SetActorHiddenInGame(false);
@@ -70,7 +69,7 @@ void AGroundTile::OnActivated()
 	UE_LOG(LogGroundTile, Verbose, TEXT("GroundTile activated at: %s"), *GetActorLocation().ToString());
 }
 
-void AGroundTile::OnDeactivated()
+void AGroundTile::OnDeactivated_Implementation()
 {
 	// Hide and disable
 	SetActorHiddenInGame(true);
@@ -80,12 +79,12 @@ void AGroundTile::OnDeactivated()
 	UE_LOG(LogGroundTile, Verbose, TEXT("GroundTile deactivated"));
 }
 
-void AGroundTile::ResetState()
+void AGroundTile::ResetState_Implementation()
 {
 	// Reset to default state
 	SetActorLocation(FVector::ZeroVector);
 	SetActorRotation(FRotator::ZeroRotator);
-	OnDeactivated();
+	Execute_OnDeactivated(this);
 
 	UE_LOG(LogGroundTile, Verbose, TEXT("GroundTile state reset"));
 }
