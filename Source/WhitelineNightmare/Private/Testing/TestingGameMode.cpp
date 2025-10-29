@@ -7,7 +7,6 @@
 // Forward declaration of test registration functions
 #if !UE_BUILD_SHIPPING
 void RegisterObjectPoolTests(class UTestManager* TestManager);
-void RegisterGroundTileTests(class UTestManager* TestManager);
 #endif
 
 // Define logging category
@@ -113,13 +112,9 @@ void ATestingGameMode::RegisterSampleTests()
 	UE_LOG(LogTestingGameMode, Log, TEXT("RegisterSampleTests: Registered %d sample tests"), 4);
 
 #if !UE_BUILD_SHIPPING
-	// Register object pool tests
+	// Register object pool tests (includes ground tile tests)
 	RegisterObjectPoolTests(TestManager);
-	UE_LOG(LogTestingGameMode, Log, TEXT("RegisterSampleTests: Registered object pool tests"));
-
-	// Register ground tile tests
-	RegisterGroundTileTests(TestManager);
-	UE_LOG(LogTestingGameMode, Log, TEXT("RegisterSampleTests: Registered ground tile tests"));
+	UE_LOG(LogTestingGameMode, Log, TEXT("RegisterSampleTests: Registered object pool and ground tile tests"));
 #endif
 }
 
