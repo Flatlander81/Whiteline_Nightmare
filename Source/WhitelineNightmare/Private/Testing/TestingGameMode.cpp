@@ -112,9 +112,9 @@ void ATestingGameMode::RegisterSampleTests()
 	UE_LOG(LogTestingGameMode, Log, TEXT("RegisterSampleTests: Registered %d sample tests"), 4);
 
 #if !UE_BUILD_SHIPPING
-	// Register object pool tests
+	// Register object pool tests (includes ground tile tests)
 	RegisterObjectPoolTests(TestManager);
-	UE_LOG(LogTestingGameMode, Log, TEXT("RegisterSampleTests: Registered object pool tests"));
+	UE_LOG(LogTestingGameMode, Log, TEXT("RegisterSampleTests: Registered object pool and ground tile tests"));
 #endif
 }
 

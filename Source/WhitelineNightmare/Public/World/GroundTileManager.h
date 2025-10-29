@@ -115,6 +115,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ground Tile Manager|Config")
 	float TileDespawnDistance;
 
+	// Optional tile mesh override from data table
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ground Tile Manager|Config")
+	TSoftObjectPtr<UStaticMesh> ConfiguredTileMesh;
+
+	// Optional tile material override from data table
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ground Tile Manager|Config")
+	TSoftObjectPtr<UMaterialInterface> ConfiguredTileMaterial;
+
 	// Debug visualization
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ground Tile Manager|Debug")
 	bool bShowDebugVisualization;

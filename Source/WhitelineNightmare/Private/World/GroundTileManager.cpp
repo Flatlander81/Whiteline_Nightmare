@@ -21,9 +21,9 @@ UGroundTileManager::UGroundTileManager()
 	, WarRig(nullptr)
 	, TilePool(nullptr)
 	, TileSize(2000.0f)
-	, TilePoolSize(10)
-	, TileSpawnDistance(50000.0f)  // Spawn very far ahead (well off-screen)
-	, TileDespawnDistance(15000.0f)  // Despawn very far behind (well off-screen)
+	, TilePoolSize(15)
+	, TileSpawnDistance(10000.0f)  // Spawn 10000 units ahead (5 tiles)
+	, TileDespawnDistance(5000.0f)  // Despawn 5000 units behind (2.5 tiles)
 	, bShowDebugVisualization(false)
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -34,11 +34,18 @@ void UGroundTileManager::BeginPlay()
 {
 	Super::BeginPlay();
 
+	UE_LOG(LogGroundTileManager, Log, TEXT("=== GroundTileManager BeginPlay ==="));
+	UE_LOG(LogGroundTileManager, Log, TEXT("Initial defaults: TileSize=%.0f, PoolSize=%d, SpawnDist=%.0f, DespawnDist=%.0f"),
+		TileSize, TilePoolSize, TileSpawnDistance, TileDespawnDistance);
+
 	// Load configuration from data table
 	if (!LoadConfigFromDataTable())
 	{
 		UE_LOG(LogGroundTileManager, Warning, TEXT("Failed to load config from data table, using defaults"));
 	}
+
+	UE_LOG(LogGroundTileManager, Log, TEXT("After config load: TileSize=%.0f, PoolSize=%d, SpawnDist=%.0f, DespawnDist=%.0f"),
+		TileSize, TilePoolSize, TileSpawnDistance, TileDespawnDistance);
 
 	// Initialize tile pool
 	if (!InitializeTilePool())
@@ -53,11 +60,20 @@ void UGroundTileManager::BeginPlay()
 	{
 		UE_LOG(LogGroundTileManager, Warning, TEXT("War rig not found, using world origin"));
 	}
+	else
+	{
+		UE_LOG(LogGroundTileManager, Log, TEXT("War rig found at position: %s"), *WarRig->GetActorLocation().ToString());
+	}
 
 	// Spawn initial tiles
 	SpawnInitialTiles();
 
 	UE_LOG(LogGroundTileManager, Log, TEXT("GroundTileManager initialized: %d tiles spawned"), ActiveTiles.Num());
+	UE_LOG(LogGroundTileManager, Log, TEXT("Pool state: Active=%d, Available=%d, Total=%d"),
+		TilePool ? TilePool->GetActiveCount() : 0,
+		TilePool ? TilePool->GetAvailableCount() : 0,
+		TilePool ? TilePool->GetTotalPoolSize() : 0);
+	UE_LOG(LogGroundTileManager, Log, TEXT("=== GroundTileManager Initialization Complete ==="));
 }
 
 void UGroundTileManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -202,8 +218,53 @@ bool UGroundTileManager::LoadConfigFromDataTable()
 	TileSpawnDistance = RowData->TileSpawnDistance;
 	TileDespawnDistance = RowData->TileDespawnDistance;
 
+	// Load optional visual overrides
+	ConfiguredTileMesh = RowData->TileMesh;
+	ConfiguredTileMaterial = RowData->TileMaterial;
+
 	UE_LOG(LogGroundTileManager, Log, TEXT("Loaded config: TileSize=%.0f, PoolSize=%d, SpawnDist=%.0f, DespawnDist=%.0f"),
 		TileSize, TilePoolSize, TileSpawnDistance, TileDespawnDistance);
+
+	if (!ConfiguredTileMesh.IsNull())
+	{
+		UE_LOG(LogGroundTileManager, Log, TEXT("  TileMesh override: %s"), *ConfiguredTileMesh.ToString());
+	}
+	if (!ConfiguredTileMaterial.IsNull())
+	{
+		UE_LOG(LogGroundTileManager, Log, TEXT("  TileMaterial override: %s"), *ConfiguredTileMaterial.ToString());
+	}
+
+	// Validate configuration
+	bool bConfigValid = true;
+
+	// Validate pool size (minimum 3 for seamless scrolling)
+	if (TilePoolSize < 3)
+	{
+		UE_LOG(LogGroundTileManager, Error, TEXT("TilePoolSize (%d) is less than minimum required (3). Seamless scrolling requires at least 3 tiles."), TilePoolSize);
+		TilePoolSize = 3; // Clamp to minimum
+		bConfigValid = false;
+	}
+
+	// Validate spawn/despawn distances
+	if (TileSpawnDistance <= TileDespawnDistance)
+	{
+		UE_LOG(LogGroundTileManager, Error, TEXT("TileSpawnDistance (%.0f) must be greater than TileDespawnDistance (%.0f). Tiles would spawn behind despawn threshold!"),
+			TileSpawnDistance, TileDespawnDistance);
+		bConfigValid = false;
+	}
+
+	// Validate tile size is positive
+	if (TileSize <= 0.0f)
+	{
+		UE_LOG(LogGroundTileManager, Error, TEXT("TileSize (%.0f) must be positive. Using default 2000.0f"), TileSize);
+		TileSize = 2000.0f;
+		bConfigValid = false;
+	}
+
+	if (!bConfigValid)
+	{
+		UE_LOG(LogGroundTileManager, Warning, TEXT("Configuration validation failed. Some values have been corrected. Please fix data table."));
+	}
 
 	return true;
 }
@@ -213,8 +274,14 @@ bool UGroundTileManager::InitializeTilePool()
 	// Validate tile class
 	if (!TileClass)
 	{
-		UE_LOG(LogGroundTileManager, Error, TEXT("TileClass not set"));
+		UE_LOG(LogGroundTileManager, Error, TEXT("TileClass not set. Please assign a valid AGroundTile class in the component properties."));
 		return false;
+	}
+
+	// Validate tile class implements IPoolableActor (warning only, not fatal)
+	if (!TileClass->ImplementsInterface(UPoolableActor::StaticClass()))
+	{
+		UE_LOG(LogGroundTileManager, Warning, TEXT("TileClass does not implement IPoolableActor interface. Pool lifecycle callbacks may not work correctly."));
 	}
 
 	// Create pool component if not exists
@@ -243,6 +310,17 @@ bool UGroundTileManager::InitializeTilePool()
 	PoolConfig.bAutoExpand = true;
 	PoolConfig.MaxPoolSize = TilePoolSize * 2;
 
+	UE_LOG(LogGroundTileManager, Log, TEXT("=== Pool Configuration ==="));
+	UE_LOG(LogGroundTileManager, Log, TEXT("Initial Size: %d"), PoolConfig.PoolSize);
+	UE_LOG(LogGroundTileManager, Log, TEXT("Auto-Expand: %s"), PoolConfig.bAutoExpand ? TEXT("Yes") : TEXT("No"));
+	UE_LOG(LogGroundTileManager, Log, TEXT("Max Size: %d"), PoolConfig.MaxPoolSize);
+
+	// Validate pool configuration
+	if (PoolConfig.PoolSize < 3)
+	{
+		UE_LOG(LogGroundTileManager, Warning, TEXT("Pool size is %d, minimum recommended is 3 for seamless scrolling"), PoolConfig.PoolSize);
+	}
+
 	// Initialize pool
 	bool bSuccess = TilePool->Initialize(TileClass, PoolConfig);
 	if (!bSuccess)
@@ -251,7 +329,9 @@ bool UGroundTileManager::InitializeTilePool()
 		return false;
 	}
 
-	UE_LOG(LogGroundTileManager, Log, TEXT("Tile pool initialized with %d tiles"), TilePoolSize);
+	UE_LOG(LogGroundTileManager, Log, TEXT("Tile pool initialized successfully"));
+	UE_LOG(LogGroundTileManager, Log, TEXT("Pool state after init: Total=%d, Available=%d, Active=%d"),
+		TilePool->GetTotalPoolSize(), TilePool->GetAvailableCount(), TilePool->GetActiveCount());
 	return true;
 }
 
@@ -265,34 +345,65 @@ void UGroundTileManager::SpawnInitialTiles()
 
 	const float WarRigX = WarRig->GetActorLocation().X;
 
+	UE_LOG(LogGroundTileManager, Log, TEXT("=== SpawnInitialTiles Calculation ==="));
+	UE_LOG(LogGroundTileManager, Log, TEXT("Config: TileSize=%.0f, SpawnDist=%.0f, DespawnDist=%.0f, PoolSize=%d"),
+		TileSize, TileSpawnDistance, TileDespawnDistance, TilePoolSize);
+
 	// Calculate how many tiles we need to fill the visible area
 	const float VisibleDistance = TileSpawnDistance + TileDespawnDistance;
 	const int32 NumTilesToSpawn = FMath::CeilToInt(VisibleDistance / TileSize) + 2;
 
-	UE_LOG(LogGroundTileManager, Log, TEXT("Spawning %d initial tiles (VisibleDist=%.0f, TileSize=%.0f)"),
-		NumTilesToSpawn, VisibleDistance, TileSize);
+	UE_LOG(LogGroundTileManager, Log, TEXT("VisibleDistance = SpawnDist + DespawnDist = %.0f + %.0f = %.0f"),
+		TileSpawnDistance, TileDespawnDistance, VisibleDistance);
+	UE_LOG(LogGroundTileManager, Log, TEXT("NumTilesToSpawn = Ceil(%.0f / %.0f) + 2 = %d"),
+		VisibleDistance, TileSize, NumTilesToSpawn);
 
 	// Spawn tiles from well behind to ahead
 	// Add extra margin (10000 units) behind despawn distance to ensure road looks complete from any camera angle
 	const float ExtraBackMargin = 10000.0f;
 	const float StartX = WarRigX - TileDespawnDistance - ExtraBackMargin;
 
-	UE_LOG(LogGroundTileManager, Log, TEXT("Starting initial tiles at X=%.0f (WarRig=%.0f, ExtraMargin=%.0f)"),
-		StartX, WarRigX, ExtraBackMargin);
+	UE_LOG(LogGroundTileManager, Log, TEXT("WarRigX=%.0f, ExtraBackMargin=%.0f"), WarRigX, ExtraBackMargin);
+	UE_LOG(LogGroundTileManager, Log, TEXT("StartX = %.0f - %.0f - %.0f = %.0f"),
+		WarRigX, TileDespawnDistance, ExtraBackMargin, StartX);
+	UE_LOG(LogGroundTileManager, Log, TEXT("Attempting to spawn %d tiles (Pool max: %d)"),
+		NumTilesToSpawn, TilePool ? TilePool->GetTotalPoolSize() : 0);
+
+	int32 SuccessCount = 0;
+	int32 FailCount = 0;
 
 	for (int32 i = 0; i < NumTilesToSpawn; ++i)
 	{
 		FVector TilePosition(StartX + (i * TileSize), 0.0f, 0.0f);
+
+		if (TilePool)
+		{
+			UE_LOG(LogGroundTileManager, Verbose, TEXT("  [%d/%d] Attempting spawn at X=%.0f (Pool: %d/%d available)"),
+				i + 1, NumTilesToSpawn, TilePosition.X,
+				TilePool->GetAvailableCount(), TilePool->GetTotalPoolSize());
+		}
+
 		AGroundTile* Tile = SpawnTile(TilePosition);
 
 		if (!Tile)
 		{
-			UE_LOG(LogGroundTileManager, Warning, TEXT("Failed to spawn initial tile %d"), i);
-			break;
+			FailCount++;
+			UE_LOG(LogGroundTileManager, Warning, TEXT("  [%d/%d] FAILED to spawn tile at X=%.0f"), i + 1, NumTilesToSpawn, TilePosition.X);
+		}
+		else
+		{
+			SuccessCount++;
 		}
 	}
 
-	UE_LOG(LogGroundTileManager, Log, TEXT("Spawned %d initial tiles"), ActiveTiles.Num());
+	UE_LOG(LogGroundTileManager, Log, TEXT("=== Spawn Results ==="));
+	UE_LOG(LogGroundTileManager, Log, TEXT("Attempted: %d, Success: %d, Failed: %d"), NumTilesToSpawn, SuccessCount, FailCount);
+	UE_LOG(LogGroundTileManager, Log, TEXT("Active tiles: %d"), ActiveTiles.Num());
+	if (TilePool)
+	{
+		UE_LOG(LogGroundTileManager, Log, TEXT("Pool: Active=%d, Available=%d, Total=%d"),
+			TilePool->GetActiveCount(), TilePool->GetAvailableCount(), TilePool->GetTotalPoolSize());
+	}
 }
 
 AGroundTile* UGroundTileManager::SpawnTile(const FVector& Position)
@@ -321,8 +432,32 @@ AGroundTile* UGroundTileManager::SpawnTile(const FVector& Position)
 
 	// Configure tile
 	Tile->SetTileLength(TileSize);
-	Tile->OnActivated();
+	IPoolableActor::Execute_OnActivated(Tile);
 	Tile->bShowDebugBounds = bShowDebugVisualization;
+
+	// Apply mesh override from data table if configured
+	if (!ConfiguredTileMesh.IsNull())
+	{
+		UStaticMesh* MeshToApply = ConfiguredTileMesh.LoadSynchronous();
+		UStaticMeshComponent* MeshComponent = Tile->GetTileMesh();
+		if (MeshToApply && MeshComponent)
+		{
+			MeshComponent->SetStaticMesh(MeshToApply);
+			UE_LOG(LogGroundTileManager, Verbose, TEXT("Applied mesh override to tile: %s"), *MeshToApply->GetName());
+		}
+	}
+
+	// Apply material override from data table if configured
+	if (!ConfiguredTileMaterial.IsNull())
+	{
+		UMaterialInterface* MaterialToApply = ConfiguredTileMaterial.LoadSynchronous();
+		UStaticMeshComponent* MeshComponent = Tile->GetTileMesh();
+		if (MaterialToApply && MeshComponent)
+		{
+			MeshComponent->SetMaterial(0, MaterialToApply);
+			UE_LOG(LogGroundTileManager, Verbose, TEXT("Applied material override to tile: %s"), *MaterialToApply->GetName());
+		}
+	}
 
 	// Add to active tiles
 	ActiveTiles.Add(Tile);
@@ -338,7 +473,7 @@ void UGroundTileManager::RecycleTile(AGroundTile* Tile)
 	}
 
 	// Deactivate tile
-	Tile->OnDeactivated();
+	IPoolableActor::Execute_OnDeactivated(Tile);
 
 	// Return to pool
 	TilePool->ReturnToPool(Tile);
