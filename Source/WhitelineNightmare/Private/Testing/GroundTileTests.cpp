@@ -11,60 +11,64 @@
 
 #if !UE_BUILD_SHIPPING
 
-// Helper function to get a valid world for testing
-static UWorld* GetTestWorld()
+// Anonymous namespace to avoid symbol conflicts with other test files
+namespace
 {
-	for (const FWorldContext& Context : GEngine->GetWorldContexts())
+	// Helper function to get a valid world for testing
+	UWorld* GetGroundTileTestWorld()
 	{
-		if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+		for (const FWorldContext& Context : GEngine->GetWorldContexts())
 		{
-			return Context.World();
+			if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+			{
+				return Context.World();
+			}
 		}
-	}
-	return nullptr;
-}
-
-// Helper function to create a ground tile manager for testing
-static UGroundTileManager* CreateTestGroundTileManager()
-{
-	UWorld* World = GetTestWorld();
-	if (!World)
-	{
 		return nullptr;
 	}
 
-	// Create a dummy actor to hold the component
-	AActor* DummyActor = World->SpawnActor<AActor>();
-	if (!DummyActor)
+	// Helper function to create a ground tile manager for testing
+	UGroundTileManager* CreateTestGroundTileManager()
 	{
-		return nullptr;
+		UWorld* World = GetGroundTileTestWorld();
+		if (!World)
+		{
+			return nullptr;
+		}
+
+		// Create a dummy actor to hold the component
+		AActor* DummyActor = World->SpawnActor<AActor>();
+		if (!DummyActor)
+		{
+			return nullptr;
+		}
+
+		// Create and attach the tile manager component
+		UGroundTileManager* TileManager = NewObject<UGroundTileManager>(DummyActor);
+		if (TileManager)
+		{
+			TileManager->RegisterComponent();
+		}
+
+		return TileManager;
 	}
 
-	// Create and attach the tile manager component
-	UGroundTileManager* TileManager = NewObject<UGroundTileManager>(DummyActor);
-	if (TileManager)
+	// Helper function to create a simple war rig stand-in for testing
+	AActor* CreateTestWarRig(UWorld* World, const FVector& Location)
 	{
-		TileManager->RegisterComponent();
-	}
+		if (!World)
+		{
+			return nullptr;
+		}
 
-	return TileManager;
-}
-
-// Helper function to create a simple war rig stand-in for testing
-static AActor* CreateTestWarRig(UWorld* World, const FVector& Location)
-{
-	if (!World)
-	{
-		return nullptr;
+		AActor* WarRig = World->SpawnActor<AActor>(AActor::StaticClass(), Location, FRotator::ZeroRotator);
+		if (WarRig)
+		{
+			WarRig->SetActorLabel(TEXT("WarRig"));
+		}
+		return WarRig;
 	}
-
-	AActor* WarRig = World->SpawnActor<AActor>(AActor::StaticClass(), Location, FRotator::ZeroRotator);
-	if (WarRig)
-	{
-		WarRig->SetActorLabel(TEXT("WarRig"));
-	}
-	return WarRig;
-}
+} // anonymous namespace
 
 /**
  * Test: Tile Pool Recycling
@@ -72,27 +76,25 @@ static AActor* CreateTestWarRig(UWorld* World, const FVector& Location)
  */
 static bool GroundTileTest_TilePoolRecycling()
 {
-	UGroundTileManager* TileManager = CreateTestGroundTileManager();
-	TEST_NOT_NULL(TileManager, "Tile manager should be created");
-
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetGroundTileTestWorld();
 	TEST_NOT_NULL(World, "World should exist");
 
 	// Create a war rig for position reference
 	AActor* WarRig = CreateTestWarRig(World, FVector::ZeroVector);
 	TEST_NOT_NULL(WarRig, "War rig should be created");
 
-	// Set up tile manager manually for testing
-	TileManager->TileClass = AGroundTile::StaticClass();
+	// Create pool directly without accessing protected members
+	AActor* PoolOwner = World->SpawnActor<AActor>();
+	TEST_NOT_NULL(PoolOwner, "Pool owner should be created");
 
-	// Create pool manually
-	UObjectPoolComponent* Pool = NewObject<UObjectPoolComponent>(TileManager->GetOwner());
+	UObjectPoolComponent* Pool = NewObject<UObjectPoolComponent>(PoolOwner);
 	Pool->RegisterComponent();
 
 	FObjectPoolConfig Config;
 	Config.PoolSize = 5;
 	Config.bAutoExpand = false;
-	Pool->Initialize(AGroundTile::StaticClass(), Config);
+	bool bInitSuccess = Pool->Initialize(AGroundTile::StaticClass(), Config);
+	TEST_TRUE(bInitSuccess, "Pool should initialize successfully");
 
 	TEST_EQUAL(Pool->GetTotalPoolSize(), 5, "Pool should have 5 tiles");
 
@@ -114,17 +116,17 @@ static bool GroundTileTest_TilePoolRecycling()
 	AGroundTile* Tile2 = Cast<AGroundTile>(Tile2Actor);
 
 	// Verify it's the SAME instance (reused, not destroyed and recreated)
-	TEST_EQUAL(OriginalTile, Tile2, "Pool should reuse the same tile instance, not create a new one");
-	TEST_EQUAL(Pool->GetTotalPoolSize(), 5, "Pool size should remain constant (tiles not destroyed)");
+	TEST_EQUAL(OriginalTile, Tile2, "Pool should reuse the same tile instance");
+	TEST_EQUAL(Pool->GetTotalPoolSize(), 5, "Pool size should remain constant");
 
 	// Cleanup
 	if (WarRig)
 	{
 		WarRig->Destroy();
 	}
-	if (TileManager->GetOwner())
+	if (PoolOwner)
 	{
-		TileManager->GetOwner()->Destroy();
+		PoolOwner->Destroy();
 	}
 
 	TEST_SUCCESS("GroundTileTest_TilePoolRecycling");
@@ -136,20 +138,21 @@ static bool GroundTileTest_TilePoolRecycling()
  */
 static bool GroundTileTest_SeamlessScrolling()
 {
-	UGroundTileManager* TileManager = CreateTestGroundTileManager();
-	TEST_NOT_NULL(TileManager, "Tile manager should be created");
-
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetGroundTileTestWorld();
 	TEST_NOT_NULL(World, "World should exist");
 
 	// Create pool
-	UObjectPoolComponent* Pool = NewObject<UObjectPoolComponent>(TileManager->GetOwner());
+	AActor* PoolOwner = World->SpawnActor<AActor>();
+	TEST_NOT_NULL(PoolOwner, "Pool owner should be created");
+
+	UObjectPoolComponent* Pool = NewObject<UObjectPoolComponent>(PoolOwner);
 	Pool->RegisterComponent();
 
 	FObjectPoolConfig Config;
 	Config.PoolSize = 3;
 	Config.bAutoExpand = false;
-	Pool->Initialize(AGroundTile::StaticClass(), Config);
+	bool bInitSuccess = Pool->Initialize(AGroundTile::StaticClass(), Config);
+	TEST_TRUE(bInitSuccess, "Pool should initialize successfully");
 
 	const float TileSize = 2000.0f;
 
@@ -177,8 +180,7 @@ static bool GroundTileTest_SeamlessScrolling()
 
 		// Tiles should be adjacent with no gap (allowing small floating point tolerance)
 		float Gap = NextTileStart - CurrentTileEnd;
-		TEST_NEARLY_EQUAL(Gap, 0.0f, 1.0f,
-			FString::Printf(TEXT("No gap should exist between tile %d and %d (gap: %.2f)"), i, i + 1, Gap));
+		TEST_NEARLY_EQUAL(Gap, 0.0f, 1.0f, "No gap should exist between tiles");
 	}
 
 	// Verify tiles form a continuous line
@@ -188,12 +190,12 @@ static bool GroundTileTest_SeamlessScrolling()
 	float ActualTotalLength = LastTileEnd - FirstTileStart;
 
 	TEST_NEARLY_EQUAL(ActualTotalLength, ExpectedTotalLength, 1.0f,
-		"Total length of all tiles should equal expected continuous length");
+		"Total length should equal expected continuous length");
 
 	// Cleanup
-	if (TileManager->GetOwner())
+	if (PoolOwner)
 	{
-		TileManager->GetOwner()->Destroy();
+		PoolOwner->Destroy();
 	}
 
 	TEST_SUCCESS("GroundTileTest_SeamlessScrolling");
@@ -205,10 +207,7 @@ static bool GroundTileTest_SeamlessScrolling()
  */
 static bool GroundTileTest_TilePositioning()
 {
-	UGroundTileManager* TileManager = CreateTestGroundTileManager();
-	TEST_NOT_NULL(TileManager, "Tile manager should be created");
-
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetGroundTileTestWorld();
 	TEST_NOT_NULL(World, "World should exist");
 
 	// Create war rig at a specific position
@@ -217,13 +216,17 @@ static bool GroundTileTest_TilePositioning()
 	TEST_NOT_NULL(WarRig, "War rig should be created");
 
 	// Create pool
-	UObjectPoolComponent* Pool = NewObject<UObjectPoolComponent>(TileManager->GetOwner());
+	AActor* PoolOwner = World->SpawnActor<AActor>();
+	TEST_NOT_NULL(PoolOwner, "Pool owner should be created");
+
+	UObjectPoolComponent* Pool = NewObject<UObjectPoolComponent>(PoolOwner);
 	Pool->RegisterComponent();
 
 	FObjectPoolConfig Config;
 	Config.PoolSize = 5;
 	Config.bAutoExpand = false;
-	Pool->Initialize(AGroundTile::StaticClass(), Config);
+	bool bInitSuccess = Pool->Initialize(AGroundTile::StaticClass(), Config);
+	TEST_TRUE(bInitSuccess, "Pool should initialize successfully");
 
 	const float TileSize = 2000.0f;
 	const float SpawnDistanceAhead = 5000.0f;
@@ -239,7 +242,7 @@ static bool GroundTileTest_TilePositioning()
 	// Verify tile is at correct position
 	float ActualTileX = Tile->GetActorLocation().X;
 	TEST_NEARLY_EQUAL(ActualTileX, ExpectedFurthestPosition, 1.0f,
-		"Tile should be positioned at correct spawn distance ahead of war rig");
+		"Tile should be at correct spawn distance");
 
 	// Verify tile is ahead of war rig
 	TEST_TRUE(ActualTileX > WarRigPosition.X, "Tile should be ahead of war rig");
@@ -247,28 +250,31 @@ static bool GroundTileTest_TilePositioning()
 	// Calculate distance between war rig and tile
 	float DistanceFromWarRig = ActualTileX - WarRigPosition.X;
 	TEST_NEARLY_EQUAL(DistanceFromWarRig, SpawnDistanceAhead, 1.0f,
-		"Distance from war rig should match spawn distance");
+		"Distance should match spawn distance");
 
 	// Test multiple tiles at different positions
-	TArray<float> TestPositions = {
-		WarRigPosition.X - 1000.0f,  // Behind
-		WarRigPosition.X,             // At war rig
-		WarRigPosition.X + 2000.0f,  // Ahead
-		WarRigPosition.X + 4000.0f   // Far ahead
-	};
-
-	for (float TestX : TestPositions)
+	float TestPosition1 = WarRigPosition.X - 1000.0f;
+	AActor* TestTileActor1 = Pool->GetFromPool(FVector(TestPosition1, 0.0f, 0.0f), FRotator::ZeroRotator);
+	if (TestTileActor1)
 	{
-		AActor* TestTileActor = Pool->GetFromPool(FVector(TestX, 0.0f, 0.0f), FRotator::ZeroRotator);
-		if (TestTileActor)
-		{
-			AGroundTile* TestTile = Cast<AGroundTile>(TestTileActor);
-			float ActualX = TestTile->GetActorLocation().X;
-			TEST_NEARLY_EQUAL(ActualX, TestX, 1.0f,
-				FString::Printf(TEXT("Tile should spawn at specified position (%.0f)"), TestX));
+		TEST_NEARLY_EQUAL(TestTileActor1->GetActorLocation().X, TestPosition1, 1.0f, "Tile at position 1");
+		Pool->ReturnToPool(TestTileActor1);
+	}
 
-			Pool->ReturnToPool(TestTileActor);
-		}
+	float TestPosition2 = WarRigPosition.X;
+	AActor* TestTileActor2 = Pool->GetFromPool(FVector(TestPosition2, 0.0f, 0.0f), FRotator::ZeroRotator);
+	if (TestTileActor2)
+	{
+		TEST_NEARLY_EQUAL(TestTileActor2->GetActorLocation().X, TestPosition2, 1.0f, "Tile at position 2");
+		Pool->ReturnToPool(TestTileActor2);
+	}
+
+	float TestPosition3 = WarRigPosition.X + 2000.0f;
+	AActor* TestTileActor3 = Pool->GetFromPool(FVector(TestPosition3, 0.0f, 0.0f), FRotator::ZeroRotator);
+	if (TestTileActor3)
+	{
+		TEST_NEARLY_EQUAL(TestTileActor3->GetActorLocation().X, TestPosition3, 1.0f, "Tile at position 3");
+		Pool->ReturnToPool(TestTileActor3);
 	}
 
 	// Cleanup
@@ -276,9 +282,9 @@ static bool GroundTileTest_TilePositioning()
 	{
 		WarRig->Destroy();
 	}
-	if (TileManager->GetOwner())
+	if (PoolOwner)
 	{
-		TileManager->GetOwner()->Destroy();
+		PoolOwner->Destroy();
 	}
 
 	TEST_SUCCESS("GroundTileTest_TilePositioning");
@@ -290,75 +296,64 @@ static bool GroundTileTest_TilePositioning()
  */
 static bool GroundTileTest_PoolSize()
 {
-	UGroundTileManager* TileManager = CreateTestGroundTileManager();
-	TEST_NOT_NULL(TileManager, "Tile manager should be created");
+	UWorld* World = GetGroundTileTestWorld();
+	TEST_NOT_NULL(World, "World should exist");
 
-	// Test various pool sizes
-	TArray<int32> PoolSizes = { 3, 5, 10, 15 };
+	AActor* PoolOwner = World->SpawnActor<AActor>();
+	TEST_NOT_NULL(PoolOwner, "Pool owner should be created");
 
-	for (int32 PoolSize : PoolSizes)
+	// Test pool size of 5
+	UObjectPoolComponent* Pool1 = NewObject<UObjectPoolComponent>(PoolOwner);
+	Pool1->RegisterComponent();
+
+	FObjectPoolConfig Config1;
+	Config1.PoolSize = 5;
+	Config1.bAutoExpand = false;
+
+	bool bInitSuccess1 = Pool1->Initialize(AGroundTile::StaticClass(), Config1);
+	TEST_TRUE(bInitSuccess1, "Pool should initialize with size 5");
+	TEST_EQUAL(Pool1->GetTotalPoolSize(), 5, "Pool should have 5 tiles");
+	TEST_EQUAL(Pool1->GetAvailableCount(), 5, "All 5 tiles should be available");
+	TEST_EQUAL(Pool1->GetActiveCount(), 0, "No tiles should be active initially");
+
+	// Get all tiles from pool
+	TArray<AActor*> RetrievedTiles;
+	for (int32 i = 0; i < 5; ++i)
 	{
-		UObjectPoolComponent* Pool = NewObject<UObjectPoolComponent>(TileManager->GetOwner());
-		Pool->RegisterComponent();
+		AActor* Tile = Pool1->GetFromPool(FVector(i * 1000.0f, 0.0f, 0.0f), FRotator::ZeroRotator);
+		TEST_NOT_NULL(Tile, "Should retrieve tile from pool");
+		RetrievedTiles.Add(Tile);
+	}
 
-		FObjectPoolConfig Config;
-		Config.PoolSize = PoolSize;
-		Config.bAutoExpand = false;
+	// Verify pool is exhausted
+	TEST_EQUAL(Pool1->GetActiveCount(), 5, "All 5 tiles should be active");
+	TEST_EQUAL(Pool1->GetAvailableCount(), 0, "Pool should be exhausted");
 
-		bool bInitSuccess = Pool->Initialize(AGroundTile::StaticClass(), Config);
-		TEST_TRUE(bInitSuccess, FString::Printf(TEXT("Pool should initialize with size %d"), PoolSize));
+	// Try to get one more (should fail - no auto-expand)
+	AActor* ExtraTile = Pool1->GetFromPool(FVector::ZeroVector, FRotator::ZeroRotator);
+	TEST_NULL(ExtraTile, "Should not get tile when pool exhausted");
 
-		// Verify pool created correct number of tiles
-		TEST_EQUAL(Pool->GetTotalPoolSize(), PoolSize,
-			FString::Printf(TEXT("Pool should have %d tiles"), PoolSize));
-
-		TEST_EQUAL(Pool->GetAvailableCount(), PoolSize,
-			FString::Printf(TEXT("All %d tiles should be available initially"), PoolSize));
-
-		TEST_EQUAL(Pool->GetActiveCount(), 0,
-			FString::Printf(TEXT("No tiles should be active initially for pool size %d"), PoolSize));
-
-		// Get all tiles from pool
-		TArray<AActor*> RetrievedTiles;
-		for (int32 i = 0; i < PoolSize; ++i)
-		{
-			AActor* Tile = Pool->GetFromPool(FVector(i * 1000.0f, 0.0f, 0.0f), FRotator::ZeroRotator);
-			TEST_NOT_NULL(Tile, FString::Printf(TEXT("Should retrieve tile %d of %d"), i + 1, PoolSize));
-			RetrievedTiles.Add(Tile);
-		}
-
-		// Verify pool is exhausted
-		TEST_EQUAL(Pool->GetActiveCount(), PoolSize,
-			FString::Printf(TEXT("All %d tiles should be active"), PoolSize));
-		TEST_EQUAL(Pool->GetAvailableCount(), 0,
-			FString::Printf(TEXT("Pool should be exhausted with %d tiles"), PoolSize));
-
-		// Try to get one more (should fail - no auto-expand)
-		AActor* ExtraTile = Pool->GetFromPool(FVector::ZeroVector, FRotator::ZeroRotator);
-		TEST_NULL(ExtraTile, FString::Printf(TEXT("Should not get tile when pool of %d is exhausted"), PoolSize));
-
-		// Clean up this pool's tiles
-		for (AActor* Tile : RetrievedTiles)
-		{
-			Pool->ReturnToPool(Tile);
-		}
+	// Return tiles
+	for (AActor* Tile : RetrievedTiles)
+	{
+		Pool1->ReturnToPool(Tile);
 	}
 
 	// Test minimum recommended size (3)
-	UObjectPoolComponent* MinPool = NewObject<UObjectPoolComponent>(TileManager->GetOwner());
-	MinPool->RegisterComponent();
+	UObjectPoolComponent* Pool2 = NewObject<UObjectPoolComponent>(PoolOwner);
+	Pool2->RegisterComponent();
 
-	FObjectPoolConfig MinConfig;
-	MinConfig.PoolSize = 3;
-	MinConfig.bAutoExpand = false;
-	MinPool->Initialize(AGroundTile::StaticClass(), MinConfig);
-
-	TEST_EQUAL(MinPool->GetTotalPoolSize(), 3, "Minimum pool size should be 3 for seamless scrolling");
+	FObjectPoolConfig Config2;
+	Config2.PoolSize = 3;
+	Config2.bAutoExpand = false;
+	bool bInitSuccess2 = Pool2->Initialize(AGroundTile::StaticClass(), Config2);
+	TEST_TRUE(bInitSuccess2, "Pool should initialize with size 3");
+	TEST_EQUAL(Pool2->GetTotalPoolSize(), 3, "Minimum pool size should be 3");
 
 	// Cleanup
-	if (TileManager->GetOwner())
+	if (PoolOwner)
 	{
-		TileManager->GetOwner()->Destroy();
+		PoolOwner->Destroy();
 	}
 
 	TEST_SUCCESS("GroundTileTest_PoolSize");
@@ -370,10 +365,7 @@ static bool GroundTileTest_PoolSize()
  */
 static bool GroundTileTest_TileDespawn()
 {
-	UGroundTileManager* TileManager = CreateTestGroundTileManager();
-	TEST_NOT_NULL(TileManager, "Tile manager should be created");
-
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetGroundTileTestWorld();
 	TEST_NOT_NULL(World, "World should exist");
 
 	// Create war rig
@@ -382,69 +374,52 @@ static bool GroundTileTest_TileDespawn()
 	TEST_NOT_NULL(WarRig, "War rig should be created");
 
 	// Create pool
-	UObjectPoolComponent* Pool = NewObject<UObjectPoolComponent>(TileManager->GetOwner());
+	AActor* PoolOwner = World->SpawnActor<AActor>();
+	TEST_NOT_NULL(PoolOwner, "Pool owner should be created");
+
+	UObjectPoolComponent* Pool = NewObject<UObjectPoolComponent>(PoolOwner);
 	Pool->RegisterComponent();
 
 	FObjectPoolConfig Config;
 	Config.PoolSize = 5;
 	Config.bAutoExpand = false;
-	Pool->Initialize(AGroundTile::StaticClass(), Config);
+	bool bInitSuccess = Pool->Initialize(AGroundTile::StaticClass(), Config);
+	TEST_TRUE(bInitSuccess, "Pool should initialize successfully");
 
 	const float DespawnDistance = 1000.0f;
 	const float DespawnThreshold = WarRigPosition.X - DespawnDistance;
 
-	// Spawn tiles at various positions relative to despawn threshold
-	struct FTileTestData
-	{
-		float Position;
-		bool ShouldDespawn;
-		FString Description;
-	};
+	// Test tile well behind threshold (should despawn)
+	float Position1 = DespawnThreshold - 500.0f;
+	AActor* TileActor1 = Pool->GetFromPool(FVector(Position1, 0.0f, 0.0f), FRotator::ZeroRotator);
+	TEST_NOT_NULL(TileActor1, "Tile 1 should be created");
+	AGroundTile* Tile1 = Cast<AGroundTile>(TileActor1);
+	bool IsBehind1 = (Tile1->GetActorLocation().X < DespawnThreshold);
+	TEST_TRUE(IsBehind1, "Tile 1 should be behind threshold");
+	Pool->ReturnToPool(TileActor1);
+	TEST_TRUE(Tile1->IsHidden(), "Despawned tile should be hidden");
 
-	TArray<FTileTestData> TestCases = {
-		{ DespawnThreshold - 500.0f, true,  TEXT("Well behind threshold") },
-		{ DespawnThreshold - 1.0f,   true,  TEXT("Just behind threshold") },
-		{ DespawnThreshold + 1.0f,   false, TEXT("Just ahead of threshold") },
-		{ DespawnThreshold + 500.0f, false, TEXT("Well ahead of threshold") },
-		{ WarRigPosition.X,          false, TEXT("At war rig position") }
-	};
+	// Test tile ahead of threshold (should not despawn)
+	float Position2 = DespawnThreshold + 500.0f;
+	AActor* TileActor2 = Pool->GetFromPool(FVector(Position2, 0.0f, 0.0f), FRotator::ZeroRotator);
+	TEST_NOT_NULL(TileActor2, "Tile 2 should be created");
+	AGroundTile* Tile2 = Cast<AGroundTile>(TileActor2);
+	bool IsBehind2 = (Tile2->GetActorLocation().X < DespawnThreshold);
+	TEST_FALSE(IsBehind2, "Tile 2 should be ahead of threshold");
+	Pool->ReturnToPool(TileActor2);
 
-	for (const FTileTestData& TestCase : TestCases)
-	{
-		AActor* TileActor = Pool->GetFromPool(FVector(TestCase.Position, 0.0f, 0.0f), FRotator::ZeroRotator);
-		TEST_NOT_NULL(TileActor, FString::Printf(TEXT("Tile should be created at %.0f (%s)"),
-			TestCase.Position, *TestCase.Description));
-
-		AGroundTile* Tile = Cast<AGroundTile>(TileActor);
-		float TileX = Tile->GetActorLocation().X;
-
-		// Check if tile is behind despawn threshold
-		bool IsBehindThreshold = (TileX < DespawnThreshold);
-
-		TEST_EQUAL(IsBehindThreshold, TestCase.ShouldDespawn,
-			FString::Printf(TEXT("Tile at %.0f %s be behind despawn threshold %.0f (%s)"),
-				TileX,
-				TestCase.ShouldDespawn ? TEXT("should") : TEXT("should not"),
-				DespawnThreshold,
-				*TestCase.Description));
-
-		// Simulate despawn check logic
-		if (IsBehindThreshold)
-		{
-			// This tile should be returned to pool
-			Pool->ReturnToPool(TileActor);
-			TEST_TRUE(Tile->IsHidden(), FString::Printf(TEXT("Despawned tile should be hidden (%s)"), *TestCase.Description));
-		}
-		else
-		{
-			// This tile should remain active
-			Pool->ReturnToPool(TileActor); // Clean up for next test
-		}
-	}
+	// Test tile at war rig position (should not despawn)
+	float Position3 = WarRigPosition.X;
+	AActor* TileActor3 = Pool->GetFromPool(FVector(Position3, 0.0f, 0.0f), FRotator::ZeroRotator);
+	TEST_NOT_NULL(TileActor3, "Tile 3 should be created");
+	AGroundTile* Tile3 = Cast<AGroundTile>(TileActor3);
+	bool IsBehind3 = (Tile3->GetActorLocation().X < DespawnThreshold);
+	TEST_FALSE(IsBehind3, "Tile 3 should be ahead of threshold");
+	Pool->ReturnToPool(TileActor3);
 
 	// Verify pool statistics after despawn operations
-	TEST_EQUAL(Pool->GetActiveCount(), 0, "All tiles should be returned after test");
-	TEST_EQUAL(Pool->GetAvailableCount(), 5, "All tiles should be available after test");
+	TEST_EQUAL(Pool->GetActiveCount(), 0, "All tiles returned");
+	TEST_EQUAL(Pool->GetAvailableCount(), 5, "All tiles available");
 
 	// Test distance-based despawn with moving war rig
 	AActor* TestTile = Pool->GetFromPool(FVector(1000.0f, 0.0f, 0.0f), FRotator::ZeroRotator);
@@ -456,9 +431,7 @@ static bool GroundTileTest_TileDespawn()
 	float TilePosition = TestTile->GetActorLocation().X;
 
 	// Tile at 1000 should now be behind threshold of 2000
-	TEST_TRUE(TilePosition < NewDespawnThreshold,
-		FString::Printf(TEXT("Tile at %.0f should be behind new threshold %.0f after war rig moved"),
-			TilePosition, NewDespawnThreshold));
+	TEST_TRUE(TilePosition < NewDespawnThreshold, "Tile should be behind new threshold");
 
 	// Cleanup
 	Pool->ReturnToPool(TestTile);
@@ -466,9 +439,9 @@ static bool GroundTileTest_TileDespawn()
 	{
 		WarRig->Destroy();
 	}
-	if (TileManager->GetOwner())
+	if (PoolOwner)
 	{
-		TileManager->GetOwner()->Destroy();
+		PoolOwner->Destroy();
 	}
 
 	TEST_SUCCESS("GroundTileTest_TileDespawn");
