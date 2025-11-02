@@ -10,7 +10,7 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
-#include "WorldCollision.h"
+#include "Engine/OverlapResult.h"
 #include "CollisionQueryParams.h"
 #include "CollisionShape.h"
 
