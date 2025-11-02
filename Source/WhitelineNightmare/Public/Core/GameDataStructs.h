@@ -289,6 +289,9 @@ struct FGameplayBalanceData : public FTableRowBase
 	}
 };
 
+// Forward declaration for turret class
+class ATurretBase;
+
 /**
  * Turret Data - Data table row for different turret types
  */
@@ -296,6 +299,10 @@ USTRUCT(BlueprintType)
 struct FTurretData : public FTableRowBase
 {
 	GENERATED_BODY()
+
+	// Internal turret name (used for identification)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret")
+	FName TurretName;
 
 	// Display name of the turret
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret")
@@ -305,9 +312,17 @@ struct FTurretData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret")
 	FText Description;
 
+	// Class reference for the turret type
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret")
+	TSubclassOf<ATurretBase> TurretClass;
+
 	// Reference to the turret mesh
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret")
 	TSoftObjectPtr<UStaticMesh> TurretMesh;
+
+	// Icon for UI display
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret|UI")
+	TSoftObjectPtr<UTexture2D> Icon;
 
 	// Base damage per shot
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret|Combat")
@@ -321,6 +336,10 @@ struct FTurretData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret|Combat")
 	float Range;
 
+	// Base health for the turret
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret|Combat")
+	float BaseHealth;
+
 	// Cost in scrap to build
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret|Economy")
 	int32 BuildCost;
@@ -330,9 +349,11 @@ struct FTurretData : public FTableRowBase
 	int32 UpgradeCost;
 
 	FTurretData()
-		: BaseDamage(10.0f)
+		: TurretName(NAME_None)
+		, BaseDamage(10.0f)
 		, FireRate(1.0f)
 		, Range(1000.0f)
+		, BaseHealth(100.0f)
 		, BuildCost(50)
 		, UpgradeCost(25)
 	{
