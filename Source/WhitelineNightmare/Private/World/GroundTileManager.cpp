@@ -14,6 +14,9 @@
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogGroundTileManager, Log, All);
 
+// Extra back margin for initial tile spawning (ensures road looks complete from any camera angle)
+static constexpr float EXTRA_BACK_MARGIN = 10000.0f;
+
 UGroundTileManager::UGroundTileManager()
 	: TileDataTable(nullptr)
 	, DataTableRowName("DefaultTile")
@@ -316,11 +319,11 @@ bool UGroundTileManager::LoadConfigFromDataTable()
 	// Validate configuration
 	bool bConfigValid = true;
 
-	// Validate pool size (minimum 3 for seamless scrolling)
-	if (TilePoolSize < 3)
+	// Validate tile size is positive (check this first since we use it in calculations)
+	if (TileSize <= 0.0f)
 	{
-		UE_LOG(LogGroundTileManager, Error, TEXT("TilePoolSize (%d) is less than minimum required (3). Seamless scrolling requires at least 3 tiles."), TilePoolSize);
-		TilePoolSize = 3; // Clamp to minimum
+		UE_LOG(LogGroundTileManager, Error, TEXT("TileSize (%.0f) must be positive. Using default 2000.0f"), TileSize);
+		TileSize = 2000.0f;
 		bConfigValid = false;
 	}
 
@@ -332,17 +335,42 @@ bool UGroundTileManager::LoadConfigFromDataTable()
 		bConfigValid = false;
 	}
 
-	// Validate tile size is positive
-	if (TileSize <= 0.0f)
+	// Calculate required pool size based on actual coverage needed
+	// Coverage includes: ExtraBackMargin + DespawnDistance + SpawnDistance
+	const float TotalCoverage = EXTRA_BACK_MARGIN + TileDespawnDistance + TileSpawnDistance;
+	const int32 RequiredTiles = FMath::CeilToInt(TotalCoverage / TileSize) + 2; // +2 for safety margin
+
+	UE_LOG(LogGroundTileManager, Log, TEXT("=== Pool Size Validation ==="));
+	UE_LOG(LogGroundTileManager, Log, TEXT("Coverage needed: ExtraBackMargin(%.0f) + DespawnDist(%.0f) + SpawnDist(%.0f) = %.0f units"),
+		EXTRA_BACK_MARGIN, TileDespawnDistance, TileSpawnDistance, TotalCoverage);
+	UE_LOG(LogGroundTileManager, Log, TEXT("Required tiles: Ceil(%.0f / %.0f) + 2 = %d tiles"),
+		TotalCoverage, TileSize, RequiredTiles);
+	UE_LOG(LogGroundTileManager, Log, TEXT("Configured pool size: %d tiles"), TilePoolSize);
+
+	// Validate pool size is sufficient
+	if (TilePoolSize < RequiredTiles)
 	{
-		UE_LOG(LogGroundTileManager, Error, TEXT("TileSize (%.0f) must be positive. Using default 2000.0f"), TileSize);
-		TileSize = 2000.0f;
+		UE_LOG(LogGroundTileManager, Warning, TEXT("TilePoolSize (%d) is less than required (%d) for coverage. Increasing to %d."),
+			TilePoolSize, RequiredTiles, RequiredTiles);
+		TilePoolSize = RequiredTiles;
+		bConfigValid = false;
+	}
+
+	// Validate minimum pool size (3 for seamless scrolling)
+	if (TilePoolSize < 3)
+	{
+		UE_LOG(LogGroundTileManager, Error, TEXT("TilePoolSize (%d) is less than minimum required (3). Seamless scrolling requires at least 3 tiles."), TilePoolSize);
+		TilePoolSize = 3; // Clamp to minimum
 		bConfigValid = false;
 	}
 
 	if (!bConfigValid)
 	{
-		UE_LOG(LogGroundTileManager, Warning, TEXT("Configuration validation failed. Some values have been corrected. Please fix data table."));
+		UE_LOG(LogGroundTileManager, Warning, TEXT("Configuration validation failed. Some values have been corrected. Please update your data table."));
+	}
+	else
+	{
+		UE_LOG(LogGroundTileManager, Log, TEXT("Pool size validation: OK (sufficient for coverage)"));
 	}
 
 	return true;
@@ -383,16 +411,24 @@ bool UGroundTileManager::InitializeTilePool()
 		TilePool->RegisterComponent();
 	}
 
+	// Calculate max pool size based on actual coverage requirements
+	// This ensures pool can expand to handle full coverage even if initial size is small
+	const float TotalCoverage = EXTRA_BACK_MARGIN + TileDespawnDistance + TileSpawnDistance;
+	const int32 MaxRequiredTiles = FMath::CeilToInt(TotalCoverage / TileSize) + 4; // +4 for extra safety margin
+	const int32 CalculatedMaxSize = FMath::Max(TilePoolSize * 2, MaxRequiredTiles); // At least 2x or required coverage
+
 	// Configure pool
 	FObjectPoolConfig PoolConfig;
 	PoolConfig.PoolSize = TilePoolSize;
 	PoolConfig.bAutoExpand = true;
-	PoolConfig.MaxPoolSize = TilePoolSize * 2; // Allow expansion to 2x initial size
+	PoolConfig.MaxPoolSize = CalculatedMaxSize;
 
 	UE_LOG(LogGroundTileManager, Log, TEXT("=== Pool Configuration ==="));
 	UE_LOG(LogGroundTileManager, Log, TEXT("Initial Size: %d"), PoolConfig.PoolSize);
 	UE_LOG(LogGroundTileManager, Log, TEXT("Auto-Expand: %s"), PoolConfig.bAutoExpand ? TEXT("Yes") : TEXT("No"));
-	UE_LOG(LogGroundTileManager, Log, TEXT("Max Size: %d (2x initial)"), PoolConfig.MaxPoolSize);
+	UE_LOG(LogGroundTileManager, Log, TEXT("Max Size: %d (max of 2x initial or coverage requirement)"), PoolConfig.MaxPoolSize);
+	UE_LOG(LogGroundTileManager, Log, TEXT("  - 2x initial: %d tiles"), TilePoolSize * 2);
+	UE_LOG(LogGroundTileManager, Log, TEXT("  - Coverage requirement: %d tiles (%.0f units coverage)"), MaxRequiredTiles, TotalCoverage);
 
 	// Validate pool configuration
 	if (PoolConfig.PoolSize < 3)
@@ -442,13 +478,12 @@ void UGroundTileManager::SpawnInitialTiles()
 		VisibleDistance, TileSize, NumTilesToSpawn);
 
 	// Spawn tiles from well behind to ahead
-	// Add extra margin (10000 units) behind despawn distance to ensure road looks complete from any camera angle
-	const float ExtraBackMargin = 10000.0f;
-	const float StartX = WarRigX - TileDespawnDistance - ExtraBackMargin;
+	// Add extra margin behind despawn distance to ensure road looks complete from any camera angle
+	const float StartX = WarRigX - TileDespawnDistance - EXTRA_BACK_MARGIN;
 
-	UE_LOG(LogGroundTileManager, Log, TEXT("WarRigX=%.0f, ExtraBackMargin=%.0f"), WarRigX, ExtraBackMargin);
+	UE_LOG(LogGroundTileManager, Log, TEXT("WarRigX=%.0f, ExtraBackMargin=%.0f"), WarRigX, EXTRA_BACK_MARGIN);
 	UE_LOG(LogGroundTileManager, Log, TEXT("StartX = %.0f - %.0f - %.0f = %.0f"),
-		WarRigX, TileDespawnDistance, ExtraBackMargin, StartX);
+		WarRigX, TileDespawnDistance, EXTRA_BACK_MARGIN, StartX);
 	UE_LOG(LogGroundTileManager, Log, TEXT("Attempting to spawn %d tiles (Pool max: %d)"),
 		NumTilesToSpawn, TilePool ? TilePool->GetTotalPoolSize() : 0);
 
