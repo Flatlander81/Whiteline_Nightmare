@@ -19,43 +19,46 @@
 
 #if !UE_BUILD_SHIPPING
 
-// Helper function to get a valid world for testing
-static UWorld* GetTestWorld()
+namespace
 {
-	for (const FWorldContext& Context : GEngine->GetWorldContexts())
+	// Helper function to get a valid world for testing
+	UWorld* GetTestWorld()
 	{
-		if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+		for (const FWorldContext& Context : GEngine->GetWorldContexts())
 		{
-			return Context.World();
+			if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+			{
+				return Context.World();
+			}
 		}
-	}
-	return nullptr;
-}
-
-// Helper function to create a pool component for testing
-static UObjectPoolComponent* CreateTestPoolComponent()
-{
-	UWorld* World = GetTestWorld();
-	if (!World)
-	{
 		return nullptr;
 	}
 
-	// Create a dummy actor to hold the component
-	AActor* DummyActor = World->SpawnActor<AActor>();
-	if (!DummyActor)
+	// Helper function to create a pool component for testing
+	UObjectPoolComponent* CreateTestPoolComponent()
 	{
-		return nullptr;
-	}
+		UWorld* World = GetTestWorld();
+		if (!World)
+		{
+			return nullptr;
+		}
 
-	// Create and attach the pool component
-	UObjectPoolComponent* PoolComponent = NewObject<UObjectPoolComponent>(DummyActor);
-	if (PoolComponent)
-	{
-		PoolComponent->RegisterComponent();
-	}
+		// Create a dummy actor to hold the component
+		AActor* DummyActor = World->SpawnActor<AActor>();
+		if (!DummyActor)
+		{
+			return nullptr;
+		}
 
-	return PoolComponent;
+		// Create and attach the pool component
+		UObjectPoolComponent* PoolComponent = NewObject<UObjectPoolComponent>(DummyActor);
+		if (PoolComponent)
+		{
+			PoolComponent->RegisterComponent();
+		}
+
+		return PoolComponent;
+	}
 }
 
 /**

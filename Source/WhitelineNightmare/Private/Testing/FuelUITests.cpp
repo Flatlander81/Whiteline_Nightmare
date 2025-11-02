@@ -15,17 +15,20 @@
 
 #if !UE_BUILD_SHIPPING
 
-// Helper function to get a valid world for testing
-static UWorld* GetTestWorld()
+namespace
 {
-	for (const FWorldContext& Context : GEngine->GetWorldContexts())
+	// Helper function to get a valid world for testing
+	UWorld* GetTestWorld()
 	{
-		if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+		for (const FWorldContext& Context : GEngine->GetWorldContexts())
 		{
-			return Context.World();
+			if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+			{
+				return Context.World();
+			}
 		}
+		return nullptr;
 	}
-	return nullptr;
 }
 
 /**
