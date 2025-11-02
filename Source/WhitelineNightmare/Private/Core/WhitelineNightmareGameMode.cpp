@@ -10,9 +10,8 @@
 #if !UE_BUILD_SHIPPING
 #include "Testing/TestManager.h"
 
-// Forward declaration of test registration functions
+// Forward declaration of test registration function
 void RegisterObjectPoolTests(class UTestManager* TestManager);
-void RegisterWorldScrollTests(class UTestManager* TestManager);
 #endif
 
 // Define logging category
@@ -56,8 +55,7 @@ void AWhitelineNightmareGameMode::BeginPlay()
 	if (TestManager)
 	{
 		RegisterObjectPoolTests(TestManager);
-		RegisterWorldScrollTests(TestManager);
-		UE_LOG(LogWhitelineNightmare, Log, TEXT("WhitelineNightmareGameMode: Registered ObjectPool and WorldScroll tests"));
+		UE_LOG(LogWhitelineNightmare, Log, TEXT("WhitelineNightmareGameMode: Registered all tests (ObjectPool, GroundTile, Turret, WorldScroll)"));
 	}
 #endif
 
