@@ -3,6 +3,7 @@
 #include "Testing/TestMacros.h"
 #include "Testing/TestManager.h"
 #include "Turrets/TurretBase.h"
+#include "Testing/TestTurret.h"
 #include "GAS/Attributes/CombatAttributeSet.h"
 #include "Core/WarRigPawn.h"
 #include "Core/GameDataStructs.h"
@@ -55,11 +56,11 @@ static ATurretBase* CreateTestTurret()
 		return nullptr;
 	}
 
-	// Spawn turret at origin
+	// Spawn test turret at origin (using concrete ATestTurret class instead of abstract ATurretBase)
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	ATurretBase* Turret = World->SpawnActor<ATurretBase>(ATurretBase::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	ATurretBase* Turret = World->SpawnActor<ATestTurret>(ATestTurret::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 	return Turret;
 }
 
