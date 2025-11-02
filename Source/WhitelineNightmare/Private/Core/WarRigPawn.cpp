@@ -834,13 +834,13 @@ void AWarRigPawn::DebugShowFuel()
 	float MaxFuel = AttributeSet->GetMaxFuel();
 	float FuelPercent = (MaxFuel > 0.0f) ? (CurrentFuel / MaxFuel) * 100.0f : 0.0f;
 
-	UE_LOG(LogTemp, Log, TEXT("═════════════════════════════════════"));
+	UE_LOG(LogTemp, Log, TEXT("========================================"));
 	UE_LOG(LogTemp, Log, TEXT("  FUEL STATUS"));
-	UE_LOG(LogTemp, Log, TEXT("═════════════════════════════════════"));
+	UE_LOG(LogTemp, Log, TEXT("========================================"));
 	UE_LOG(LogTemp, Log, TEXT("  Current Fuel: %.2f"), CurrentFuel);
 	UE_LOG(LogTemp, Log, TEXT("  Max Fuel:     %.2f"), MaxFuel);
 	UE_LOG(LogTemp, Log, TEXT("  Percentage:   %.1f%%"), FuelPercent);
-	UE_LOG(LogTemp, Log, TEXT("═════════════════════════════════════"));
+	UE_LOG(LogTemp, Log, TEXT("========================================"));
 }
 
 // ===== FUEL SYSTEM TEST FUNCTIONS =====
@@ -865,7 +865,7 @@ void AWarRigPawn::TestFuelDrainRate()
 	UE_LOG(LogTemp, Log, TEXT("Use 'DebugShowFuel' command to check current fuel"));
 	UE_LOG(LogTemp, Log, TEXT("SUCCESS: Test setup complete - monitor fuel manually"));
 
-	UE_LOG(LogTemp, Log, TEXT("======================================="));
+	UE_LOG(LogTemp, Log, TEXT("==========================================="));
 }
 
 void AWarRigPawn::TestFuelClamping()
@@ -923,7 +923,7 @@ void AWarRigPawn::TestFuelClamping()
 		UE_LOG(LogTemp, Error, TEXT("OVERALL: Some clamping tests FAILED"));
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("======================================"));
+	UE_LOG(LogTemp, Log, TEXT("==========================================="));
 }
 
 void AWarRigPawn::TestAbilityGranting()
@@ -959,7 +959,7 @@ void AWarRigPawn::TestAbilityGranting()
 		UE_LOG(LogTemp, Error, TEXT("FAILED: Fuel drain ability is NOT granted or handle is invalid"));
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("========================================="));
+	UE_LOG(LogTemp, Log, TEXT("==========================================="));
 }
 
 void AWarRigPawn::TestGameOverTrigger()
@@ -982,7 +982,7 @@ void AWarRigPawn::TestGameOverTrigger()
 	UE_LOG(LogTemp, Log, TEXT("Check console for game over messages."));
 	UE_LOG(LogTemp, Log, TEXT("SUCCESS: Test complete - verify game over triggered"));
 
-	UE_LOG(LogTemp, Log, TEXT("========================================="));
+	UE_LOG(LogTemp, Log, TEXT("==========================================="));
 }
 
 void AWarRigPawn::TestAttributeInitialization()
@@ -1045,7 +1045,7 @@ void AWarRigPawn::TestAttributeInitialization()
 		UE_LOG(LogTemp, Error, TEXT("OVERALL: Some initialization tests FAILED"));
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("================================================="));
+	UE_LOG(LogTemp, Log, TEXT("==========================================="));
 }
 
 void AWarRigPawn::TestFuelDrainPause()
@@ -1107,7 +1107,7 @@ void AWarRigPawn::TestFuelDrainPause()
 	FuelDrainAbility->bFuelDrainPaused = bInitialState;
 
 	UE_LOG(LogTemp, Log, TEXT("OVERALL: Pause/Resume test complete"));
-	UE_LOG(LogTemp, Log, TEXT("========================================"));
+	UE_LOG(LogTemp, Log, TEXT("==========================================="));
 }
 
 void AWarRigPawn::TestFuelSystemAll()
