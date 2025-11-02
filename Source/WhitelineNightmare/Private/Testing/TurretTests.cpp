@@ -16,8 +16,8 @@
 // HELPER FUNCTIONS
 // ============================================================================
 
-// Helper function to get a valid world for testing
-static UWorld* GetTestWorld()
+// Helper function to get a valid world for testing (turret-specific to avoid collision)
+static UWorld* GetTurretTestWorld()
 {
 	for (const FWorldContext& Context : GEngine->GetWorldContexts())
 	{
@@ -32,7 +32,7 @@ static UWorld* GetTestWorld()
 // Helper function to create a test war rig
 static AWarRigPawn* CreateTestWarRig()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTurretTestWorld();
 	if (!World)
 	{
 		return nullptr;
@@ -49,7 +49,7 @@ static AWarRigPawn* CreateTestWarRig()
 // Helper function to create a test turret
 static ATurretBase* CreateTestTurret()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTurretTestWorld();
 	if (!World)
 	{
 		return nullptr;
@@ -117,7 +117,7 @@ static bool TurretTest_TurretSpawn()
  */
 static bool TurretTest_TargetAcquisition()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTurretTestWorld();
 	TEST_NOT_NULL(World, "World should exist");
 
 	ATurretBase* Turret = CreateTestTurret();

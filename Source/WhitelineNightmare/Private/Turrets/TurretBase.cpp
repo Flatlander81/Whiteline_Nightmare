@@ -10,6 +10,8 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+#include "Engine/EngineTypes.h"
+#include "CollisionQueryParams.h"
 
 ATurretBase::ATurretBase()
 {
@@ -51,10 +53,10 @@ void ATurretBase::BeginPlay()
 	Super::BeginPlay();
 
 	// Initialize Ability System Component
-	if (AbilitySystemComponent)
+	if (AbilitySystemComponent && CombatAttributes)
 	{
-		// Add the attribute set to the ASC
-		AbilitySystemComponent->GetSpawnedAttributes_Mutable().AddUnique(CombatAttributes);
+		// Add the attribute set to the ASC (UE 5.6+ way)
+		AbilitySystemComponent->AddSpawnedAttribute(CombatAttributes);
 		CombatAttributes->InitHealth(CombatAttributes->GetMaxHealth());
 	}
 
@@ -456,8 +458,8 @@ bool ATurretBase::IsTargetValid(AActor* Target) const
 		return false;
 	}
 
-	// Check if target is pending kill or being destroyed
-	if (Target->IsPendingKill() || !IsValid(Target))
+	// Check if target is being destroyed or invalid
+	if (!IsValid(Target))
 	{
 		return false;
 	}
