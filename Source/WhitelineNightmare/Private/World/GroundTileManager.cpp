@@ -80,6 +80,23 @@ void UGroundTileManager::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// FIX 2: Retry finding WarRig if it spawned late
+	if (!WarRig)
+	{
+		WarRig = GetWarRig();
+		if (WarRig)
+		{
+			UE_LOG(LogGroundTileManager, Log, TEXT("War rig found on retry at position: %s"), *WarRig->GetActorLocation().ToString());
+
+			// Spawn initial tiles now that we have a war rig
+			if (ActiveTiles.Num() == 0)
+			{
+				UE_LOG(LogGroundTileManager, Log, TEXT("Spawning initial tiles after finding war rig..."));
+				SpawnInitialTiles();
+			}
+		}
+	}
+
 	// Check for tiles that need recycling
 	CheckForTileRecycling();
 
@@ -115,21 +132,54 @@ float UGroundTileManager::GetFurthestTilePosition() const
 
 void UGroundTileManager::CheckForTileRecycling()
 {
+	// FIX 1: Defensive null WarRig handling - use world origin as fallback
+	float WarRigX = 0.0f;
 	if (!WarRig)
 	{
-		return;
+		// Use world origin as fallback
+		WarRigX = 0.0f;
+
+		// FIX 3: Log warning every 5 seconds (not every frame)
+		static float LastWarningTime = 0.0f;
+		float CurrentTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+		if (CurrentTime - LastWarningTime > 5.0f)
+		{
+			UE_LOG(LogGroundTileManager, Warning, TEXT("WarRig is null - using world origin (0,0,0) for tile management. Active tiles: %d, Pool: %d/%d"),
+				ActiveTiles.Num(),
+				TilePool ? TilePool->GetActiveCount() : 0,
+				TilePool ? TilePool->GetTotalPoolSize() : 0);
+			LastWarningTime = CurrentTime;
+		}
+	}
+	else
+	{
+		WarRigX = WarRig->GetActorLocation().X;
 	}
 
-	const float WarRigX = WarRig->GetActorLocation().X;
 	const float DespawnThreshold = WarRigX - TileDespawnDistance;
 	const float SpawnThreshold = WarRigX + TileSpawnDistance;
 
+	// FIX 3: Log detailed recycling info when pool is getting full
+	if (TilePool && TilePool->GetAvailableCount() < 3)
+	{
+		UE_LOG(LogGroundTileManager, Warning, TEXT("Pool running low! Available: %d/%d, Active tiles: %d, WarRigX: %.0f, Despawn threshold: %.0f"),
+			TilePool->GetAvailableCount(),
+			TilePool->GetTotalPoolSize(),
+			ActiveTiles.Num(),
+			WarRigX,
+			DespawnThreshold);
+	}
+
 	// Check for tiles that passed behind war rig
+	int32 RecycledCount = 0;
 	for (int32 i = ActiveTiles.Num() - 1; i >= 0; --i)
 	{
 		AGroundTile* Tile = ActiveTiles[i];
 		if (!Tile)
 		{
+			// FIX 3: Log and remove null tiles from active list
+			UE_LOG(LogGroundTileManager, Warning, TEXT("Found null tile in ActiveTiles at index %d - removing"), i);
+			ActiveTiles.RemoveAt(i);
 			continue;
 		}
 
@@ -138,12 +188,23 @@ void UGroundTileManager::CheckForTileRecycling()
 		// If tile passed behind war rig, recycle it
 		if (TileX < DespawnThreshold)
 		{
-			UE_LOG(LogGroundTileManager, Verbose, TEXT("Recycling tile at X=%.0f (threshold=%.0f)"),
-				TileX, DespawnThreshold);
+			UE_LOG(LogGroundTileManager, Verbose, TEXT("Recycling tile at X=%.0f (threshold=%.0f, behind by %.0f)"),
+				TileX, DespawnThreshold, DespawnThreshold - TileX);
 
 			RecycleTile(Tile);
 			ActiveTiles.RemoveAt(i);
+			RecycledCount++;
 		}
+	}
+
+	// FIX 3: Log when tiles are recycled
+	if (RecycledCount > 0)
+	{
+		UE_LOG(LogGroundTileManager, Log, TEXT("Recycled %d tiles. Pool now: %d/%d available, %d active tiles remaining"),
+			RecycledCount,
+			TilePool ? TilePool->GetAvailableCount() : 0,
+			TilePool ? TilePool->GetTotalPoolSize() : 0,
+			ActiveTiles.Num());
 	}
 
 	// Spawn new tiles if furthest tile is too close
@@ -152,11 +213,29 @@ void UGroundTileManager::CheckForTileRecycling()
 	{
 		// Spawn new tile at furthest position + tile size
 		FVector NewPosition(FurthestX + TileSize, 0.0f, 0.0f);
+
+		// FIX 3: Log spawn attempt with pool state
+		if (TilePool)
+		{
+			UE_LOG(LogGroundTileManager, Verbose, TEXT("Spawning tile at X=%.0f (Furthest: %.0f, Threshold: %.0f). Pool: %d/%d available"),
+				NewPosition.X, FurthestX, SpawnThreshold,
+				TilePool->GetAvailableCount(), TilePool->GetTotalPoolSize());
+		}
+
 		AGroundTile* NewTile = SpawnTile(NewPosition);
 
 		if (NewTile)
 		{
-			UE_LOG(LogGroundTileManager, Verbose, TEXT("Spawned new tile at X=%.0f"), NewPosition.X);
+			UE_LOG(LogGroundTileManager, Verbose, TEXT("Successfully spawned tile at X=%.0f"), NewPosition.X);
+		}
+		else
+		{
+			// FIX 3: Log spawn failure with detailed pool info
+			UE_LOG(LogGroundTileManager, Error, TEXT("FAILED to spawn tile at X=%.0f! Pool exhausted. Active=%d, Available=%d, Total=%d"),
+				NewPosition.X,
+				TilePool ? TilePool->GetActiveCount() : 0,
+				TilePool ? TilePool->GetAvailableCount() : 0,
+				TilePool ? TilePool->GetTotalPoolSize() : 0);
 		}
 	}
 }
@@ -308,12 +387,12 @@ bool UGroundTileManager::InitializeTilePool()
 	FObjectPoolConfig PoolConfig;
 	PoolConfig.PoolSize = TilePoolSize;
 	PoolConfig.bAutoExpand = true;
-	PoolConfig.MaxPoolSize = TilePoolSize * 5; // Increased from 2x to 5x to handle more active tiles
+	PoolConfig.MaxPoolSize = TilePoolSize * 2; // Allow expansion to 2x initial size
 
 	UE_LOG(LogGroundTileManager, Log, TEXT("=== Pool Configuration ==="));
 	UE_LOG(LogGroundTileManager, Log, TEXT("Initial Size: %d"), PoolConfig.PoolSize);
 	UE_LOG(LogGroundTileManager, Log, TEXT("Auto-Expand: %s"), PoolConfig.bAutoExpand ? TEXT("Yes") : TEXT("No"));
-	UE_LOG(LogGroundTileManager, Log, TEXT("Max Size: %d"), PoolConfig.MaxPoolSize);
+	UE_LOG(LogGroundTileManager, Log, TEXT("Max Size: %d (2x initial)"), PoolConfig.MaxPoolSize);
 
 	// Validate pool configuration
 	if (PoolConfig.PoolSize < 3)
@@ -337,13 +416,17 @@ bool UGroundTileManager::InitializeTilePool()
 
 void UGroundTileManager::SpawnInitialTiles()
 {
+	// FIX 1: Use world origin if WarRig is null (defensive coding)
+	float WarRigX = 0.0f;
 	if (!WarRig)
 	{
-		UE_LOG(LogGroundTileManager, Warning, TEXT("Cannot spawn tiles without war rig reference"));
-		return;
+		UE_LOG(LogGroundTileManager, Warning, TEXT("War rig not found - spawning tiles relative to world origin (0,0,0). Retry will occur on tick."));
+		WarRigX = 0.0f;
 	}
-
-	const float WarRigX = WarRig->GetActorLocation().X;
+	else
+	{
+		WarRigX = WarRig->GetActorLocation().X;
+	}
 
 	UE_LOG(LogGroundTileManager, Log, TEXT("=== SpawnInitialTiles Calculation ==="));
 	UE_LOG(LogGroundTileManager, Log, TEXT("Config: TileSize=%.0f, SpawnDist=%.0f, DespawnDist=%.0f, PoolSize=%d"),
@@ -414,11 +497,23 @@ AGroundTile* UGroundTileManager::SpawnTile(const FVector& Position)
 		return nullptr;
 	}
 
+	// FIX 3: Log pool state before getting tile
+	UE_LOG(LogGroundTileManager, VeryVerbose, TEXT("SpawnTile: Requesting tile at X=%.0f. Pool state BEFORE: Active=%d, Available=%d, Total=%d"),
+		Position.X,
+		TilePool->GetActiveCount(),
+		TilePool->GetAvailableCount(),
+		TilePool->GetTotalPoolSize());
+
 	// Get tile from pool
 	AActor* TileActor = TilePool->GetFromPool(Position, FRotator::ZeroRotator);
 	if (!TileActor)
 	{
-		UE_LOG(LogGroundTileManager, Warning, TEXT("Failed to get tile from pool (pool exhausted)"));
+		UE_LOG(LogGroundTileManager, Error, TEXT("Failed to get tile from pool at X=%.0f! Pool exhausted. Active=%d, Available=%d, Total=%d, ActiveTiles array size=%d"),
+			Position.X,
+			TilePool->GetActiveCount(),
+			TilePool->GetAvailableCount(),
+			TilePool->GetTotalPoolSize(),
+			ActiveTiles.Num());
 		return nullptr;
 	}
 
@@ -461,6 +556,12 @@ AGroundTile* UGroundTileManager::SpawnTile(const FVector& Position)
 
 	// Add to active tiles
 	ActiveTiles.Add(Tile);
+
+	// FIX 3: Log when tile is successfully added to active tiles
+	UE_LOG(LogGroundTileManager, VeryVerbose, TEXT("SpawnTile: Tile successfully spawned and added to ActiveTiles. New ActiveTiles count: %d, Pool state AFTER: Active=%d, Available=%d"),
+		ActiveTiles.Num(),
+		TilePool->GetActiveCount(),
+		TilePool->GetAvailableCount());
 
 	return Tile;
 }
