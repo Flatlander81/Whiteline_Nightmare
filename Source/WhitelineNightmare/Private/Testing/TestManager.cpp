@@ -2,6 +2,7 @@
 
 #include "Testing/TestManager.h"
 #include "Engine/World.h"
+#include "HAL/IConsoleManager.h"
 
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogTestManager, Log, All);
@@ -53,6 +54,40 @@ void UTestManager::RegisterTest(const FString& TestName, ETestCategory Category,
 	RegisteredTests.Add(NewTest);
 
 	UE_LOG(LogTestManager, Log, TEXT("RegisterTest: Registered test '%s' in category %d"), *TestName, (int32)Category);
+
+#if !UE_BUILD_SHIPPING
+	// Register a console command for this test (allows direct calling by name)
+	// Create command name with Test_ prefix to avoid conflicts
+	FString CommandName = FString::Printf(TEXT("Test_%s"), *TestName);
+	FString HelpText = FString::Printf(TEXT("Run test: %s"), *TestName);
+
+	// Register console command
+	IConsoleCommand* Command = IConsoleManager::Get().RegisterConsoleCommand(
+		*CommandName,
+		*HelpText,
+		FConsoleCommandDelegate::CreateLambda([TestName]()
+		{
+			UE_LOG(LogTestManager, Log, TEXT("Console: Running test '%s' via direct command"), *TestName);
+
+			// Get TestManager instance
+			UTestManager* Manager = UTestManager::Get(nullptr);
+			if (Manager)
+			{
+				Manager->RunTest(TestName);
+			}
+			else
+			{
+				UE_LOG(LogTestManager, Error, TEXT("Console: Failed to get TestManager"));
+			}
+		}),
+		ECVF_Default
+	);
+
+	// Store command for cleanup
+	ConsoleCommands.Add(TestName, Command);
+
+	UE_LOG(LogTestManager, Log, TEXT("RegisterTest: Created console command '%s'"), *CommandName);
+#endif
 }
 
 bool UTestManager::RunAllTests()
@@ -227,6 +262,29 @@ void UTestManager::LogTestSummary() const
 	}
 
 	UE_LOG(LogTestManager, Log, TEXT("========================================"));
+}
+
+void UTestManager::Cleanup()
+{
+#if !UE_BUILD_SHIPPING
+	// Unregister all console commands
+	for (const TPair<FString, IConsoleCommand*>& Pair : ConsoleCommands)
+	{
+		if (Pair.Value)
+		{
+			FString CommandName = FString::Printf(TEXT("Test_%s"), *Pair.Key);
+			IConsoleManager::Get().UnregisterConsoleObject(*CommandName);
+		}
+	}
+
+	ConsoleCommands.Empty();
+	UE_LOG(LogTestManager, Log, TEXT("Cleanup: Unregistered %d console commands"), ConsoleCommands.Num());
+#endif
+}
+
+UTestManager::~UTestManager()
+{
+	Cleanup();
 }
 
 // Auto-registration helper implementation

@@ -307,6 +307,12 @@ static FAutoConsoleCommand ListTestsCommand(
 		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
 		UE_LOG(LogTestingGameMode, Log, TEXT("Registered Tests (%d total):"), AllTests.Num());
 		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("Usage: Each test can be run directly by typing:"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  Test_<TestName>  (e.g., Test_ObjectPool_SpawnTile)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  or"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  RunTests <Category>  (runs all tests in category)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
 
 		// Group tests by category
 		TMap<ETestCategory, TArray<FString>> TestsByCategory;
@@ -335,7 +341,7 @@ static FAutoConsoleCommand ListTestsCommand(
 			UE_LOG(LogTestingGameMode, Log, TEXT("\n[%s] - %d tests:"), *CategoryName, Tests.Num());
 			for (const FString& TestName : Tests)
 			{
-				UE_LOG(LogTestingGameMode, Log, TEXT("  - %s"), *TestName);
+				UE_LOG(LogTestingGameMode, Log, TEXT("  - %s  (run with: Test_%s)"), *TestName, *TestName);
 			}
 		};
 
@@ -360,8 +366,11 @@ static FAutoConsoleCommand ListTestsCommand(
 		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
 		UE_LOG(LogTestingGameMode, Log, TEXT(""));
 		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
-		UE_LOG(LogTestingGameMode, Log, TEXT("War Rig Exec Tests (via WarRigPawn):"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("War Rig Exec Tests (directly callable):"));
 		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("Note: These tests can be called directly WITHOUT the Test_ prefix"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("      (e.g., just type 'TestFuelClamping' in console)"));
 		UE_LOG(LogTestingGameMode, Log, TEXT(""));
 		UE_LOG(LogTestingGameMode, Log, TEXT("[Movement] - War Rig Tests:"));
 		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestWarRigDataLoading"));
