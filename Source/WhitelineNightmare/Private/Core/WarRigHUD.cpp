@@ -5,6 +5,9 @@
 #include "Engine/Font.h"
 #include "Core/WarRigPawn.h"
 #include "Core/LaneSystemComponent.h"
+#include "UI/WarRigHUDWidget.h"
+#include "Blueprint/UserWidget.h"
+#include "AbilitySystemComponent.h"
 
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogWarRigHUD, Log, All);
@@ -17,6 +20,7 @@ AWarRigHUD::AWarRigHUD()
 	, bShowingGameOver(false)
 	, bPlayerWonGame(false)
 	, bShowDebugLaneUI(true) // Show by default
+	, FuelWidget(nullptr)
 {
 	// Enable ticking
 	PrimaryActorTick.bCanEverTick = true;
@@ -29,6 +33,42 @@ void AWarRigHUD::BeginPlay()
 
 	UE_LOG(LogWarRigHUD, Log, TEXT("WarRigHUD: Initialized (Debug Lane UI: %s)"),
 		bShowDebugLaneUI ? TEXT("Enabled") : TEXT("Disabled"));
+
+	// Create fuel HUD widget
+	if (!FuelWidget)
+	{
+		FuelWidget = CreateWidget<UWarRigHUDWidget>(GetWorld(), UWarRigHUDWidget::StaticClass());
+		if (FuelWidget)
+		{
+			// Add widget to viewport
+			FuelWidget->AddToViewport(0); // Z-order 0 (behind other UI)
+			UE_LOG(LogWarRigHUD, Log, TEXT("WarRigHUD: Created fuel HUD widget"));
+
+			// Get war rig pawn and initialize widget with its AbilitySystemComponent
+			AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetOwningPawn());
+			if (WarRig)
+			{
+				UAbilitySystemComponent* ASC = WarRig->GetAbilitySystemComponent();
+				if (ASC)
+				{
+					FuelWidget->InitializeWidget(ASC);
+					UE_LOG(LogWarRigHUD, Log, TEXT("WarRigHUD: Fuel widget initialized with AbilitySystemComponent"));
+				}
+				else
+				{
+					UE_LOG(LogWarRigHUD, Error, TEXT("WarRigHUD: War Rig has no AbilitySystemComponent"));
+				}
+			}
+			else
+			{
+				UE_LOG(LogWarRigHUD, Warning, TEXT("WarRigHUD: Could not get War Rig pawn, fuel widget not bound to GAS"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogWarRigHUD, Error, TEXT("WarRigHUD: Failed to create fuel HUD widget"));
+		}
+	}
 }
 
 void AWarRigHUD::DrawHUD()
@@ -348,4 +388,44 @@ void AWarRigHUD::DrawDebugLaneUI()
 	const int32 CurrentLane = LaneSystem->GetCurrentLane();
 	const FString LaneText = FString::Printf(TEXT("Current Lane: %d"), CurrentLane);
 	DrawText(LaneText, FLinearColor::Yellow, CenterX - 60, ButtonY - 30, nullptr, 1.2f);
+}
+
+void AWarRigHUD::DebugToggleFuelUI()
+{
+	if (FuelWidget)
+	{
+		FuelWidget->ToggleVisibility();
+		UE_LOG(LogWarRigHUD, Log, TEXT("DebugToggleFuelUI: Toggled fuel UI visibility"));
+	}
+	else
+	{
+		UE_LOG(LogWarRigHUD, Warning, TEXT("DebugToggleFuelUI: Fuel widget is null"));
+	}
+}
+
+void AWarRigHUD::DebugTestFuelColors()
+{
+	if (FuelWidget)
+	{
+		FuelWidget->DebugCycleColors();
+		UE_LOG(LogWarRigHUD, Log, TEXT("DebugTestFuelColors: Cycled fuel colors"));
+	}
+	else
+	{
+		UE_LOG(LogWarRigHUD, Warning, TEXT("DebugTestFuelColors: Fuel widget is null"));
+	}
+}
+
+void AWarRigHUD::DebugShowFuelBindings()
+{
+	if (FuelWidget)
+	{
+		const bool bBindingSuccessful = FuelWidget->IsBindingSuccessful();
+		UE_LOG(LogWarRigHUD, Log, TEXT("DebugShowFuelBindings: Fuel widget binding status: %s"),
+			bBindingSuccessful ? TEXT("SUCCESS") : TEXT("FAILED"));
+	}
+	else
+	{
+		UE_LOG(LogWarRigHUD, Warning, TEXT("DebugShowFuelBindings: Fuel widget is null"));
+	}
 }

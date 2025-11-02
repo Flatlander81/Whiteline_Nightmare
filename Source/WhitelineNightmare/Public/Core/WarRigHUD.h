@@ -90,6 +90,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|HUD|Debug")
 	void ToggleDebugLaneUI();
 
+	// Debug commands for fuel UI widget
+	/**
+	 * Toggle fuel UI visibility (for testing)
+	 */
+	UFUNCTION(Exec, Category = "Debug")
+	void DebugToggleFuelUI();
+
+	/**
+	 * Cycle through fuel color states (for testing)
+	 */
+	UFUNCTION(Exec, Category = "Debug")
+	void DebugTestFuelColors();
+
+	/**
+	 * Log fuel binding status (for testing)
+	 */
+	UFUNCTION(Exec, Category = "Debug")
+	void DebugShowFuelBindings();
+
 protected:
 	// Current fuel percentage (0-1)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|HUD|State")
@@ -122,6 +141,10 @@ protected:
 	// Button hit boxes for lane controls
 	FBox2D LeftLaneButtonBox;
 	FBox2D RightLaneButtonBox;
+
+	// Fuel HUD widget (created programmatically)
+	UPROPERTY()
+	class UWarRigHUDWidget* FuelWidget;
 
 private:
 	/**
