@@ -358,6 +358,45 @@ static FAutoConsoleCommand ListTestsCommand(
 			DisplayCategory(ETestCategory::All, TestsByCategory[ETestCategory::All]);
 
 		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("War Rig Exec Tests (via WarRigPawn):"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("[Movement] - War Rig Tests:"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestWarRigDataLoading"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestWarRigSpawn"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestMountPointSetup"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestCameraSetup"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestStationaryPosition"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestWarRigAll (comprehensive)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("[Movement] - Lane System Tests:"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestLaneSystemBounds"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestLaneTransitionSpeed"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestLaneChangeValidation"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestCurrentLaneTracking"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestStationaryInOtherAxes"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestLaneSystemAll (comprehensive)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("[Economy] - Fuel System Tests:"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestFuelDrainRate"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestFuelClamping"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestGameOverTrigger"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("[GAS] - Fuel System GAS Tests:"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestAbilityGranting"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestAttributeInitialization"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestFuelDrainPause"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestFuelSystemAll (comprehensive)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("Comprehensive Test Suites:"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestWarRigAll (runs all war rig tests)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestLaneSystemAll (runs all lane system tests)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestFuelSystemAll (runs all fuel system tests)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
 	})
 );
 
