@@ -440,8 +440,11 @@ void RegisterTurretTests(UTestManager* TestManager)
 {
 	if (!TestManager)
 	{
+		UE_LOG(LogTemp, Error, TEXT("RegisterTurretTests: TestManager is null!"));
 		return;
 	}
+
+	UE_LOG(LogTemp, Log, TEXT("RegisterTurretTests: Registering 8 turret tests..."));
 
 	// Register all turret tests in Combat category
 	TestManager->RegisterTest(TEXT("Turret_Spawn"), ETestCategory::Combat, &TurretTest_TurretSpawn);
@@ -452,6 +455,8 @@ void RegisterTurretTests(UTestManager* TestManager)
 	TestManager->RegisterTest(TEXT("Turret_AttributeClamping"), ETestCategory::GAS, &TurretTest_AttributeClamping);
 	TestManager->RegisterTest(TEXT("Turret_MountPointIntegration"), ETestCategory::Combat, &TurretTest_MountPointIntegration);
 	TestManager->RegisterTest(TEXT("Turret_AbilitySystemIntegration"), ETestCategory::GAS, &TurretTest_AbilitySystemIntegration);
+
+	UE_LOG(LogTemp, Log, TEXT("RegisterTurretTests: Successfully registered 8 turret tests (6 Combat, 2 GAS)"));
 }
 
 #endif // !UE_BUILD_SHIPPING

@@ -308,7 +308,7 @@ bool UGroundTileManager::InitializeTilePool()
 	FObjectPoolConfig PoolConfig;
 	PoolConfig.PoolSize = TilePoolSize;
 	PoolConfig.bAutoExpand = true;
-	PoolConfig.MaxPoolSize = TilePoolSize * 2;
+	PoolConfig.MaxPoolSize = TilePoolSize * 5; // Increased from 2x to 5x to handle more active tiles
 
 	UE_LOG(LogGroundTileManager, Log, TEXT("=== Pool Configuration ==="));
 	UE_LOG(LogGroundTileManager, Log, TEXT("Initial Size: %d"), PoolConfig.PoolSize);
