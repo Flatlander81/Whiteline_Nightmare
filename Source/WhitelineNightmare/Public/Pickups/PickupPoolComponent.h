@@ -109,12 +109,12 @@ protected:
 	 */
 	FVector GetSpawnLocationForLane(int32 LaneIndex) const;
 
-	// Debug visualization
-#if !UE_BUILD_SHIPPING
-	/** Enable/disable debug visualization */
+	/** Enable/disable debug visualization (only functional in non-shipping builds) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickup Pool|Debug")
 	bool bShowDebugVisualization;
 
+	// Debug visualization functions
+#if !UE_BUILD_SHIPPING
 	/** Draw debug visualization for pickups and spawn/despawn boundaries */
 	void DrawDebugVisualization() const;
 

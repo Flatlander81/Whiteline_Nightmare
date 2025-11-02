@@ -43,9 +43,8 @@ UPickupPoolComponent::UPickupPoolComponent()
 	// Default lane positions (5 lanes)
 	LaneYPositions = { -400.0f, -200.0f, 0.0f, 200.0f, 400.0f };
 
-#if !UE_BUILD_SHIPPING
+	// Debug visualization (property exists in all builds, but only functional in non-shipping)
 	bShowDebugVisualization = false;
-#endif
 }
 
 void UPickupPoolComponent::BeginPlay()
