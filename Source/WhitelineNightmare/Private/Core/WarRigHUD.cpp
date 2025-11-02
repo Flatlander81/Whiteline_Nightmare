@@ -42,7 +42,11 @@ void AWarRigHUD::BeginPlay()
 		{
 			// Add widget to viewport
 			FuelWidget->AddToViewport(0); // Z-order 0 (behind other UI)
-			UE_LOG(LogWarRigHUD, Log, TEXT("WarRigHUD: Created fuel HUD widget"));
+
+			// CRITICAL: Set visibility to Visible so the widget renders!
+			FuelWidget->SetVisibility(ESlateVisibility::Visible);
+
+			UE_LOG(LogWarRigHUD, Log, TEXT("WarRigHUD: Created fuel HUD widget and set visibility to Visible"));
 
 			// Get war rig pawn and initialize widget with its AbilitySystemComponent
 			AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetOwningPawn());
@@ -482,7 +486,11 @@ void AWarRigHUD::DebugForceCreateFuelWidget()
 
 	// Add to viewport
 	FuelWidget->AddToViewport(0);
-	UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: Widget added to viewport"));
+
+	// CRITICAL: Set visibility to Visible so the widget renders!
+	FuelWidget->SetVisibility(ESlateVisibility::Visible);
+
+	UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: Widget added to viewport and set to Visible"));
 
 	// Try to initialize with War Rig's ASC
 	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetOwningPawn());
