@@ -10,8 +10,9 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
-#include "Engine/EngineTypes.h"
+#include "WorldCollision.h"
 #include "CollisionQueryParams.h"
+#include "CollisionShape.h"
 
 ATurretBase::ATurretBase()
 {
