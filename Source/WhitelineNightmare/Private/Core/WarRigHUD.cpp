@@ -423,9 +423,90 @@ void AWarRigHUD::DebugShowFuelBindings()
 		const bool bBindingSuccessful = FuelWidget->IsBindingSuccessful();
 		UE_LOG(LogWarRigHUD, Log, TEXT("DebugShowFuelBindings: Fuel widget binding status: %s"),
 			bBindingSuccessful ? TEXT("SUCCESS") : TEXT("FAILED"));
+
+		// Also log widget visibility
+		const ESlateVisibility Visibility = FuelWidget->GetVisibility();
+		FString VisibilityStr;
+		switch (Visibility)
+		{
+			case ESlateVisibility::Visible: VisibilityStr = TEXT("Visible"); break;
+			case ESlateVisibility::Collapsed: VisibilityStr = TEXT("Collapsed"); break;
+			case ESlateVisibility::Hidden: VisibilityStr = TEXT("Hidden"); break;
+			case ESlateVisibility::HitTestInvisible: VisibilityStr = TEXT("HitTestInvisible"); break;
+			case ESlateVisibility::SelfHitTestInvisible: VisibilityStr = TEXT("SelfHitTestInvisible"); break;
+			default: VisibilityStr = TEXT("Unknown"); break;
+		}
+		UE_LOG(LogWarRigHUD, Log, TEXT("DebugShowFuelBindings: Widget visibility: %s"), *VisibilityStr);
+		UE_LOG(LogWarRigHUD, Log, TEXT("DebugShowFuelBindings: Widget is in viewport: %s"),
+			FuelWidget->IsInViewport() ? TEXT("YES") : TEXT("NO"));
 	}
 	else
 	{
 		UE_LOG(LogWarRigHUD, Warning, TEXT("DebugShowFuelBindings: Fuel widget is null"));
 	}
+}
+
+void AWarRigHUD::DebugForceCreateFuelWidget()
+{
+	UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: Attempting to create fuel widget..."));
+
+	if (FuelWidget)
+	{
+		UE_LOG(LogWarRigHUD, Warning, TEXT("DebugForceCreateFuelWidget: Fuel widget already exists!"));
+		UE_LOG(LogWarRigHUD, Log, TEXT("  -> Visibility: %s"),
+			FuelWidget->GetVisibility() == ESlateVisibility::Visible ? TEXT("Visible") : TEXT("Hidden/Other"));
+		UE_LOG(LogWarRigHUD, Log, TEXT("  -> In Viewport: %s"),
+			FuelWidget->IsInViewport() ? TEXT("YES") : TEXT("NO"));
+		UE_LOG(LogWarRigHUD, Log, TEXT("  -> Binding Status: %s"),
+			FuelWidget->IsBindingSuccessful() ? TEXT("SUCCESS") : TEXT("FAILED"));
+		return;
+	}
+
+	// Get world
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		UE_LOG(LogWarRigHUD, Error, TEXT("DebugForceCreateFuelWidget: World is null!"));
+		return;
+	}
+
+	// Create widget
+	FuelWidget = CreateWidget<UWarRigHUDWidget>(World, UWarRigHUDWidget::StaticClass());
+	if (!FuelWidget)
+	{
+		UE_LOG(LogWarRigHUD, Error, TEXT("DebugForceCreateFuelWidget: Failed to create widget!"));
+		return;
+	}
+
+	UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: Widget created successfully"));
+
+	// Add to viewport
+	FuelWidget->AddToViewport(0);
+	UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: Widget added to viewport"));
+
+	// Try to initialize with War Rig's ASC
+	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetOwningPawn());
+	if (WarRig)
+	{
+		UAbilitySystemComponent* ASC = WarRig->GetAbilitySystemComponent();
+		if (ASC)
+		{
+			FuelWidget->InitializeWidget(ASC);
+			UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: Widget initialized with ASC"));
+		}
+		else
+		{
+			UE_LOG(LogWarRigHUD, Warning, TEXT("DebugForceCreateFuelWidget: War Rig has no ASC"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogWarRigHUD, Warning, TEXT("DebugForceCreateFuelWidget: No War Rig pawn found"));
+	}
+
+	// Force a test update to make it visible
+	FuelWidget->UpdateFuelDisplay(75.0f, 100.0f);
+	UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: Forced test update (75/100)"));
+
+	UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: DONE - Widget should now be visible at top-left!"));
 }

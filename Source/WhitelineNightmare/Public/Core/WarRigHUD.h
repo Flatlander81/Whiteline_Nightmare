@@ -109,6 +109,12 @@ public:
 	UFUNCTION(Exec, Category = "Debug")
 	void DebugShowFuelBindings();
 
+	/**
+	 * Force create fuel widget if it doesn't exist (for debugging)
+	 */
+	UFUNCTION(Exec, Category = "Debug")
+	void DebugForceCreateFuelWidget();
+
 protected:
 	// Current fuel percentage (0-1)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|HUD|State")
