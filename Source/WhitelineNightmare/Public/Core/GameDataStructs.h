@@ -253,6 +253,14 @@ struct FGameplayBalanceData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Balance|Fuel")
 	float FuelDrainRate;
 
+	// Starting fuel amount
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Balance|Fuel")
+	float FuelStartAmount;
+
+	// Maximum fuel capacity
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Balance|Fuel")
+	float MaxFuelCapacity;
+
 	// Fuel cost to change lanes
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Balance|Fuel")
 	float LaneChangeFuelCost;
@@ -278,7 +286,9 @@ struct FGameplayBalanceData : public FTableRowBase
 	float LaneWidth;
 
 	FGameplayBalanceData()
-		: FuelDrainRate(1.0f)
+		: FuelDrainRate(5.0f)
+		, FuelStartAmount(100.0f)
+		, MaxFuelCapacity(100.0f)
 		, LaneChangeFuelCost(5.0f)
 		, WinDistance(10000.0f)
 		, ObstacleSpawnDistance(2000.0f)

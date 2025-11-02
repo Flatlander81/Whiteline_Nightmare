@@ -145,10 +145,21 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Testing")
 	const TArray<FTestCase>& GetAllTests() const { return RegisteredTests; }
 
+	/**
+	 * Cleanup - unregister all console commands
+	 */
+	void Cleanup();
+
+	/** Destructor */
+	virtual ~UTestManager();
+
 protected:
 	// Array of registered tests
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Testing")
 	TArray<FTestCase> RegisteredTests;
+
+	// Map of test names to console command handles (for cleanup)
+	TMap<FString, IConsoleCommand*> ConsoleCommands;
 
 private:
 	// Singleton instance

@@ -102,3 +102,7 @@ DerivedDataCache/*
 
 # Unreal project directory cache
 *.uprojectdirs
+
+# Build logs
+build.log
+*.log

@@ -307,6 +307,12 @@ static FAutoConsoleCommand ListTestsCommand(
 		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
 		UE_LOG(LogTestingGameMode, Log, TEXT("Registered Tests (%d total):"), AllTests.Num());
 		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("Usage: Each test can be run directly by typing:"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  Test_<TestName>  (e.g., Test_ObjectPool_SpawnTile)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  or"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  RunTests <Category>  (runs all tests in category)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
 
 		// Group tests by category
 		TMap<ETestCategory, TArray<FString>> TestsByCategory;
@@ -335,7 +341,7 @@ static FAutoConsoleCommand ListTestsCommand(
 			UE_LOG(LogTestingGameMode, Log, TEXT("\n[%s] - %d tests:"), *CategoryName, Tests.Num());
 			for (const FString& TestName : Tests)
 			{
-				UE_LOG(LogTestingGameMode, Log, TEXT("  - %s"), *TestName);
+				UE_LOG(LogTestingGameMode, Log, TEXT("  - %s  (run with: Test_%s)"), *TestName, *TestName);
 			}
 		};
 
@@ -357,6 +363,48 @@ static FAutoConsoleCommand ListTestsCommand(
 		if (TestsByCategory.Contains(ETestCategory::All))
 			DisplayCategory(ETestCategory::All, TestsByCategory[ETestCategory::All]);
 
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("War Rig Exec Tests (directly callable):"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("Note: These tests can be called directly WITHOUT the Test_ prefix"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("      (e.g., just type 'TestFuelClamping' in console)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("[Movement] - War Rig Tests:"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestWarRigDataLoading"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestWarRigSpawn"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestMountPointSetup"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestCameraSetup"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestStationaryPosition"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestWarRigAll (comprehensive)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("[Movement] - Lane System Tests:"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestLaneSystemBounds"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestLaneTransitionSpeed"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestLaneChangeValidation"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestCurrentLaneTracking"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestStationaryInOtherAxes"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestLaneSystemAll (comprehensive)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("[Economy] - Fuel System Tests:"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestFuelDrainRate"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestFuelClamping"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestGameOverTrigger"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("[GAS] - Fuel System GAS Tests:"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestAbilityGranting"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestAttributeInitialization"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestFuelDrainPause"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestFuelSystemAll (comprehensive)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT(""));
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("Comprehensive Test Suites:"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestWarRigAll (runs all war rig tests)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestLaneSystemAll (runs all lane system tests)"));
+		UE_LOG(LogTestingGameMode, Log, TEXT("  - TestFuelSystemAll (runs all fuel system tests)"));
 		UE_LOG(LogTestingGameMode, Log, TEXT("========================================"));
 	})
 );
