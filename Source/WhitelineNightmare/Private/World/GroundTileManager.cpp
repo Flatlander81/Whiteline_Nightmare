@@ -17,6 +17,9 @@ DEFINE_LOG_CATEGORY_STATIC(LogGroundTileManager, Log, All);
 // Extra back margin for initial tile spawning (ensures road looks complete from any camera angle)
 static constexpr float EXTRA_BACK_MARGIN = 10000.0f;
 
+// Enable verbose tile recycling logs (set to 1 to see detailed pool recycling info every tick)
+#define GROUND_TILE_VERBOSE_LOGGING 0
+
 UGroundTileManager::UGroundTileManager()
 	: TileDataTable(nullptr)
 	, DataTableRowName("DefaultTile")
@@ -200,7 +203,8 @@ void UGroundTileManager::CheckForTileRecycling()
 		}
 	}
 
-	// FIX 3: Log when tiles are recycled
+	// FIX 3: Log when tiles are recycled (only if verbose logging enabled)
+#if GROUND_TILE_VERBOSE_LOGGING
 	if (RecycledCount > 0)
 	{
 		UE_LOG(LogGroundTileManager, Log, TEXT("Recycled %d tiles. Pool now: %d/%d available, %d active tiles remaining"),
@@ -209,6 +213,7 @@ void UGroundTileManager::CheckForTileRecycling()
 			TilePool ? TilePool->GetTotalPoolSize() : 0,
 			ActiveTiles.Num());
 	}
+#endif
 
 	// Spawn new tiles if furthest tile is too close
 	const float FurthestX = GetFurthestTilePosition();
