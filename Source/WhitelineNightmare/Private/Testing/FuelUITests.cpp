@@ -18,7 +18,7 @@
 namespace
 {
 	// Helper function to get a valid world for testing
-	UWorld* GetTestWorld()
+	UWorld* GetTestWorldForFuelUITests()
 	{
 		for (const FWorldContext& Context : GEngine->GetWorldContexts())
 		{
@@ -37,7 +37,7 @@ namespace
  */
 static bool FuelUITest_WidgetCreation()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForFuelUITests();
 	TEST_NOT_NULL(World, "World should exist for UI testing");
 
 	// Create the widget
@@ -64,7 +64,7 @@ static bool FuelUITest_WidgetCreation()
  */
 static bool FuelUITest_UIUpdate()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForFuelUITests();
 	TEST_NOT_NULL(World, "World should exist for UI testing");
 
 	// Create the widget
@@ -98,7 +98,7 @@ static bool FuelUITest_UIUpdate()
  */
 static bool FuelUITest_ColorCoding()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForFuelUITests();
 	TEST_NOT_NULL(World, "World should exist for UI testing");
 
 	// Create the widget
@@ -139,7 +139,7 @@ static bool FuelUITest_ColorCoding()
  */
 static bool FuelUITest_TextDisplay()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForFuelUITests();
 	TEST_NOT_NULL(World, "World should exist for UI testing");
 
 	// Create the widget
@@ -170,7 +170,7 @@ static bool FuelUITest_TextDisplay()
  */
 static bool FuelUITest_GASBinding()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForFuelUITests();
 	TEST_NOT_NULL(World, "World should exist for UI testing");
 
 	// Create the widget
@@ -219,7 +219,7 @@ static bool FuelUITest_GASBinding()
  */
 static bool FuelUITest_MaxFuelChange()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForFuelUITests();
 	TEST_NOT_NULL(World, "World should exist for UI testing");
 
 	// Create the widget
@@ -252,7 +252,7 @@ static bool FuelUITest_MaxFuelChange()
  */
 static bool FuelUITest_VisibilityToggle()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForFuelUITests();
 	TEST_NOT_NULL(World, "World should exist for UI testing");
 
 	// Create the widget
@@ -285,7 +285,7 @@ static bool FuelUITest_VisibilityToggle()
  */
 static bool FuelUITest_HUDIntegration()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForFuelUITests();
 	TEST_NOT_NULL(World, "World should exist for UI testing");
 
 	// Try to get the HUD
