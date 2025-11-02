@@ -10,6 +10,7 @@
 
 // Forward declarations
 class UAbilitySystemComponent;
+class UWarRigAttributeSet;
 class UDataTable;
 class UStaticMeshComponent;
 class USpringArmComponent;
@@ -92,6 +93,29 @@ public:
 	UFUNCTION(Exec, Category = "Testing|Movement")
 	void TestLaneSystemAll();
 
+	// Fuel System Testing Functions
+	UFUNCTION(Exec, Category = "Testing|Economy")
+	void TestFuelDrainRate();
+
+	UFUNCTION(Exec, Category = "Testing|Economy")
+	void TestFuelClamping();
+
+	UFUNCTION(Exec, Category = "Testing|GAS")
+	void TestAbilityGranting();
+
+	UFUNCTION(Exec, Category = "Testing|Economy")
+	void TestGameOverTrigger();
+
+	UFUNCTION(Exec, Category = "Testing|GAS")
+	void TestAttributeInitialization();
+
+	UFUNCTION(Exec, Category = "Testing|Economy")
+	void TestFuelDrainPause();
+
+	/** Run all fuel system tests */
+	UFUNCTION(Exec, Category = "Testing|Economy")
+	void TestFuelSystemAll();
+
 	// Debug commands
 	UFUNCTION(Exec, Category = "Debug|War Rig")
 	void DebugShowWarRigBounds();
@@ -109,6 +133,22 @@ public:
 	/** Toggle debug lane UI widget (shows lane change buttons) */
 	UFUNCTION(Exec, Category = "Debug|Lane System")
 	void ToggleDebugLaneUI();
+
+	// Fuel Debug Commands
+	UFUNCTION(Exec, Category = "Debug|Fuel")
+	void DebugAddFuel(float Amount);
+
+	UFUNCTION(Exec, Category = "Debug|Fuel")
+	void DebugSetFuel(float Amount);
+
+	UFUNCTION(Exec, Category = "Debug|Fuel")
+	void DebugSetFuelDrainRate(float Rate);
+
+	UFUNCTION(Exec, Category = "Debug|Fuel")
+	void DebugToggleFuelDrain();
+
+	UFUNCTION(Exec, Category = "Debug|Fuel")
+	void DebugShowFuel();
 
 protected:
 	// Component creation and setup
@@ -134,6 +174,10 @@ protected:
 	/** Ability System Component for GAS integration */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "War Rig|Abilities")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+
+	/** Attribute Set for fuel system */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "War Rig|Abilities")
+	TObjectPtr<UWarRigAttributeSet> AttributeSet;
 
 	/** Lane system component for lateral movement between lanes */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "War Rig|Movement")
@@ -168,6 +212,13 @@ protected:
 	/** Cached war rig data from data table */
 	UPROPERTY(BlueprintReadOnly, Category = "War Rig|Configuration")
 	FWarRigData CachedRigData;
+
+	/** Fuel drain ability class to grant */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "War Rig|Abilities")
+	TSubclassOf<class UGameplayAbility> FuelDrainAbilityClass;
+
+	/** Fuel drain ability spec handle */
+	FGameplayAbilitySpecHandle FuelDrainAbilityHandle;
 
 	// === DEBUG ===
 

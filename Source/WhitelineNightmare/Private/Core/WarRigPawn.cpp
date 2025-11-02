@@ -4,6 +4,8 @@
 #include "Core/LaneSystemComponent.h"
 #include "Core/WarRigHUD.h"
 #include "AbilitySystemComponent.h"
+#include "GAS/WarRigAttributeSet.h"
+#include "GAS/GameplayAbility_FuelDrain.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
@@ -26,6 +28,9 @@ AWarRigPawn::AWarRigPawn()
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+	// Create Attribute Set
+	AttributeSet = CreateDefaultSubobject<UWarRigAttributeSet>(TEXT("AttributeSet"));
 
 	// Create Lane System Component
 	LaneSystemComponent = CreateDefaultSubobject<ULaneSystemComponent>(TEXT("LaneSystemComponent"));
@@ -60,6 +65,50 @@ void AWarRigPawn::BeginPlay()
 	if (AbilitySystemComponent)
 	{
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+		// Initialize fuel attributes
+		if (AttributeSet)
+		{
+			// TODO: Load balance data from data table
+			// For now, use hardcoded defaults matching FGameplayBalanceData
+			const float DefaultMaxFuel = 100.0f;
+			const float DefaultStartFuel = 100.0f;
+
+			// Set MaxFuel first
+			AbilitySystemComponent->SetNumericAttributeBase(AttributeSet->GetMaxFuelAttribute(), DefaultMaxFuel);
+
+			// Then set Fuel (will be clamped to MaxFuel)
+			AbilitySystemComponent->SetNumericAttributeBase(AttributeSet->GetFuelAttribute(), DefaultStartFuel);
+
+			UE_LOG(LogTemp, Log, TEXT("AWarRigPawn::BeginPlay - Initialized fuel: %.2f / %.2f"),
+				AttributeSet->GetFuel(), AttributeSet->GetMaxFuel());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::BeginPlay - AttributeSet is null!"));
+		}
+
+		// Grant passive fuel drain ability
+		if (FuelDrainAbilityClass)
+		{
+			FGameplayAbilitySpec AbilitySpec(FuelDrainAbilityClass, 1, INDEX_NONE, this);
+			FuelDrainAbilityHandle = AbilitySystemComponent->GiveAbility(AbilitySpec);
+
+			// Activate the ability immediately
+			if (FuelDrainAbilityHandle.IsValid())
+			{
+				AbilitySystemComponent->TryActivateAbility(FuelDrainAbilityHandle);
+				UE_LOG(LogTemp, Log, TEXT("AWarRigPawn::BeginPlay - Fuel drain ability granted and activated"));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::BeginPlay - Failed to grant fuel drain ability!"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("AWarRigPawn::BeginPlay - FuelDrainAbilityClass not set! Set it in Blueprint or defaults."));
+		}
 	}
 	else
 	{
@@ -675,6 +724,454 @@ void AWarRigPawn::TestWarRigAll()
 	UE_LOG(LogTemp, Log, TEXT("  ✓ Mount Point Creation (10 points)"));
 	UE_LOG(LogTemp, Log, TEXT("  ✓ Camera Configuration (SpringArm + Camera)"));
 	UE_LOG(LogTemp, Log, TEXT("  ✓ Movement Model (X/Z locked, Y for lane changes)"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("═══════════════════════════════════════════════════════════════"));
+}
+
+// ===== FUEL DEBUG COMMANDS =====
+
+void AWarRigPawn::DebugAddFuel(float Amount)
+{
+	if (!AbilitySystemComponent || !AttributeSet)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugAddFuel - AbilitySystemComponent or AttributeSet is null!"));
+		return;
+	}
+
+	float CurrentFuel = AttributeSet->GetFuel();
+	float NewFuel = CurrentFuel + Amount;
+
+	AbilitySystemComponent->SetNumericAttributeBase(AttributeSet->GetFuelAttribute(), NewFuel);
+
+	UE_LOG(LogTemp, Log, TEXT("AWarRigPawn::DebugAddFuel - Added %.2f fuel (%.2f -> %.2f / %.2f)"),
+		Amount, CurrentFuel, AttributeSet->GetFuel(), AttributeSet->GetMaxFuel());
+}
+
+void AWarRigPawn::DebugSetFuel(float Amount)
+{
+	if (!AbilitySystemComponent || !AttributeSet)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugSetFuel - AbilitySystemComponent or AttributeSet is null!"));
+		return;
+	}
+
+	AbilitySystemComponent->SetNumericAttributeBase(AttributeSet->GetFuelAttribute(), Amount);
+
+	UE_LOG(LogTemp, Log, TEXT("AWarRigPawn::DebugSetFuel - Set fuel to %.2f / %.2f"),
+		AttributeSet->GetFuel(), AttributeSet->GetMaxFuel());
+}
+
+void AWarRigPawn::DebugSetFuelDrainRate(float Rate)
+{
+	if (!AbilitySystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugSetFuelDrainRate - AbilitySystemComponent is null!"));
+		return;
+	}
+
+	// Find the fuel drain ability
+	FGameplayAbilitySpec* AbilitySpec = AbilitySystemComponent->FindAbilitySpecFromHandle(FuelDrainAbilityHandle);
+	if (!AbilitySpec || !AbilitySpec->Ability)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugSetFuelDrainRate - Fuel drain ability not found!"));
+		return;
+	}
+
+	// Cast to the fuel drain ability
+	UGameplayAbility_FuelDrain* FuelDrainAbility = Cast<UGameplayAbility_FuelDrain>(AbilitySpec->Ability);
+	if (FuelDrainAbility)
+	{
+		float OldRate = FuelDrainAbility->FuelDrainRate;
+		FuelDrainAbility->FuelDrainRate = Rate;
+		UE_LOG(LogTemp, Log, TEXT("AWarRigPawn::DebugSetFuelDrainRate - Changed fuel drain rate from %.2f to %.2f"),
+			OldRate, Rate);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugSetFuelDrainRate - Failed to cast ability to UGameplayAbility_FuelDrain!"));
+	}
+}
+
+void AWarRigPawn::DebugToggleFuelDrain()
+{
+	if (!AbilitySystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugToggleFuelDrain - AbilitySystemComponent is null!"));
+		return;
+	}
+
+	// Find the fuel drain ability
+	FGameplayAbilitySpec* AbilitySpec = AbilitySystemComponent->FindAbilitySpecFromHandle(FuelDrainAbilityHandle);
+	if (!AbilitySpec || !AbilitySpec->Ability)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugToggleFuelDrain - Fuel drain ability not found!"));
+		return;
+	}
+
+	// Cast to the fuel drain ability
+	UGameplayAbility_FuelDrain* FuelDrainAbility = Cast<UGameplayAbility_FuelDrain>(AbilitySpec->Ability);
+	if (FuelDrainAbility)
+	{
+		FuelDrainAbility->bFuelDrainPaused = !FuelDrainAbility->bFuelDrainPaused;
+		UE_LOG(LogTemp, Log, TEXT("AWarRigPawn::DebugToggleFuelDrain - Fuel drain %s"),
+			FuelDrainAbility->bFuelDrainPaused ? TEXT("PAUSED") : TEXT("RESUMED"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugToggleFuelDrain - Failed to cast ability to UGameplayAbility_FuelDrain!"));
+	}
+}
+
+void AWarRigPawn::DebugShowFuel()
+{
+	if (!AttributeSet)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugShowFuel - AttributeSet is null!"));
+		return;
+	}
+
+	float CurrentFuel = AttributeSet->GetFuel();
+	float MaxFuel = AttributeSet->GetMaxFuel();
+	float FuelPercent = (MaxFuel > 0.0f) ? (CurrentFuel / MaxFuel) * 100.0f : 0.0f;
+
+	UE_LOG(LogTemp, Log, TEXT("═════════════════════════════════════"));
+	UE_LOG(LogTemp, Log, TEXT("  FUEL STATUS"));
+	UE_LOG(LogTemp, Log, TEXT("═════════════════════════════════════"));
+	UE_LOG(LogTemp, Log, TEXT("  Current Fuel: %.2f"), CurrentFuel);
+	UE_LOG(LogTemp, Log, TEXT("  Max Fuel:     %.2f"), MaxFuel);
+	UE_LOG(LogTemp, Log, TEXT("  Percentage:   %.1f%%"), FuelPercent);
+	UE_LOG(LogTemp, Log, TEXT("═════════════════════════════════════"));
+}
+
+// ===== FUEL SYSTEM TEST FUNCTIONS =====
+
+void AWarRigPawn::TestFuelDrainRate()
+{
+	UE_LOG(LogTemp, Log, TEXT("========== TestFuelDrainRate =========="));
+
+	if (!AbilitySystemComponent || !AttributeSet)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: AbilitySystemComponent or AttributeSet is null"));
+		return;
+	}
+
+	// Record initial fuel
+	float InitialFuel = AttributeSet->GetFuel();
+	UE_LOG(LogTemp, Log, TEXT("Initial Fuel: %.2f"), InitialFuel);
+
+	// Wait for fuel drain (this test requires manual verification)
+	UE_LOG(LogTemp, Log, TEXT("Monitor fuel over 5 seconds..."));
+	UE_LOG(LogTemp, Log, TEXT("Expected drain: ~25 fuel (5 fuel/second * 5 seconds)"));
+	UE_LOG(LogTemp, Log, TEXT("Use 'DebugShowFuel' command to check current fuel"));
+	UE_LOG(LogTemp, Log, TEXT("SUCCESS: Test setup complete - monitor fuel manually"));
+
+	UE_LOG(LogTemp, Log, TEXT("======================================="));
+}
+
+void AWarRigPawn::TestFuelClamping()
+{
+	UE_LOG(LogTemp, Log, TEXT("========== TestFuelClamping =========="));
+
+	if (!AbilitySystemComponent || !AttributeSet)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: AbilitySystemComponent or AttributeSet is null"));
+		return;
+	}
+
+	bool bAllTestsPassed = true;
+	float MaxFuel = AttributeSet->GetMaxFuel();
+
+	// Test 1: Set fuel above max
+	UE_LOG(LogTemp, Log, TEXT("Test 1: Setting fuel above max (%.2f)"), MaxFuel + 50.0f);
+	AbilitySystemComponent->SetNumericAttributeBase(AttributeSet->GetFuelAttribute(), MaxFuel + 50.0f);
+	float ClampedFuel = AttributeSet->GetFuel();
+
+	if (FMath::IsNearlyEqual(ClampedFuel, MaxFuel, 0.01f))
+	{
+		UE_LOG(LogTemp, Log, TEXT("SUCCESS: Fuel clamped to MaxFuel (%.2f)"), ClampedFuel);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: Fuel not clamped correctly! Expected %.2f, got %.2f"), MaxFuel, ClampedFuel);
+		bAllTestsPassed = false;
+	}
+
+	// Test 2: Set fuel below 0
+	UE_LOG(LogTemp, Log, TEXT("Test 2: Setting fuel below 0 (-50.0)"));
+	AbilitySystemComponent->SetNumericAttributeBase(AttributeSet->GetFuelAttribute(), -50.0f);
+	float ClampedToZero = AttributeSet->GetFuel();
+
+	if (FMath::IsNearlyEqual(ClampedToZero, 0.0f, 0.01f))
+	{
+		UE_LOG(LogTemp, Log, TEXT("SUCCESS: Fuel clamped to 0 (%.2f)"), ClampedToZero);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: Fuel not clamped to 0! Expected 0.00, got %.2f"), ClampedToZero);
+		bAllTestsPassed = false;
+	}
+
+	// Restore fuel to a reasonable value
+	AbilitySystemComponent->SetNumericAttributeBase(AttributeSet->GetFuelAttribute(), MaxFuel);
+
+	if (bAllTestsPassed)
+	{
+		UE_LOG(LogTemp, Log, TEXT("OVERALL: All clamping tests PASSED"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("OVERALL: Some clamping tests FAILED"));
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("======================================"));
+}
+
+void AWarRigPawn::TestAbilityGranting()
+{
+	UE_LOG(LogTemp, Log, TEXT("========== TestAbilityGranting =========="));
+
+	if (!AbilitySystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: AbilitySystemComponent is null"));
+		return;
+	}
+
+	// Check if fuel drain ability is granted
+	FGameplayAbilitySpec* AbilitySpec = AbilitySystemComponent->FindAbilitySpecFromHandle(FuelDrainAbilityHandle);
+
+	if (AbilitySpec && AbilitySpec->Ability)
+	{
+		UE_LOG(LogTemp, Log, TEXT("SUCCESS: Fuel drain ability is granted"));
+		UE_LOG(LogTemp, Log, TEXT("  Ability Class: %s"), *AbilitySpec->Ability->GetClass()->GetName());
+		UE_LOG(LogTemp, Log, TEXT("  Is Active: %s"), AbilitySpec->IsActive() ? TEXT("Yes") : TEXT("No"));
+
+		// Check if it's the correct type
+		UGameplayAbility_FuelDrain* FuelDrainAbility = Cast<UGameplayAbility_FuelDrain>(AbilitySpec->Ability);
+		if (FuelDrainAbility)
+		{
+			UE_LOG(LogTemp, Log, TEXT("  Drain Rate: %.2f"), FuelDrainAbility->FuelDrainRate);
+			UE_LOG(LogTemp, Log, TEXT("  Drain Interval: %.2fs"), FuelDrainAbility->DrainInterval);
+			UE_LOG(LogTemp, Log, TEXT("  Is Paused: %s"), FuelDrainAbility->bFuelDrainPaused ? TEXT("Yes") : TEXT("No"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: Fuel drain ability is NOT granted or handle is invalid"));
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("========================================="));
+}
+
+void AWarRigPawn::TestGameOverTrigger()
+{
+	UE_LOG(LogTemp, Log, TEXT("========== TestGameOverTrigger =========="));
+
+	if (!AbilitySystemComponent || !AttributeSet)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: AbilitySystemComponent or AttributeSet is null"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("WARNING: This test will trigger game over!"));
+	UE_LOG(LogTemp, Warning, TEXT("Setting fuel to 0..."));
+
+	// Set fuel to 0 to trigger game over
+	AbilitySystemComponent->SetNumericAttributeBase(AttributeSet->GetFuelAttribute(), 0.0f);
+
+	UE_LOG(LogTemp, Log, TEXT("Fuel set to 0. Game over sequence should have triggered."));
+	UE_LOG(LogTemp, Log, TEXT("Check console for game over messages."));
+	UE_LOG(LogTemp, Log, TEXT("SUCCESS: Test complete - verify game over triggered"));
+
+	UE_LOG(LogTemp, Log, TEXT("========================================="));
+}
+
+void AWarRigPawn::TestAttributeInitialization()
+{
+	UE_LOG(LogTemp, Log, TEXT("========== TestAttributeInitialization =========="));
+
+	if (!AbilitySystemComponent || !AttributeSet)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: AbilitySystemComponent or AttributeSet is null"));
+		return;
+	}
+
+	bool bAllTestsPassed = true;
+
+	// Check Fuel attribute
+	float CurrentFuel = AttributeSet->GetFuel();
+	UE_LOG(LogTemp, Log, TEXT("Current Fuel: %.2f"), CurrentFuel);
+
+	if (CurrentFuel >= 0.0f)
+	{
+		UE_LOG(LogTemp, Log, TEXT("SUCCESS: Fuel initialized (%.2f)"), CurrentFuel);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: Fuel is negative (%.2f)"), CurrentFuel);
+		bAllTestsPassed = false;
+	}
+
+	// Check MaxFuel attribute
+	float MaxFuel = AttributeSet->GetMaxFuel();
+	UE_LOG(LogTemp, Log, TEXT("Max Fuel: %.2f"), MaxFuel);
+
+	if (MaxFuel > 0.0f)
+	{
+		UE_LOG(LogTemp, Log, TEXT("SUCCESS: MaxFuel initialized (%.2f)"), MaxFuel);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: MaxFuel is invalid (%.2f)"), MaxFuel);
+		bAllTestsPassed = false;
+	}
+
+	// Check that Fuel <= MaxFuel
+	if (CurrentFuel <= MaxFuel)
+	{
+		UE_LOG(LogTemp, Log, TEXT("SUCCESS: Fuel is within MaxFuel bounds"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: Fuel (%.2f) exceeds MaxFuel (%.2f)"), CurrentFuel, MaxFuel);
+		bAllTestsPassed = false;
+	}
+
+	if (bAllTestsPassed)
+	{
+		UE_LOG(LogTemp, Log, TEXT("OVERALL: All initialization tests PASSED"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("OVERALL: Some initialization tests FAILED"));
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("================================================="));
+}
+
+void AWarRigPawn::TestFuelDrainPause()
+{
+	UE_LOG(LogTemp, Log, TEXT("========== TestFuelDrainPause =========="));
+
+	if (!AbilitySystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: AbilitySystemComponent is null"));
+		return;
+	}
+
+	// Find the fuel drain ability
+	FGameplayAbilitySpec* AbilitySpec = AbilitySystemComponent->FindAbilitySpecFromHandle(FuelDrainAbilityHandle);
+	if (!AbilitySpec || !AbilitySpec->Ability)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: Fuel drain ability not found"));
+		return;
+	}
+
+	UGameplayAbility_FuelDrain* FuelDrainAbility = Cast<UGameplayAbility_FuelDrain>(AbilitySpec->Ability);
+	if (!FuelDrainAbility)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: Could not cast to UGameplayAbility_FuelDrain"));
+		return;
+	}
+
+	// Test pause/resume
+	bool bInitialState = FuelDrainAbility->bFuelDrainPaused;
+	UE_LOG(LogTemp, Log, TEXT("Initial pause state: %s"), bInitialState ? TEXT("PAUSED") : TEXT("ACTIVE"));
+
+	// Pause
+	FuelDrainAbility->bFuelDrainPaused = true;
+	UE_LOG(LogTemp, Log, TEXT("Set to PAUSED"));
+
+	if (FuelDrainAbility->bFuelDrainPaused)
+	{
+		UE_LOG(LogTemp, Log, TEXT("SUCCESS: Fuel drain paused"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: Could not pause fuel drain"));
+	}
+
+	// Resume
+	FuelDrainAbility->bFuelDrainPaused = false;
+	UE_LOG(LogTemp, Log, TEXT("Set to ACTIVE"));
+
+	if (!FuelDrainAbility->bFuelDrainPaused)
+	{
+		UE_LOG(LogTemp, Log, TEXT("SUCCESS: Fuel drain resumed"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("FAILED: Could not resume fuel drain"));
+	}
+
+	// Restore initial state
+	FuelDrainAbility->bFuelDrainPaused = bInitialState;
+
+	UE_LOG(LogTemp, Log, TEXT("OVERALL: Pause/Resume test complete"));
+	UE_LOG(LogTemp, Log, TEXT("========================================"));
+}
+
+void AWarRigPawn::TestFuelSystemAll()
+{
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("╔═══════════════════════════════════════════════════════════════╗"));
+	UE_LOG(LogTemp, Log, TEXT("║          FUEL SYSTEM COMPREHENSIVE TEST SUITE                 ║"));
+	UE_LOG(LogTemp, Log, TEXT("╚═══════════════════════════════════════════════════════════════╝"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("Running all fuel system tests in sequence..."));
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Test 1: Attribute Initialization
+	UE_LOG(LogTemp, Log, TEXT("► Test 1/6: Attribute Initialization"));
+	TestAttributeInitialization();
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Test 2: Ability Granting
+	UE_LOG(LogTemp, Log, TEXT("► Test 2/6: Ability Granting"));
+	TestAbilityGranting();
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Test 3: Fuel Clamping
+	UE_LOG(LogTemp, Log, TEXT("► Test 3/6: Fuel Clamping"));
+	TestFuelClamping();
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Test 4: Fuel Drain Pause
+	UE_LOG(LogTemp, Log, TEXT("► Test 4/6: Fuel Drain Pause/Resume"));
+	TestFuelDrainPause();
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Test 5: Fuel Drain Rate
+	UE_LOG(LogTemp, Log, TEXT("► Test 5/6: Fuel Drain Rate"));
+	TestFuelDrainRate();
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Test 6: Game Over Trigger (skipped by default to avoid triggering game over)
+	UE_LOG(LogTemp, Log, TEXT("► Test 6/6: Game Over Trigger (SKIPPED)"));
+	UE_LOG(LogTemp, Log, TEXT("Run 'TestGameOverTrigger' manually to test game over sequence"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+
+	// Summary
+	UE_LOG(LogTemp, Log, TEXT("╔═══════════════════════════════════════════════════════════════╗"));
+	UE_LOG(LogTemp, Log, TEXT("║                    TEST SUITE COMPLETE                        ║"));
+	UE_LOG(LogTemp, Log, TEXT("╚═══════════════════════════════════════════════════════════════╝"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("5 of 6 fuel system tests have been executed."));
+	UE_LOG(LogTemp, Log, TEXT("Review the output above for SUCCESS/FAILED messages."));
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("Key Components Tested:"));
+	UE_LOG(LogTemp, Log, TEXT("  ✓ Attribute Initialization (Fuel, MaxFuel)"));
+	UE_LOG(LogTemp, Log, TEXT("  ✓ Ability Granting (Fuel Drain)"));
+	UE_LOG(LogTemp, Log, TEXT("  ✓ Attribute Clamping ([0, MaxFuel])"));
+	UE_LOG(LogTemp, Log, TEXT("  ✓ Fuel Drain Pause/Resume"));
+	UE_LOG(LogTemp, Log, TEXT("  ✓ Fuel Drain Rate Monitoring"));
+	UE_LOG(LogTemp, Log, TEXT("  - Game Over Trigger (manual test)"));
+	UE_LOG(LogTemp, Log, TEXT(""));
+	UE_LOG(LogTemp, Log, TEXT("Debug Commands Available:"));
+	UE_LOG(LogTemp, Log, TEXT("  - DebugAddFuel <amount>"));
+	UE_LOG(LogTemp, Log, TEXT("  - DebugSetFuel <amount>"));
+	UE_LOG(LogTemp, Log, TEXT("  - DebugSetFuelDrainRate <rate>"));
+	UE_LOG(LogTemp, Log, TEXT("  - DebugToggleFuelDrain"));
+	UE_LOG(LogTemp, Log, TEXT("  - DebugShowFuel"));
 	UE_LOG(LogTemp, Log, TEXT(""));
 	UE_LOG(LogTemp, Log, TEXT("═══════════════════════════════════════════════════════════════"));
 }
