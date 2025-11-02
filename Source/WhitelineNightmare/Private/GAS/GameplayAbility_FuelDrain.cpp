@@ -91,9 +91,8 @@ void UGameplayAbility_FuelDrain::ApplyFuelDrain()
 	// For now, we'll manually modify the fuel attribute until we have a GameplayEffect asset
 	// TODO: Use FuelDrainEffectClass when we have the GameplayEffect asset set up
 
-	// Get all attribute sets
-	TArray<UAttributeSet*> AttributeSets;
-	ASC->GetAllAttributes(AttributeSets);
+	// Get the spawned attribute sets
+	const TArray<UAttributeSet*>& AttributeSets = ASC->GetSpawnedAttributes();
 
 	// Find the WarRigAttributeSet
 	UWarRigAttributeSet* WarRigAttributeSet = nullptr;

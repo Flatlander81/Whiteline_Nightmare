@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "GameDataStructs.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayAbilitySpec.h"
 #include "WarRigPawn.generated.h"
 
 // Forward declarations
