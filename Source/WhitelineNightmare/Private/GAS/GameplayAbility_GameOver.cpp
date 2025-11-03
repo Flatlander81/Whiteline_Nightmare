@@ -202,9 +202,10 @@ void UGameplayAbility_GameOver::ShowGameOverUI()
 		PC->bEnableClickEvents = true;
 		PC->bEnableMouseOverEvents = true;
 
-		// Set input mode to UI only (but we'll still allow restart input)
-		FInputModeUIOnly InputMode;
-		InputMode.SetWidgetToFocus(GameOverWidget->TakeWidget());
+		// Set input mode to Game and UI (allows both mouse and keyboard input)
+		// Don't use UIOnly mode because it requires a focusable widget
+		FInputModeGameAndUI InputMode;
+		InputMode.SetHideCursorDuringCapture(false);
 		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 		PC->SetInputMode(InputMode);
 	}

@@ -64,19 +64,20 @@ void UGameOverWidget::CreateWidgetLayout()
 		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Created root canvas"));
 	}
 
-	// CRITICAL: Ensure Canvas Panel is visible
+	// CRITICAL: Root canvas must be Visible to render children
 	if (RootCanvas)
 	{
-		RootCanvas->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		RootCanvas->SetVisibility(ESlateVisibility::Visible);
 		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Configured root canvas visibility"));
 	}
 
-	// Create semi-transparent background overlay
+	// Create semi-transparent background overlay (this will block input)
 	BackgroundOverlay = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("BackgroundOverlay"));
 	if (BackgroundOverlay)
 	{
 		// Set background color (semi-transparent black)
 		BackgroundOverlay->SetBrushColor(FLinearColor(0.0f, 0.0f, 0.0f, 0.8f));
+		// Visible means it blocks input AND renders
 		BackgroundOverlay->SetVisibility(ESlateVisibility::Visible);
 
 		// Add to canvas (fullscreen)
@@ -94,15 +95,17 @@ void UGameOverWidget::CreateWidgetLayout()
 	MainVerticalBox = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MainVerticalBox"));
 	if (MainVerticalBox)
 	{
-		MainVerticalBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		MainVerticalBox->SetVisibility(ESlateVisibility::Visible);
 
-		// Add to canvas (centered)
+		// Add to canvas (centered, with explicit size)
 		UCanvasPanelSlot* VBoxSlot = RootCanvas->AddChildToCanvas(MainVerticalBox);
 		if (VBoxSlot)
 		{
 			VBoxSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
 			VBoxSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-			VBoxSlot->SetAutoSize(true);
+			// Give it a reasonable size instead of auto-size
+			VBoxSlot->SetSize(FVector2D(800.0f, 600.0f));
+			VBoxSlot->SetPosition(FVector2D(0.0f, 0.0f));
 		}
 
 		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Created main vertical box"));
