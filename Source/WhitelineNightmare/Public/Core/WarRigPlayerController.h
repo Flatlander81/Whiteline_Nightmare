@@ -65,6 +65,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|Game State")
 	void OnGameOver(bool bPlayerWon);
 
+	/**
+	 * Restart the game (reload current level)
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|Game State")
+	void RestartGame();
+
+	/**
+	 * Check if game is currently over
+	 * @return True if game over
+	 */
+	UFUNCTION(BlueprintPure, Category = "Whiteline Nightmare|Game State")
+	bool IsGameOver() const { return bIsGameOver; }
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -76,6 +89,10 @@ protected:
 	// Starting scrap amount (can be configured in data table)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Whiteline Nightmare|Economy")
 	int32 StartingScrap;
+
+	// Game over flag
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Game State")
+	bool bIsGameOver;
 
 private:
 	/**

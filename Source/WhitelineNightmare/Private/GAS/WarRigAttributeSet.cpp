@@ -1,9 +1,11 @@
 // Copyright Flatlander81. All Rights Reserved.
 
 #include "GAS/WarRigAttributeSet.h"
+#include "GAS/GameplayAbility_GameOver.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/Pawn.h"
 #include "AbilitySystemComponent.h"
 
 UWarRigAttributeSet::UWarRigAttributeSet()
@@ -75,26 +77,33 @@ void UWarRigAttributeSet::HandleFuelDepleted(const FGameplayEffectModCallbackDat
 		return;
 	}
 
-	// TODO: Trigger game over sequence
-	// For now, we'll disable input and log a message
-
-	// Disable player input
-	APawn* OwningPawn = Cast<APawn>(OwningActor);
-	if (OwningPawn)
+	// Get the ability system component
+	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+	if (!ASC)
 	{
-		APlayerController* PC = Cast<APlayerController>(OwningPawn->GetController());
-		if (PC)
-		{
-			OwningPawn->DisableInput(PC);
-			UE_LOG(LogTemp, Warning, TEXT("UWarRigAttributeSet::HandleFuelDepleted - Input disabled"));
-		}
+		UE_LOG(LogTemp, Error, TEXT("UWarRigAttributeSet::HandleFuelDepleted - No AbilitySystemComponent found!"));
+		return;
 	}
 
-	// TODO: Stop world scrolling
-	// This will be implemented when we have the world scroll system
+	// Find the game over ability by class
+	FGameplayAbilitySpec* GameOverSpec = ASC->FindAbilitySpecFromClass(UGameplayAbility_GameOver::StaticClass());
+	if (!GameOverSpec)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UWarRigAttributeSet::HandleFuelDepleted - Game over ability not found!"));
+		UE_LOG(LogTemp, Error, TEXT("Make sure GameOverAbilityClass is set in BP_WarRig Blueprint!"));
+		return;
+	}
+
+	// Try to activate the game over ability
+	if (!ASC->TryActivateAbility(GameOverSpec->Handle))
+	{
+		UE_LOG(LogTemp, Error, TEXT("UWarRigAttributeSet::HandleFuelDepleted - Failed to activate game over ability!"));
+		return;
+	}
 
 	UE_LOG(LogTemp, Warning, TEXT("═══════════════════════════════════════"));
-	UE_LOG(LogTemp, Warning, TEXT("          GAME OVER - OUT OF FUEL      "));
+	UE_LOG(LogTemp, Warning, TEXT("    GAME OVER - OUT OF FUEL"));
+	UE_LOG(LogTemp, Warning, TEXT("    Game over ability activated"));
 	UE_LOG(LogTemp, Warning, TEXT("═══════════════════════════════════════"));
 }
 

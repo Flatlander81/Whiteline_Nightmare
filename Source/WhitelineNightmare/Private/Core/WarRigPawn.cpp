@@ -109,6 +109,26 @@ void AWarRigPawn::BeginPlay()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("AWarRigPawn::BeginPlay - FuelDrainAbilityClass not set! Set it in Blueprint or defaults."));
 		}
+
+		// Grant game over ability (passive, activated when needed)
+		if (GameOverAbilityClass)
+		{
+			FGameplayAbilitySpec GameOverSpec(GameOverAbilityClass, 1, INDEX_NONE, this);
+			GameOverAbilityHandle = AbilitySystemComponent->GiveAbility(GameOverSpec);
+
+			if (GameOverAbilityHandle.IsValid())
+			{
+				UE_LOG(LogTemp, Log, TEXT("AWarRigPawn::BeginPlay - Game over ability granted"));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::BeginPlay - Failed to grant game over ability!"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("AWarRigPawn::BeginPlay - GameOverAbilityClass not set! Set it in Blueprint or defaults."));
+		}
 	}
 	else
 	{

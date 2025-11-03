@@ -2,6 +2,7 @@
 
 #include "Core/WarRigPlayerController.h"
 #include "Core/WarRigHUD.h"
+#include "Kismet/GameplayStatics.h"
 
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogWarRigPlayerController, Log, All);
@@ -9,6 +10,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogWarRigPlayerController, Log, All);
 AWarRigPlayerController::AWarRigPlayerController()
 	: CurrentScrap(0)
 	, StartingScrap(100)
+	, bIsGameOver(false)
 {
 	// Enable ticking if needed
 	PrimaryActorTick.bCanEverTick = false;
@@ -69,7 +71,10 @@ void AWarRigPlayerController::SetupInputComponent()
 		return;
 	}
 
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready"));
+	// Bind "R" key to RestartGame (for game over restart)
+	InputComponent->BindAction("Restart", IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready (Restart bound to 'R')"));
 }
 
 bool AWarRigPlayerController::AddScrap(int32 Amount)
@@ -141,11 +146,43 @@ void AWarRigPlayerController::OnGameOver(bool bPlayerWon)
 {
 	UE_LOG(LogWarRigPlayerController, Log, TEXT("OnGameOver: Player %s"), bPlayerWon ? TEXT("WON") : TEXT("LOST"));
 
+	// Set game over flag
+	bIsGameOver = true;
+
 	LogPlayerState();
 
-	// TODO: Show game over UI
-	// TODO: Disable input
-	// TODO: Save statistics
+	// Game over sequence is now handled by UGameplayAbility_GameOver
+	// This function is kept for Blueprint compatibility and additional logic if needed
+}
+
+void AWarRigPlayerController::RestartGame()
+{
+	// Only allow restart if game is over
+	if (!bIsGameOver)
+	{
+		UE_LOG(LogWarRigPlayerController, Warning, TEXT("RestartGame: Game is not over, ignoring restart request"));
+		return;
+	}
+
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("RestartGame: Restarting game..."));
+
+	// Get the current level name
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		UE_LOG(LogWarRigPlayerController, Error, TEXT("RestartGame: World is null!"));
+		return;
+	}
+
+	FString CurrentLevelName = World->GetName();
+
+	// Remove "UEDPIE_0_" prefix if present (editor play-in-editor)
+	CurrentLevelName.RemoveFromStart(TEXT("UEDPIE_0_"));
+
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("RestartGame: Reloading level '%s'"), *CurrentLevelName);
+
+	// Reload the current level
+	UGameplayStatics::OpenLevel(World, FName(*CurrentLevelName));
 }
 
 bool AWarRigPlayerController::ValidateScrapAmount(int32 NewAmount) const

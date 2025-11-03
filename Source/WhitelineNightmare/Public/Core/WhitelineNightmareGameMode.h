@@ -69,6 +69,49 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Whiteline Nightmare|Game State")
 	bool IsGameOver() const { return bIsGameOver; }
 
+	// === STAT TRACKING ===
+
+	/**
+	 * Increment enemies killed counter
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|Stats")
+	void IncrementEnemiesKilled();
+
+	/**
+	 * Add fuel collected
+	 * @param Amount - Amount of fuel collected
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|Stats")
+	void AddFuelCollected(float Amount);
+
+	/**
+	 * Add scrap collected
+	 * @param Amount - Amount of scrap collected
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|Stats")
+	void AddScrapCollected(int32 Amount);
+
+	/**
+	 * Get enemies killed count
+	 * @return Number of enemies killed
+	 */
+	UFUNCTION(BlueprintPure, Category = "Whiteline Nightmare|Stats")
+	int32 GetEnemiesKilled() const { return EnemiesKilled; }
+
+	/**
+	 * Get fuel collected amount
+	 * @return Amount of fuel collected
+	 */
+	UFUNCTION(BlueprintPure, Category = "Whiteline Nightmare|Stats")
+	float GetFuelCollected() const { return FuelCollected; }
+
+	/**
+	 * Get scrap collected amount
+	 * @return Amount of scrap collected
+	 */
+	UFUNCTION(BlueprintPure, Category = "Whiteline Nightmare|Stats")
+	int32 GetScrapCollected() const { return ScrapCollected; }
+
 	// === DEBUG COMMANDS ===
 
 	/** Debug command: Set scroll speed */
@@ -131,6 +174,20 @@ protected:
 	// Whether the player won
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Game State")
 	bool bPlayerWon;
+
+	// === STATS ===
+
+	// Number of enemies killed
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Stats")
+	int32 EnemiesKilled;
+
+	// Amount of fuel collected
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Stats")
+	float FuelCollected;
+
+	// Amount of scrap collected
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|Stats")
+	int32 ScrapCollected;
 
 private:
 	/**
