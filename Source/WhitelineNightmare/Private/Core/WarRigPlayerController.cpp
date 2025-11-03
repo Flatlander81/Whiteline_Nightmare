@@ -71,10 +71,21 @@ void AWarRigPlayerController::SetupInputComponent()
 		return;
 	}
 
-	// Bind "R" key to RestartGame (for game over restart)
-	InputComponent->BindKey(EKeys::R, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready"));
+}
 
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready (Restart bound to 'R' key)"));
+bool AWarRigPlayerController::InputKey(const FInputKeyParams& Params)
+{
+	// If game is over and any key is pressed, restart the game
+	if (bIsGameOver && Params.Event == IE_Pressed)
+	{
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("InputKey: Key pressed during game over (%s), restarting..."), *Params.Key.ToString());
+		RestartGame();
+		return true; // Consume the input
+	}
+
+	// Otherwise, let the parent handle it
+	return Super::InputKey(Params);
 }
 
 bool AWarRigPlayerController::AddScrap(int32 Amount)
