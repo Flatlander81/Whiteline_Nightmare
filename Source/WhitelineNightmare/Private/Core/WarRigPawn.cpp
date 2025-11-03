@@ -2,6 +2,7 @@
 
 #include "Core/WarRigPawn.h"
 #include "Core/LaneSystemComponent.h"
+#include "Core/TurretMountComponent.h"
 #include "Core/WarRigHUD.h"
 #include "AbilitySystemComponent.h"
 #include "GAS/WarRigAttributeSet.h"
@@ -34,6 +35,9 @@ AWarRigPawn::AWarRigPawn()
 
 	// Create Lane System Component
 	LaneSystemComponent = CreateDefaultSubobject<ULaneSystemComponent>(TEXT("LaneSystemComponent"));
+
+	// Create Turret Mount Component
+	TurretMountComponent = CreateDefaultSubobject<UTurretMountComponent>(TEXT("TurretMountComponent"));
 
 	// Create Spring Arm Component
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
@@ -1264,4 +1268,120 @@ void AWarRigPawn::TestLaneSystemAll()
 	}
 
 	LaneSystemComponent->TestLaneSystemAll();
+}
+
+// === TURRET MOUNT TEST WRAPPERS ===
+// These functions forward test calls to the TurretMountComponent
+// Exec functions must be on Pawn/PlayerController/GameMode to be accessible from console
+
+void AWarRigPawn::TestMountPointCount()
+{
+	if (!TurretMountComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestMountPointCount - TurretMountComponent is null!"));
+		return;
+	}
+
+	TurretMountComponent->TestMountPointCount();
+}
+
+void AWarRigPawn::TestMountPointPositioning()
+{
+	if (!TurretMountComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestMountPointPositioning - TurretMountComponent is null!"));
+		return;
+	}
+
+	TurretMountComponent->TestMountPointPositioning();
+}
+
+void AWarRigPawn::TestMountOccupancy()
+{
+	if (!TurretMountComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestMountOccupancy - TurretMountComponent is null!"));
+		return;
+	}
+
+	TurretMountComponent->TestMountOccupancy();
+}
+
+void AWarRigPawn::TestFacingConstraints()
+{
+	if (!TurretMountComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestFacingConstraints - TurretMountComponent is null!"));
+		return;
+	}
+
+	TurretMountComponent->TestFacingConstraints();
+}
+
+void AWarRigPawn::TestMountUnmount()
+{
+	if (!TurretMountComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestMountUnmount - TurretMountComponent is null!"));
+		return;
+	}
+
+	TurretMountComponent->TestMountUnmount();
+}
+
+void AWarRigPawn::TestDesignerMountOverride()
+{
+	if (!TurretMountComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestDesignerMountOverride - TurretMountComponent is null!"));
+		return;
+	}
+
+	TurretMountComponent->TestDesignerMountOverride();
+}
+
+void AWarRigPawn::TestTurretMountAll()
+{
+	if (!TurretMountComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::TestTurretMountAll - TurretMountComponent is null!"));
+		return;
+	}
+
+	TurretMountComponent->TestTurretMountAll();
+}
+
+// === TURRET MOUNT DEBUG WRAPPERS ===
+
+void AWarRigPawn::DebugShowMountPointsNew()
+{
+	if (!TurretMountComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugShowMountPointsNew - TurretMountComponent is null!"));
+		return;
+	}
+
+	TurretMountComponent->DebugShowMountPoints();
+}
+
+void AWarRigPawn::DebugShowFacingConstraints()
+{
+	if (!TurretMountComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugShowFacingConstraints - TurretMountComponent is null!"));
+		return;
+	}
+
+	TurretMountComponent->DebugShowFacingConstraints();
+}
+
+void AWarRigPawn::DebugListMounts()
+{
+	if (!TurretMountComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWarRigPawn::DebugListMounts - TurretMountComponent is null!"));
+		return;
+	}
+
+	TurretMountComponent->DebugListMounts();
 }

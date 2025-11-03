@@ -14,6 +14,7 @@ class UNiagaraSystem;
 
 /**
  * Mount Point Data - Defines where turrets can be mounted on the war rig
+ * EXTENDED from Prompt 3.2 to include occupancy tracking
  */
 USTRUCT(BlueprintType)
 struct FMountPointData
@@ -25,7 +26,7 @@ struct FMountPointData
 	FTransform MountTransform;
 
 	// Array of allowed facing directions (0-7 for 8 compass directions)
-	// 0 = Forward, 1 = Forward-Right, 2 = Right, 3 = Back-Right, etc.
+	// 0 = North (Forward), 1 = NE, 2 = East (Right), 3 = SE, 4 = South (Back), 5 = SW, 6 = West (Left), 7 = NW
 	// Empty array = all directions allowed
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mount Point")
 	TArray<int32> AllowedFacingDirections;
@@ -38,9 +39,19 @@ struct FMountPointData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mount Point")
 	FText DisplayName;
 
+	// Whether a turret is currently mounted here
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mount Point|State")
+	bool bOccupied;
+
+	// Reference to the turret currently occupying this mount (nullptr if unoccupied)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mount Point|State")
+	TObjectPtr<ATurretBase> OccupyingTurret;
+
 	FMountPointData()
 		: MountTransform(FTransform::Identity)
 		, DisplayName(FText::FromString("Mount Point"))
+		, bOccupied(false)
+		, OccupyingTurret(nullptr)
 	{
 	}
 };

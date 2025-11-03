@@ -19,6 +19,7 @@ class UCameraComponent;
 class ULaneSystemComponent;
 class USceneComponent;
 class ATurretBase;
+class UTurretMountComponent;
 
 /**
  * AWarRigPawn - The player's war rig vehicle
@@ -118,6 +119,29 @@ public:
 	UFUNCTION(Exec, Category = "Testing|Economy")
 	void TestFuelSystemAll();
 
+	// Turret Mount System Testing Functions (wrappers for TurretMountComponent)
+	UFUNCTION(Exec, Category = "Testing|Combat")
+	void TestMountPointCount();
+
+	UFUNCTION(Exec, Category = "Testing|Combat")
+	void TestMountPointPositioning();
+
+	UFUNCTION(Exec, Category = "Testing|Combat")
+	void TestMountOccupancy();
+
+	UFUNCTION(Exec, Category = "Testing|Combat")
+	void TestFacingConstraints();
+
+	UFUNCTION(Exec, Category = "Testing|Combat")
+	void TestMountUnmount();
+
+	UFUNCTION(Exec, Category = "Testing|Combat")
+	void TestDesignerMountOverride();
+
+	/** Run all turret mount tests */
+	UFUNCTION(Exec, Category = "Testing|Combat")
+	void TestTurretMountAll();
+
 	// Debug commands
 	UFUNCTION(Exec, Category = "Debug|War Rig")
 	void DebugShowWarRigBounds();
@@ -152,6 +176,16 @@ public:
 	UFUNCTION(Exec, Category = "Debug|Fuel")
 	void DebugShowFuel();
 
+	// Turret Mount Debug Commands (wrappers for TurretMountComponent)
+	UFUNCTION(Exec, Category = "Debug|Turret Mount")
+	void DebugShowMountPointsNew();
+
+	UFUNCTION(Exec, Category = "Debug|Turret Mount")
+	void DebugShowFacingConstraints();
+
+	UFUNCTION(Exec, Category = "Debug|Turret Mount")
+	void DebugListMounts();
+
 protected:
 	// Component creation and setup
 	void CreateMeshComponents(const FWarRigData& RigData);
@@ -184,6 +218,10 @@ protected:
 	/** Lane system component for lateral movement between lanes */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "War Rig|Movement")
 	TObjectPtr<ULaneSystemComponent> LaneSystemComponent;
+
+	/** Turret mount component for managing turret placement */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "War Rig|Turrets")
+	TObjectPtr<UTurretMountComponent> TurretMountComponent;
 
 	/** Spring arm for camera positioning */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "War Rig|Camera")
