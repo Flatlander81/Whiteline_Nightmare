@@ -8,6 +8,10 @@
 #include "Core/WhitelineNightmareGameplayTags.h"
 #include "GameDataStructs.generated.h"
 
+// Forward declarations
+class USoundBase;
+class UNiagaraSystem;
+
 /**
  * Mount Point Data - Defines where turrets can be mounted on the war rig
  */
@@ -449,10 +453,28 @@ struct FPickupData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickup|Spawning")
 	float SpawnWeight;
 
+	// Sound to play when pickup is collected
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickup|Effects")
+	TSoftObjectPtr<USoundBase> PickupSound;
+
+	// Particle effect to spawn when pickup is collected
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickup|Effects")
+	TSoftObjectPtr<UNiagaraSystem> PickupParticle;
+
+	// Visual color for the pickup sphere
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickup|Visual")
+	FLinearColor VisualColor;
+
+	// Collision radius for the pickup sphere
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickup|Collision")
+	float PickupRadius;
+
 	FPickupData()
 		: FuelAmount(0.0f)
 		, ScrapAmount(0)
 		, SpawnWeight(1.0f)
+		, VisualColor(FLinearColor::Green)
+		, PickupRadius(50.0f)
 	{
 	}
 };
