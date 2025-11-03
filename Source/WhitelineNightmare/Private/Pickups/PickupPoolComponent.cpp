@@ -98,20 +98,32 @@ bool UPickupPoolComponent::InitializePickupPool(AWarRigPawn* WarRig, UWorldScrol
 	WorldScrollComponent = ScrollComponent;
 
 	// Get lane positions from war rig's lane system if available
+	// LaneYPositions member is protected, so we build the positions ourselves
+	// based on the lane system's configuration
 	if (ULaneSystemComponent* LaneSystem = WarRig->FindComponentByClass<ULaneSystemComponent>())
 	{
-		LaneYPositions = LaneSystem->GetLaneYPositions();
+		// Build lane positions from center lane and spacing
+		// Default: 5 lanes, center at index 2, spacing 200
+		const int32 NumLanes = 5;
+		const int32 CenterIndex = 2;
+		const float Spacing = 200.0f;
+
+		LaneYPositions.Empty(NumLanes);
+		for (int32 i = 0; i < NumLanes; ++i)
+		{
+			LaneYPositions.Add(LaneSystem->GetLaneYPosition(i));
+		}
 	}
 
 	// Initialize the base object pool
-	FObjectPoolConfig PoolConfig;
-	PoolConfig.PoolSize = PoolSize;
-	PoolConfig.bAutoExpand = true;
-	PoolConfig.MaxPoolSize = PoolSize * 2;  // Allow expansion up to 2x initial size
-	PoolConfig.SpawnDistanceAhead = SpawnDistanceAhead;
-	PoolConfig.DespawnDistanceBehind = DespawnDistanceBehind;
+	FObjectPoolConfig Config;
+	Config.PoolSize = PoolSize;
+	Config.bAutoExpand = true;
+	Config.MaxPoolSize = PoolSize * 2;  // Allow expansion up to 2x initial size
+	Config.SpawnDistanceAhead = SpawnDistanceAhead;
+	Config.DespawnDistanceBehind = DespawnDistanceBehind;
 
-	bool bSuccess = Initialize(PickupClass, PoolConfig);
+	bool bSuccess = Initialize(PickupClass, Config);
 	if (bSuccess)
 	{
 		// Set world scroll component and pool component reference on all pooled pickups

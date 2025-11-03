@@ -5,8 +5,8 @@
 #include "Components/SphereComponent.h"
 #include "Core/WorldScrollComponent.h"
 #include "Core/WarRigPawn.h"
+#include "GAS/WarRigAttributeSet.h"
 #include "AbilitySystemComponent.h"
-#include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayEffect.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraSystem.h"
@@ -207,17 +207,13 @@ void AFuelPickup::ApplyFuelRestore(AWarRigPawn* WarRig)
 	{
 		// Fallback: Directly modify fuel attribute if no gameplay effect is set
 		// This is similar to how FuelDrain currently works
-		UAttributeSet* AttributeSet = const_cast<UAttributeSet*>(ASC->GetAttributeSet(UAttributeSet::StaticClass()));
-		if (AttributeSet)
+		const UWarRigAttributeSet* WarRigAttributeSet = ASC->GetSet<UWarRigAttributeSet>();
+		if (WarRigAttributeSet)
 		{
-			// Find the Fuel attribute
-			FGameplayAttribute FuelAttribute = UAbilitySystemBlueprintLibrary::GetAttributeFromName(FName("Fuel"));
-			if (FuelAttribute.IsValid())
-			{
-				float CurrentFuel = ASC->GetNumericAttribute(FuelAttribute);
-				float NewFuel = CurrentFuel + PickupData.FuelAmount;
-				ASC->SetNumericAttributeBase(FuelAttribute, NewFuel);
-			}
+			// Get current fuel and add pickup amount
+			float CurrentFuel = WarRigAttributeSet->GetFuel();
+			float NewFuel = CurrentFuel + PickupData.FuelAmount;
+			ASC->SetNumericAttributeBase(WarRigAttributeSet->GetFuelAttribute(), NewFuel);
 		}
 	}
 }
