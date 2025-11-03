@@ -24,6 +24,9 @@ AWhitelineNightmareGameMode::AWhitelineNightmareGameMode()
 	, WinDistance(10000.0f)
 	, bIsGameOver(false)
 	, bPlayerWon(false)
+	, EnemiesKilled(0)
+	, FuelCollected(0.0f)
+	, ScrapCollected(0)
 {
 	// Enable ticking
 	PrimaryActorTick.bCanEverTick = true;
@@ -48,6 +51,11 @@ void AWhitelineNightmareGameMode::BeginPlay()
 	DistanceTraveled = 0.0f;
 	bIsGameOver = false;
 	bPlayerWon = false;
+
+	// Initialize stats
+	EnemiesKilled = 0;
+	FuelCollected = 0.0f;
+	ScrapCollected = 0;
 
 #if !UE_BUILD_SHIPPING
 	// Register tests for non-shipping builds
@@ -338,4 +346,36 @@ void AWhitelineNightmareGameMode::RunAllTests()
 #else
 	UE_LOG(LogWhitelineNightmare, Warning, TEXT("RunAllTests: Tests are only available in non-shipping builds"));
 #endif
+}
+
+// === STAT TRACKING IMPLEMENTATIONS ===
+
+void AWhitelineNightmareGameMode::IncrementEnemiesKilled()
+{
+	EnemiesKilled++;
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("IncrementEnemiesKilled: Enemies killed: %d"), EnemiesKilled);
+}
+
+void AWhitelineNightmareGameMode::AddFuelCollected(float Amount)
+{
+	if (Amount < 0.0f)
+	{
+		UE_LOG(LogWhitelineNightmare, Warning, TEXT("AddFuelCollected: Negative amount not allowed: %.2f"), Amount);
+		return;
+	}
+
+	FuelCollected += Amount;
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("AddFuelCollected: Fuel collected: %.2f (total: %.2f)"), Amount, FuelCollected);
+}
+
+void AWhitelineNightmareGameMode::AddScrapCollected(int32 Amount)
+{
+	if (Amount < 0)
+	{
+		UE_LOG(LogWhitelineNightmare, Warning, TEXT("AddScrapCollected: Negative amount not allowed: %d"), Amount);
+		return;
+	}
+
+	ScrapCollected += Amount;
+	UE_LOG(LogWhitelineNightmare, Log, TEXT("AddScrapCollected: Scrap collected: %d (total: %d)"), Amount, ScrapCollected);
 }

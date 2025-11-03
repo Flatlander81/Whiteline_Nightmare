@@ -140,6 +140,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|HUD|State")
 	bool bPlayerWonGame;
 
+	// Time remaining until auto-restart (only valid if bShowingGameOver is true)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|HUD|State")
+	float TimeUntilRestart;
+
 	// Debug lane UI enabled
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Whiteline Nightmare|HUD|Debug")
 	bool bShowDebugLaneUI;
@@ -169,4 +173,9 @@ private:
 	 * Draw debug lane UI buttons
 	 */
 	void DrawDebugLaneUI();
+
+	/**
+	 * Draw game over screen (simple DrawText placeholder)
+	 */
+	void DrawGameOverScreen();
 };

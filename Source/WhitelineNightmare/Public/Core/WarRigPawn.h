@@ -221,6 +221,13 @@ protected:
 	/** Fuel drain ability spec handle */
 	FGameplayAbilitySpecHandle FuelDrainAbilityHandle;
 
+	/** Game over ability class to grant */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "War Rig|Abilities")
+	TSubclassOf<class UGameplayAbility> GameOverAbilityClass;
+
+	/** Game over ability spec handle */
+	FGameplayAbilitySpecHandle GameOverAbilityHandle;
+
 	// === DEBUG ===
 
 	/** Show mount point debug spheres */
