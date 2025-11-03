@@ -443,6 +443,9 @@ void AWarRigHUD::DebugShowFuelBindings()
 		UE_LOG(LogWarRigHUD, Log, TEXT("DebugShowFuelBindings: Widget visibility: %s"), *VisibilityStr);
 		UE_LOG(LogWarRigHUD, Log, TEXT("DebugShowFuelBindings: Widget is in viewport: %s"),
 			FuelWidget->IsInViewport() ? TEXT("YES") : TEXT("NO"));
+
+		// Log detailed geometry information
+		FuelWidget->DebugLogGeometry();
 	}
 	else
 	{

@@ -36,6 +36,10 @@ void UWarRigHUDWidget::NativeConstruct()
 
 	// Initialize with default values
 	UpdateFuelDisplay(CurrentFuel, CurrentMaxFuel);
+
+	// Debug: Log geometry information after construction
+	UE_LOG(LogWarRigHUDWidget, Log, TEXT("WarRigHUDWidget: Widget constructed, logging geometry..."));
+	DebugLogGeometry();
 }
 
 void UWarRigHUDWidget::NativeDestruct()
@@ -74,6 +78,14 @@ void UWarRigHUDWidget::CreateWidgetLayout()
 		UE_LOG(LogWarRigHUDWidget, Log, TEXT("WarRigHUDWidget: Created root canvas"));
 	}
 
+	// CRITICAL: Ensure Canvas Panel fills the viewport by setting it to clip to bounds
+	// This gives it proper dimensions for child widget rendering
+	if (RootCanvas)
+	{
+		RootCanvas->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		UE_LOG(LogWarRigHUDWidget, Log, TEXT("WarRigHUDWidget: Configured root canvas clipping"));
+	}
+
 	// Create fuel text block
 	FuelTextBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("FuelTextBlock"));
 	if (FuelTextBlock)
@@ -85,6 +97,9 @@ void UWarRigHUDWidget::CreateWidgetLayout()
 		FontInfo.Size = 18;
 		FuelTextBlock->SetFont(FontInfo);
 		FuelTextBlock->SetColorAndOpacity(FLinearColor::White);
+
+		// CRITICAL: Explicitly set visibility
+		FuelTextBlock->SetVisibility(ESlateVisibility::Visible);
 
 		// Add to canvas at top-left with margin
 		UCanvasPanelSlot* TextSlot = RootCanvas->AddChildToCanvas(FuelTextBlock);
@@ -110,6 +125,9 @@ void UWarRigHUDWidget::CreateWidgetLayout()
 		// Configure progress bar
 		FuelProgressBar->SetPercent(1.0f); // Start at full
 		FuelProgressBar->SetFillColorAndOpacity(FLinearColor::Green);
+
+		// CRITICAL: Explicitly set visibility
+		FuelProgressBar->SetVisibility(ESlateVisibility::Visible);
 
 		// Set bar style
 		FProgressBarStyle BarStyle = FuelProgressBar->GetWidgetStyle();
@@ -368,4 +386,66 @@ void UWarRigHUDWidget::DebugCycleColors()
 
 	// Increment for next cycle
 	DebugColorIndex = (DebugColorIndex + 1) % 3;
+}
+
+void UWarRigHUDWidget::DebugLogGeometry()
+{
+	UE_LOG(LogWarRigHUDWidget, Log, TEXT("========================================"));
+	UE_LOG(LogWarRigHUDWidget, Log, TEXT("Widget Geometry Debug Info"));
+	UE_LOG(LogWarRigHUDWidget, Log, TEXT("========================================"));
+
+	// Widget self
+	const FGeometry& MyGeometry = GetCachedGeometry();
+	UE_LOG(LogWarRigHUDWidget, Log, TEXT("Widget Size: %.1f x %.1f"),
+		MyGeometry.GetLocalSize().X, MyGeometry.GetLocalSize().Y);
+	UE_LOG(LogWarRigHUDWidget, Log, TEXT("Widget Absolute Position: %.1f, %.1f"),
+		MyGeometry.GetAbsolutePosition().X, MyGeometry.GetAbsolutePosition().Y);
+
+	// Root Canvas
+	if (RootCanvas)
+	{
+		const FGeometry& CanvasGeometry = RootCanvas->GetCachedGeometry();
+		UE_LOG(LogWarRigHUDWidget, Log, TEXT("Canvas Size: %.1f x %.1f"),
+			CanvasGeometry.GetLocalSize().X, CanvasGeometry.GetLocalSize().Y);
+		UE_LOG(LogWarRigHUDWidget, Log, TEXT("Canvas Visibility: %s"),
+			RootCanvas->GetVisibility() == ESlateVisibility::Visible ? TEXT("Visible") : TEXT("Not Visible"));
+	}
+	else
+	{
+		UE_LOG(LogWarRigHUDWidget, Warning, TEXT("RootCanvas is null"));
+	}
+
+	// Text Block
+	if (FuelTextBlock)
+	{
+		const FGeometry& TextGeometry = FuelTextBlock->GetCachedGeometry();
+		UE_LOG(LogWarRigHUDWidget, Log, TEXT("TextBlock Size: %.1f x %.1f"),
+			TextGeometry.GetLocalSize().X, TextGeometry.GetLocalSize().Y);
+		UE_LOG(LogWarRigHUDWidget, Log, TEXT("TextBlock Visibility: %s"),
+			FuelTextBlock->GetVisibility() == ESlateVisibility::Visible ? TEXT("Visible") : TEXT("Not Visible"));
+		UE_LOG(LogWarRigHUDWidget, Log, TEXT("TextBlock Text: %s"),
+			*FuelTextBlock->GetText().ToString());
+	}
+	else
+	{
+		UE_LOG(LogWarRigHUDWidget, Warning, TEXT("FuelTextBlock is null"));
+	}
+
+	// Progress Bar
+	if (FuelProgressBar)
+	{
+		const FGeometry& BarGeometry = FuelProgressBar->GetCachedGeometry();
+		UE_LOG(LogWarRigHUDWidget, Log, TEXT("ProgressBar Size: %.1f x %.1f"),
+			BarGeometry.GetLocalSize().X, BarGeometry.GetLocalSize().Y);
+		UE_LOG(LogWarRigHUDWidget, Log, TEXT("ProgressBar Visibility: %s"),
+			FuelProgressBar->GetVisibility() == ESlateVisibility::Visible ? TEXT("Visible") : TEXT("Not Visible"));
+		UE_LOG(LogWarRigHUDWidget, Log, TEXT("ProgressBar Percent: %.1f%%"),
+			FuelProgressBar->GetPercent() * 100.0f);
+	}
+	else
+	{
+		UE_LOG(LogWarRigHUDWidget, Warning, TEXT("FuelProgressBar is null"));
+	}
+
+	UE_LOG(LogWarRigHUDWidget, Log, TEXT("========================================"));
 }

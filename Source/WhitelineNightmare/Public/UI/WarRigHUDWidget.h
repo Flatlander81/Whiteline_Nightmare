@@ -73,6 +73,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|UI|Debug")
 	bool IsBindingSuccessful() const { return bBindingSuccessful; }
 
+	/**
+	 * Log widget geometry for debugging
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Whiteline Nightmare|UI|Debug")
+	void DebugLogGeometry();
+
 protected:
 	// UUserWidget interface
 	virtual void NativeConstruct() override;
