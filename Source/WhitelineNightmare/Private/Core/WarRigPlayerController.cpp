@@ -71,15 +71,38 @@ void AWarRigPlayerController::SetupInputComponent()
 		return;
 	}
 
-	// Bind common keys for "Press Any Key" restart effect
-	// This covers most keys a player would naturally press
-	InputComponent->BindKey(EKeys::SpaceBar, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
-	InputComponent->BindKey(EKeys::Enter, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
-	InputComponent->BindKey(EKeys::R, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
-	InputComponent->BindKey(EKeys::Escape, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
-	InputComponent->BindKey(EKeys::AnyKey, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready"));
+}
 
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready (multiple keys bound for restart)"));
+void AWarRigPlayerController::ProcessPlayerInput(const float DeltaTime, const bool bGamePaused)
+{
+	// If game is over, check for any key press to restart
+	if (bIsGameOver && PlayerInput)
+	{
+		// Check if any key was pressed this frame
+		bool bAnyKeyPressed = false;
+
+		for (const TPair<FKey, FKeyState>& KeyPair : PlayerInput->KeyStateMap)
+		{
+			const FKeyState& KeyState = KeyPair.Value;
+			// Check if this key was pressed this frame (EventCounts[IE_Pressed] > 0)
+			if (KeyState.EventCounts[IE_Pressed].Num() > 0)
+			{
+				bAnyKeyPressed = true;
+				UE_LOG(LogWarRigPlayerController, Log, TEXT("ProcessPlayerInput: Key pressed during game over (%s), restarting..."), *KeyPair.Key.ToString());
+				break;
+			}
+		}
+
+		if (bAnyKeyPressed)
+		{
+			RestartGame();
+			return; // Don't process any other input
+		}
+	}
+
+	// Call parent to handle normal input processing
+	Super::ProcessPlayerInput(DeltaTime, bGamePaused);
 }
 
 bool AWarRigPlayerController::AddScrap(int32 Amount)
