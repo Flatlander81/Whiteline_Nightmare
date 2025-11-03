@@ -78,12 +78,13 @@ void UWarRigHUDWidget::CreateWidgetLayout()
 		UE_LOG(LogWarRigHUDWidget, Log, TEXT("WarRigHUDWidget: Created root canvas"));
 	}
 
-	// CRITICAL: Ensure Canvas Panel fills the viewport by setting it to clip to bounds
-	// This gives it proper dimensions for child widget rendering
+	// CRITICAL: Ensure Canvas Panel is visible and configured properly
 	if (RootCanvas)
 	{
+		// Must explicitly set canvas to visible!
+		RootCanvas->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		RootCanvas->SetClipping(EWidgetClipping::ClipToBoundsAlways);
-		UE_LOG(LogWarRigHUDWidget, Log, TEXT("WarRigHUDWidget: Configured root canvas clipping"));
+		UE_LOG(LogWarRigHUDWidget, Log, TEXT("WarRigHUDWidget: Configured root canvas visibility and clipping"));
 	}
 
 	// Create fuel text block
@@ -101,13 +102,16 @@ void UWarRigHUDWidget::CreateWidgetLayout()
 		// CRITICAL: Explicitly set visibility
 		FuelTextBlock->SetVisibility(ESlateVisibility::Visible);
 
-		// Add to canvas at top-left with margin
+		// Add to canvas at CENTER of screen
 		UCanvasPanelSlot* TextSlot = RootCanvas->AddChildToCanvas(FuelTextBlock);
 		if (TextSlot)
 		{
-			TextSlot->SetAnchors(FAnchors(0.0f, 0.0f, 0.0f, 0.0f)); // Top-left
-			TextSlot->SetAlignment(FVector2D(0.0f, 0.0f));
-			TextSlot->SetPosition(FVector2D(LeftMargin, TextTopMargin));
+			// Center anchor point (0.5, 0.5)
+			TextSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
+			// Center alignment so text centers on anchor point
+			TextSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+			// Position slightly above center
+			TextSlot->SetPosition(FVector2D(0.0f, -50.0f));
 			TextSlot->SetAutoSize(true);
 		}
 
@@ -134,13 +138,16 @@ void UWarRigHUDWidget::CreateWidgetLayout()
 		// Use default style (can be customized further if needed)
 		FuelProgressBar->SetWidgetStyle(BarStyle);
 
-		// Add to canvas below text
+		// Add to canvas at CENTER of screen, below text
 		UCanvasPanelSlot* BarSlot = RootCanvas->AddChildToCanvas(FuelProgressBar);
 		if (BarSlot)
 		{
-			BarSlot->SetAnchors(FAnchors(0.0f, 0.0f, 0.0f, 0.0f)); // Top-left
-			BarSlot->SetAlignment(FVector2D(0.0f, 0.0f));
-			BarSlot->SetPosition(FVector2D(LeftMargin, ProgressBarTopMargin));
+			// Center anchor point (0.5, 0.5)
+			BarSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
+			// Center alignment so bar centers on anchor point
+			BarSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+			// Position slightly below center (below the text)
+			BarSlot->SetPosition(FVector2D(0.0f, 0.0f));
 			BarSlot->SetSize(FVector2D(ProgressBarWidth, ProgressBarHeight));
 		}
 
