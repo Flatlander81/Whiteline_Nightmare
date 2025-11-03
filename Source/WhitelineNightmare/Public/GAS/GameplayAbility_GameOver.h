@@ -41,13 +41,13 @@ public:
 	FString GameOverReason;
 
 protected:
-	// Game over widget class to spawn
+	// Game over widget class to spawn (optional Blueprint override, defaults to C++ class)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Game Over")
-	TSubclassOf<class UUserWidget> GameOverWidgetClass;
+	TSubclassOf<class UGameOverWidget> GameOverWidgetClass;
 
 	// Cached game over widget instance
 	UPROPERTY()
-	TObjectPtr<class UUserWidget> GameOverWidget;
+	TObjectPtr<class UGameOverWidget> GameOverWidget;
 
 	/**
 	 * Stop world scrolling

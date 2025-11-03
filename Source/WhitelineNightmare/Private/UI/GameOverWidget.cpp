@@ -10,109 +10,106 @@
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/Border.h"
+#include "Blueprint/WidgetTree.h"
 #include "Kismet/GameplayStatics.h"
+
+// Define logging category
+DEFINE_LOG_CATEGORY_STATIC(LogGameOverWidget, Log, All);
+
+UGameOverWidget::UGameOverWidget(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+	, GameOverReason(TEXT("Game Over"))
+	, DistanceTraveled(0.0f)
+	, EnemiesKilled(0)
+	, FuelCollected(0.0f)
+	, ScrapCollected(0)
+	, RootCanvas(nullptr)
+	, BackgroundOverlay(nullptr)
+	, MainVerticalBox(nullptr)
+	, GameOverText(nullptr)
+	, ReasonText(nullptr)
+	, StatsText(nullptr)
+	, RestartInstructionText(nullptr)
+	, RestartButton(nullptr)
+	, RestartButtonText(nullptr)
+{
+}
 
 void UGameOverWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// Initialize default values
-	GameOverReason = TEXT("Game Over");
-	DistanceTraveled = 0.0f;
-	EnemiesKilled = 0;
-	FuelCollected = 0.0f;
-	ScrapCollected = 0;
+	UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: NativeConstruct called"));
 
-	// Fetch stats from GameMode
+	// Fetch stats from GameMode before creating UI
 	FetchStatsFromGameMode();
 
-	// Create the UI
-	CreateUI();
+	// Create widget layout programmatically (same as WarRigHUDWidget!)
+	CreateWidgetLayout();
 
 	// Update the stats display
 	UpdateStatsDisplay();
 
-	UE_LOG(LogTemp, Log, TEXT("UGameOverWidget::NativeConstruct - Game over widget constructed"));
+	UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Widget constructed successfully"));
 }
 
-void UGameOverWidget::SetGameOverReason(const FString& Reason)
+void UGameOverWidget::CreateWidgetLayout()
 {
-	GameOverReason = Reason;
-
-	// Update the reason text if it exists
-	if (ReasonText)
-	{
-		ReasonText->SetText(FText::FromString(Reason));
-	}
-}
-
-void UGameOverWidget::SetStats(float InDistanceTraveled, int32 InEnemiesKilled, float InFuelCollected, int32 InScrapCollected)
-{
-	DistanceTraveled = InDistanceTraveled;
-	EnemiesKilled = InEnemiesKilled;
-	FuelCollected = InFuelCollected;
-	ScrapCollected = InScrapCollected;
-
-	// Update the stats display
-	UpdateStatsDisplay();
-}
-
-void UGameOverWidget::CreateUI()
-{
-	// Create the root canvas panel
-	UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(GetRootWidget());
+	// Get or create root canvas panel
+	RootCanvas = Cast<UCanvasPanel>(GetRootWidget());
 	if (!RootCanvas)
 	{
-		// If there's no root widget, create one
-		RootCanvas = NewObject<UCanvasPanel>(this, UCanvasPanel::StaticClass());
-		if (RootCanvas)
-		{
-			// This won't work at runtime, but we'll create our own structure
-			UE_LOG(LogTemp, Warning, TEXT("UGameOverWidget::CreateUI - No root widget found, creating canvas"));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("UGameOverWidget::CreateUI - Failed to create canvas panel"));
-			return;
-		}
+		RootCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("RootCanvas"));
+		WidgetTree->RootWidget = RootCanvas;
+		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Created root canvas"));
 	}
 
-	// Create a semi-transparent background overlay
-	UBorder* BackgroundBorder = NewObject<UBorder>(this, UBorder::StaticClass(), TEXT("BackgroundBorder"));
-	if (BackgroundBorder)
+	// CRITICAL: Ensure Canvas Panel is visible
+	if (RootCanvas)
+	{
+		RootCanvas->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Configured root canvas visibility"));
+	}
+
+	// Create semi-transparent background overlay
+	BackgroundOverlay = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("BackgroundOverlay"));
+	if (BackgroundOverlay)
 	{
 		// Set background color (semi-transparent black)
-		FLinearColor BackgroundColor(0.0f, 0.0f, 0.0f, 0.8f);
-		BackgroundBorder->SetBrushColor(BackgroundColor);
+		BackgroundOverlay->SetBrushColor(FLinearColor(0.0f, 0.0f, 0.0f, 0.8f));
+		BackgroundOverlay->SetVisibility(ESlateVisibility::Visible);
 
-		// Add to canvas
-		UCanvasPanelSlot* BackgroundSlot = RootCanvas->AddChildToCanvas(BackgroundBorder);
+		// Add to canvas (fullscreen)
+		UCanvasPanelSlot* BackgroundSlot = RootCanvas->AddChildToCanvas(BackgroundOverlay);
 		if (BackgroundSlot)
 		{
 			BackgroundSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
 			BackgroundSlot->SetOffsets(FMargin(0.0f, 0.0f, 0.0f, 0.0f));
 		}
+
+		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Created background overlay"));
 	}
 
-	// Create a vertical box to hold all UI elements
-	UVerticalBox* MainVerticalBox = NewObject<UVerticalBox>(this, UVerticalBox::StaticClass(), TEXT("MainVerticalBox"));
-	if (!MainVerticalBox)
+	// Create vertical box to hold all UI elements
+	MainVerticalBox = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MainVerticalBox"));
+	if (MainVerticalBox)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGameOverWidget::CreateUI - Failed to create main vertical box"));
-		return;
-	}
+		MainVerticalBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
-	// Add vertical box to canvas (centered)
-	UCanvasPanelSlot* MainBoxSlot = RootCanvas->AddChildToCanvas(MainVerticalBox);
-	if (MainBoxSlot)
-	{
-		MainBoxSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
-		MainBoxSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-		MainBoxSlot->SetAutoSize(true);
+		// Add to canvas (centered)
+		UCanvasPanelSlot* VBoxSlot = RootCanvas->AddChildToCanvas(MainVerticalBox);
+		if (VBoxSlot)
+		{
+			VBoxSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
+			VBoxSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+			VBoxSlot->SetAutoSize(true);
+		}
+
+		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Created main vertical box"));
 	}
 
 	// Create "GAME OVER" text
-	GameOverText = NewObject<UTextBlock>(this, UTextBlock::StaticClass(), TEXT("GameOverText"));
+	GameOverText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("GameOverText"));
 	if (GameOverText)
 	{
 		GameOverText->SetText(FText::FromString(TEXT("GAME OVER")));
@@ -123,6 +120,7 @@ void UGameOverWidget::CreateUI()
 		GameOverText->SetFont(FontInfo);
 		GameOverText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.2f, 0.0f, 1.0f))); // Red/orange
 		GameOverText->SetJustification(ETextJustify::Center);
+		GameOverText->SetVisibility(ESlateVisibility::Visible);
 
 		// Add to vertical box
 		UVerticalBoxSlot* GameOverSlot = MainVerticalBox->AddChildToVerticalBox(GameOverText);
@@ -131,10 +129,12 @@ void UGameOverWidget::CreateUI()
 			GameOverSlot->SetPadding(FMargin(0.0f, 20.0f, 0.0f, 40.0f));
 			GameOverSlot->SetHorizontalAlignment(HAlign_Center);
 		}
+
+		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Created GAME OVER text"));
 	}
 
 	// Create reason text
-	ReasonText = NewObject<UTextBlock>(this, UTextBlock::StaticClass(), TEXT("ReasonText"));
+	ReasonText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("ReasonText"));
 	if (ReasonText)
 	{
 		ReasonText->SetText(FText::FromString(GameOverReason));
@@ -145,6 +145,7 @@ void UGameOverWidget::CreateUI()
 		ReasonText->SetFont(FontInfo);
 		ReasonText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 		ReasonText->SetJustification(ETextJustify::Center);
+		ReasonText->SetVisibility(ESlateVisibility::Visible);
 
 		// Add to vertical box
 		UVerticalBoxSlot* ReasonSlot = MainVerticalBox->AddChildToVerticalBox(ReasonText);
@@ -153,13 +154,15 @@ void UGameOverWidget::CreateUI()
 			ReasonSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 40.0f));
 			ReasonSlot->SetHorizontalAlignment(HAlign_Center);
 		}
+
+		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Created reason text"));
 	}
 
 	// Create stats text
-	StatsText = NewObject<UTextBlock>(this, UTextBlock::StaticClass(), TEXT("StatsText"));
+	StatsText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("StatsText"));
 	if (StatsText)
 	{
-		StatsText->SetText(FText::FromString(TEXT("Stats will be displayed here")));
+		StatsText->SetText(FText::FromString(TEXT("Stats loading...")));
 
 		// Set font size and color
 		FSlateFontInfo FontInfo = StatsText->GetFont();
@@ -167,6 +170,7 @@ void UGameOverWidget::CreateUI()
 		StatsText->SetFont(FontInfo);
 		StatsText->SetColorAndOpacity(FSlateColor(FLinearColor(0.8f, 0.8f, 0.8f, 1.0f)));
 		StatsText->SetJustification(ETextJustify::Center);
+		StatsText->SetVisibility(ESlateVisibility::Visible);
 
 		// Add to vertical box
 		UVerticalBoxSlot* StatsSlot = MainVerticalBox->AddChildToVerticalBox(StatsText);
@@ -175,10 +179,12 @@ void UGameOverWidget::CreateUI()
 			StatsSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 40.0f));
 			StatsSlot->SetHorizontalAlignment(HAlign_Center);
 		}
+
+		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Created stats text"));
 	}
 
 	// Create "Press R to Restart" instruction
-	RestartInstructionText = NewObject<UTextBlock>(this, UTextBlock::StaticClass(), TEXT("RestartInstructionText"));
+	RestartInstructionText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("RestartInstructionText"));
 	if (RestartInstructionText)
 	{
 		RestartInstructionText->SetText(FText::FromString(TEXT("Press R to Restart")));
@@ -189,6 +195,7 @@ void UGameOverWidget::CreateUI()
 		RestartInstructionText->SetFont(FontInfo);
 		RestartInstructionText->SetColorAndOpacity(FSlateColor(FLinearColor(0.7f, 0.7f, 0.7f, 1.0f)));
 		RestartInstructionText->SetJustification(ETextJustify::Center);
+		RestartInstructionText->SetVisibility(ESlateVisibility::Visible);
 
 		// Add to vertical box
 		UVerticalBoxSlot* InstructionSlot = MainVerticalBox->AddChildToVerticalBox(RestartInstructionText);
@@ -197,14 +204,18 @@ void UGameOverWidget::CreateUI()
 			InstructionSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 20.0f));
 			InstructionSlot->SetHorizontalAlignment(HAlign_Center);
 		}
+
+		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Created restart instruction text"));
 	}
 
 	// Create restart button
-	RestartButton = NewObject<UButton>(this, UButton::StaticClass(), TEXT("RestartButton"));
+	RestartButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("RestartButton"));
 	if (RestartButton)
 	{
+		RestartButton->SetVisibility(ESlateVisibility::Visible);
+
 		// Create button text
-		RestartButtonText = NewObject<UTextBlock>(this, UTextBlock::StaticClass(), TEXT("RestartButtonText"));
+		RestartButtonText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("RestartButtonText"));
 		if (RestartButtonText)
 		{
 			RestartButtonText->SetText(FText::FromString(TEXT("Restart")));
@@ -215,6 +226,7 @@ void UGameOverWidget::CreateUI()
 			RestartButtonText->SetFont(FontInfo);
 			RestartButtonText->SetColorAndOpacity(FSlateColor(FLinearColor::Black));
 			RestartButtonText->SetJustification(ETextJustify::Center);
+			RestartButtonText->SetVisibility(ESlateVisibility::Visible);
 
 			// Add text to button
 			RestartButton->AddChild(RestartButtonText);
@@ -230,9 +242,34 @@ void UGameOverWidget::CreateUI()
 			ButtonSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 20.0f));
 			ButtonSlot->SetHorizontalAlignment(HAlign_Center);
 		}
+
+		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Created restart button"));
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("UGameOverWidget::CreateUI - UI created successfully"));
+	UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: UI layout created successfully"));
+}
+
+void UGameOverWidget::SetGameOverReason(const FString& Reason)
+{
+	GameOverReason = Reason;
+
+	// Update the reason text if it exists
+	if (ReasonText)
+	{
+		ReasonText->SetText(FText::FromString(Reason));
+		UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Set game over reason to '%s'"), *Reason);
+	}
+}
+
+void UGameOverWidget::SetStats(float InDistanceTraveled, int32 InEnemiesKilled, float InFuelCollected, int32 InScrapCollected)
+{
+	DistanceTraveled = InDistanceTraveled;
+	EnemiesKilled = InEnemiesKilled;
+	FuelCollected = InFuelCollected;
+	ScrapCollected = InScrapCollected;
+
+	// Update the stats display
+	UpdateStatsDisplay();
 }
 
 void UGameOverWidget::UpdateStatsDisplay()
@@ -251,6 +288,8 @@ void UGameOverWidget::UpdateStatsDisplay()
 	), DistanceTraveled, EnemiesKilled, FuelCollected, ScrapCollected);
 
 	StatsText->SetText(FText::FromString(StatsString));
+
+	UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Updated stats display"));
 }
 
 void UGameOverWidget::FetchStatsFromGameMode()
@@ -259,14 +298,14 @@ void UGameOverWidget::FetchStatsFromGameMode()
 	UWorld* World = GetWorld();
 	if (!World)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UGameOverWidget::FetchStatsFromGameMode - No world found"));
+		UE_LOG(LogGameOverWidget, Warning, TEXT("GameOverWidget: No world found"));
 		return;
 	}
 
 	AWhitelineNightmareGameMode* GameMode = Cast<AWhitelineNightmareGameMode>(World->GetAuthGameMode());
 	if (!GameMode)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UGameOverWidget::FetchStatsFromGameMode - GameMode not found"));
+		UE_LOG(LogGameOverWidget, Warning, TEXT("GameOverWidget: GameMode not found"));
 		return;
 	}
 
@@ -276,19 +315,19 @@ void UGameOverWidget::FetchStatsFromGameMode()
 	FuelCollected = GameMode->GetFuelCollected();
 	ScrapCollected = GameMode->GetScrapCollected();
 
-	UE_LOG(LogTemp, Log, TEXT("UGameOverWidget::FetchStatsFromGameMode - Fetched stats: Distance=%.0f, Enemies=%d, Fuel=%.0f, Scrap=%d"),
+	UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Fetched stats - Distance=%.0f, Enemies=%d, Fuel=%.0f, Scrap=%d"),
 		DistanceTraveled, EnemiesKilled, FuelCollected, ScrapCollected);
 }
 
 void UGameOverWidget::OnRestartButtonClicked()
 {
-	UE_LOG(LogTemp, Log, TEXT("UGameOverWidget::OnRestartButtonClicked - Restart button clicked"));
+	UE_LOG(LogGameOverWidget, Log, TEXT("GameOverWidget: Restart button clicked"));
 
 	// Get the player controller
 	APlayerController* PC = GetOwningPlayer();
 	if (!PC)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGameOverWidget::OnRestartButtonClicked - No player controller found"));
+		UE_LOG(LogGameOverWidget, Error, TEXT("GameOverWidget: No player controller found"));
 		return;
 	}
 

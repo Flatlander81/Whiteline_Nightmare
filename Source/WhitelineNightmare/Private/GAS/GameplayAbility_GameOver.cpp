@@ -169,43 +169,48 @@ void UGameplayAbility_GameOver::ShowGameOverUI()
 		return;
 	}
 
-	// Create the game over widget if we have a class
-	if (GameOverWidgetClass)
+	// Create the game over widget (pure C++, no Blueprint required!)
+	// Use UGameOverWidget::StaticClass() directly (same pattern as WarRigHUD with FuelWidget)
+	TSubclassOf<UGameOverWidget> WidgetClass = GameOverWidgetClass;
+	if (!WidgetClass)
 	{
-		GameOverWidget = CreateWidget<UUserWidget>(PC, GameOverWidgetClass);
-		if (GameOverWidget)
+		// Fallback to C++ class if no Blueprint override is set
+		WidgetClass = UGameOverWidget::StaticClass();
+		UE_LOG(LogTemp, Log, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - Using default C++ UGameOverWidget class"));
+	}
+
+	GameOverWidget = CreateWidget<UGameOverWidget>(PC, WidgetClass);
+	if (GameOverWidget)
+	{
+		// Cast to UGameOverWidget to set the reason
+		UGameOverWidget* GameOverWidgetTyped = Cast<UGameOverWidget>(GameOverWidget);
+		if (GameOverWidgetTyped)
 		{
-			// Cast to UGameOverWidget to set the reason
-			UGameOverWidget* GameOverWidgetCasted = Cast<UGameOverWidget>(GameOverWidget);
-			if (GameOverWidgetCasted)
-			{
-				GameOverWidgetCasted->SetGameOverReason(GameOverReason);
-			}
-
-			// Add to viewport with high Z-order
-			GameOverWidget->AddToViewport(100);
-			UE_LOG(LogTemp, Log, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - Game over widget added to viewport"));
-
-			// Show mouse cursor for UI interaction
-			PC->bShowMouseCursor = true;
-			PC->bEnableClickEvents = true;
-			PC->bEnableMouseOverEvents = true;
-
-			// Set input mode to UI only (but we'll still allow restart input)
-			FInputModeUIOnly InputMode;
-			InputMode.SetWidgetToFocus(GameOverWidget->TakeWidget());
-			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			PC->SetInputMode(InputMode);
+			GameOverWidgetTyped->SetGameOverReason(GameOverReason);
 		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - Failed to create game over widget"));
-		}
+
+		// Add to viewport with high Z-order
+		GameOverWidget->AddToViewport(100);
+
+		// CRITICAL: Set visibility (same as WarRigHUDWidget pattern)
+		GameOverWidget->SetVisibility(ESlateVisibility::Visible);
+
+		UE_LOG(LogTemp, Log, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - Game over widget added to viewport and set to Visible"));
+
+		// Show mouse cursor for UI interaction
+		PC->bShowMouseCursor = true;
+		PC->bEnableClickEvents = true;
+		PC->bEnableMouseOverEvents = true;
+
+		// Set input mode to UI only (but we'll still allow restart input)
+		FInputModeUIOnly InputMode;
+		InputMode.SetWidgetToFocus(GameOverWidget->TakeWidget());
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		PC->SetInputMode(InputMode);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - No GameOverWidgetClass set"));
-		UE_LOG(LogTemp, Warning, TEXT("Set GameOverWidgetClass in Blueprint or defaults"));
+		UE_LOG(LogTemp, Error, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - Failed to create game over widget"));
 	}
 }
 
