@@ -9,7 +9,6 @@
 class UTextBlock;
 class UButton;
 class UCanvasPanel;
-class UVerticalBox;
 class UBorder;
 
 /**
@@ -92,15 +91,12 @@ protected:
 	UPROPERTY()
 	int32 ScrapCollected;
 
-	// UI Elements (created programmatically via WidgetTree)
+	// UI Elements (created programmatically via WidgetTree - SAME AS WarRigHUDWidget)
 	UPROPERTY()
 	UCanvasPanel* RootCanvas;
 
 	UPROPERTY()
 	UBorder* BackgroundOverlay;
-
-	UPROPERTY()
-	UVerticalBox* MainVerticalBox;
 
 	UPROPERTY()
 	UTextBlock* GameOverText;
