@@ -72,9 +72,9 @@ void AWarRigPlayerController::SetupInputComponent()
 	}
 
 	// Bind "R" key to RestartGame (for game over restart)
-	InputComponent->BindAction("Restart", IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	InputComponent->BindKey(EKeys::R, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
 
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready (Restart bound to 'R')"));
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready (Restart bound to 'R' key)"));
 }
 
 bool AWarRigPlayerController::AddScrap(int32 Amount)
