@@ -21,6 +21,7 @@ AWarRigHUD::AWarRigHUD()
 	, DistancePercentage(0.0f)
 	, bShowingGameOver(false)
 	, bPlayerWonGame(false)
+	, TimeUntilRestart(0.0f)
 	, bShowDebugLaneUI(true) // Show by default
 	, FuelWidget(nullptr)
 {
@@ -103,6 +104,13 @@ void AWarRigHUD::DrawHUD()
 	// Draw game over screen if active (simple DrawText - placeholder)
 	if (bShowingGameOver)
 	{
+		// Update countdown timer
+		TimeUntilRestart -= GetWorld()->GetDeltaSeconds();
+		if (TimeUntilRestart < 0.0f)
+		{
+			TimeUntilRestart = 0.0f;
+		}
+
 		DrawGameOverScreen();
 	}
 	else
@@ -211,6 +219,7 @@ void AWarRigHUD::ShowGameOverScreen(bool bPlayerWon)
 
 	bShowingGameOver = true;
 	bPlayerWonGame = bPlayerWon;
+	TimeUntilRestart = 10.0f; // Initialize countdown timer
 
 	UE_LOG(LogWarRigHUD, Log, TEXT("ShowGameOverScreen: Player %s"), bPlayerWon ? TEXT("WON") : TEXT("LOST"));
 
@@ -508,8 +517,10 @@ void AWarRigHUD::DrawGameOverScreen()
 		DrawText(FString::Printf(TEXT("Scrap Collected: %d"), Scrap), FLinearColor(0.8f, 0.8f, 0.8f, 1.0f), CenterX - 200.0f, YPos, nullptr, 1.0f);
 	}
 
-	// Draw restart instruction
-	DrawText(TEXT("Restarting in 10 seconds..."), FLinearColor(0.7f, 0.7f, 0.7f, 1.0f), CenterX - 150.0f, CenterY + 150.0f, nullptr, 1.0f);
+	// Draw restart instruction with countdown
+	const int32 SecondsRemaining = FMath::CeilToInt(TimeUntilRestart);
+	const FString RestartText = FString::Printf(TEXT("Restarting in %d seconds..."), SecondsRemaining);
+	DrawText(RestartText, FLinearColor(0.7f, 0.7f, 0.7f, 1.0f), CenterX - 150.0f, CenterY + 150.0f, nullptr, 1.0f);
 }
 
 void AWarRigHUD::DebugToggleFuelUI()
