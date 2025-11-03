@@ -4,6 +4,7 @@
 #include "Engine/Canvas.h"
 #include "Engine/Font.h"
 #include "Core/WarRigPawn.h"
+#include "Core/WhitelineNightmareGameMode.h"
 #include "Core/LaneSystemComponent.h"
 #include "UI/WarRigHUDWidget.h"
 #include "Blueprint/UserWidget.h"
