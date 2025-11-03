@@ -7,6 +7,7 @@
 // Forward declaration of test registration functions
 #if !UE_BUILD_SHIPPING
 void RegisterObjectPoolTests(class UTestManager* TestManager);
+void RegisterFuelUITests(class UTestManager* TestManager);
 // Note: Turret tests are now included in ObjectPoolTests.cpp
 #endif
 
@@ -116,6 +117,10 @@ void ATestingGameMode::RegisterSampleTests()
 	// Register object pool tests (includes ground tile tests AND turret tests)
 	RegisterObjectPoolTests(TestManager);
 	UE_LOG(LogTestingGameMode, Log, TEXT("RegisterSampleTests: Registered object pool, ground tile, and turret tests"));
+
+	// Register fuel UI tests
+	RegisterFuelUITests(TestManager);
+	UE_LOG(LogTestingGameMode, Log, TEXT("RegisterSampleTests: Registered fuel UI tests"));
 #endif
 }
 

@@ -5,6 +5,10 @@
 #include "Engine/Font.h"
 #include "Core/WarRigPawn.h"
 #include "Core/LaneSystemComponent.h"
+#include "UI/WarRigHUDWidget.h"
+#include "Blueprint/UserWidget.h"
+#include "AbilitySystemComponent.h"
+#include "GAS/WarRigAttributeSet.h"
 
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogWarRigHUD, Log, All);
@@ -17,6 +21,7 @@ AWarRigHUD::AWarRigHUD()
 	, bShowingGameOver(false)
 	, bPlayerWonGame(false)
 	, bShowDebugLaneUI(true) // Show by default
+	, FuelWidget(nullptr)
 {
 	// Enable ticking
 	PrimaryActorTick.bCanEverTick = true;
@@ -29,11 +34,70 @@ void AWarRigHUD::BeginPlay()
 
 	UE_LOG(LogWarRigHUD, Log, TEXT("WarRigHUD: Initialized (Debug Lane UI: %s)"),
 		bShowDebugLaneUI ? TEXT("Enabled") : TEXT("Disabled"));
+
+	// Create fuel HUD widget
+	if (!FuelWidget)
+	{
+		FuelWidget = CreateWidget<UWarRigHUDWidget>(GetWorld(), UWarRigHUDWidget::StaticClass());
+		if (FuelWidget)
+		{
+			// Add widget to viewport
+			FuelWidget->AddToViewport(0); // Z-order 0 (behind other UI)
+
+			// CRITICAL: Set visibility to Visible so the widget renders!
+			FuelWidget->SetVisibility(ESlateVisibility::Visible);
+
+			UE_LOG(LogWarRigHUD, Log, TEXT("WarRigHUD: Created fuel HUD widget and set visibility to Visible"));
+
+			// Get war rig pawn and initialize widget with its AbilitySystemComponent
+			AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetOwningPawn());
+			if (WarRig)
+			{
+				UAbilitySystemComponent* ASC = WarRig->GetAbilitySystemComponent();
+				if (ASC)
+				{
+					FuelWidget->InitializeWidget(ASC);
+					UE_LOG(LogWarRigHUD, Log, TEXT("WarRigHUD: Fuel widget initialized with AbilitySystemComponent"));
+				}
+				else
+				{
+					UE_LOG(LogWarRigHUD, Error, TEXT("WarRigHUD: War Rig has no AbilitySystemComponent"));
+				}
+			}
+			else
+			{
+				UE_LOG(LogWarRigHUD, Warning, TEXT("WarRigHUD: Could not get War Rig pawn, fuel widget not bound to GAS"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogWarRigHUD, Error, TEXT("WarRigHUD: Failed to create fuel HUD widget"));
+		}
+	}
 }
 
 void AWarRigHUD::DrawHUD()
 {
 	Super::DrawHUD();
+
+	// Update fuel percentage from War Rig's GAS
+	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetOwningPawn());
+	if (WarRig)
+	{
+		UAbilitySystemComponent* ASC = WarRig->GetAbilitySystemComponent();
+		if (ASC)
+		{
+			// Get fuel values from GAS attributes
+			const float CurrentFuel = ASC->GetNumericAttribute(UWarRigAttributeSet::GetFuelAttribute());
+			const float MaxFuel = ASC->GetNumericAttribute(UWarRigAttributeSet::GetMaxFuelAttribute());
+
+			// Update fuel display percentage
+			if (MaxFuel > 0.0f)
+			{
+				FuelPercentage = FMath::Clamp(CurrentFuel / MaxFuel, 0.0f, 1.0f);
+			}
+		}
+	}
 
 	// Draw debug HUD until proper UI widgets are implemented
 	DrawDebugHUD();
@@ -188,10 +252,53 @@ void AWarRigHUD::DrawDebugHUD()
 	float YPos = 50.0f;
 	const float XPos = 50.0f;
 
-	// Draw fuel
+	// Draw fuel text
 	FString FuelText = FString::Printf(TEXT("Fuel: %.1f%%"), FuelPercentage * 100.0f);
-	DrawText(FuelText, FLinearColor::Green, XPos, YPos, nullptr, 1.0f);
+
+	// Determine color based on fuel percentage
+	FLinearColor FuelColor;
+	if (FuelPercentage > 0.6f)
+	{
+		FuelColor = FLinearColor::Green;  // > 60%
+	}
+	else if (FuelPercentage > 0.3f)
+	{
+		FuelColor = FLinearColor(1.0f, 1.0f, 0.0f, 1.0f);  // Yellow: 30-60%
+	}
+	else
+	{
+		FuelColor = FLinearColor::Red;  // < 30%
+	}
+
+	DrawText(FuelText, FuelColor, XPos, YPos, nullptr, 1.0f);
 	YPos += LineHeight;
+
+	// Draw fuel progress bar
+	const float BarWidth = 300.0f;
+	const float BarHeight = 20.0f;
+	const float BarYPos = YPos;
+
+	// Background (empty portion)
+	FCanvasTileItem BackgroundTile(FVector2D(XPos, BarYPos), FVector2D(BarWidth, BarHeight), FLinearColor(0.2f, 0.2f, 0.2f, 1.0f));
+	BackgroundTile.BlendMode = SE_BLEND_Translucent;
+	Canvas->DrawItem(BackgroundTile);
+
+	// Foreground (filled portion)
+	const float FilledWidth = BarWidth * FuelPercentage;
+	if (FilledWidth > 0.0f)
+	{
+		FCanvasTileItem ForegroundTile(FVector2D(XPos, BarYPos), FVector2D(FilledWidth, BarHeight), FuelColor);
+		ForegroundTile.BlendMode = SE_BLEND_Translucent;
+		Canvas->DrawItem(ForegroundTile);
+	}
+
+	// Border around bar
+	FCanvasBoxItem BorderBox(FVector2D(XPos, BarYPos), FVector2D(BarWidth, BarHeight));
+	BorderBox.SetColor(FLinearColor::White);
+	BorderBox.LineThickness = 2.0f;
+	Canvas->DrawItem(BorderBox);
+
+	YPos += BarHeight + 10.0f;
 
 	// Draw armor
 	FString ArmorText = FString::Printf(TEXT("Armor: %.1f%%"), ArmorPercentage * 100.0f);
@@ -348,4 +455,132 @@ void AWarRigHUD::DrawDebugLaneUI()
 	const int32 CurrentLane = LaneSystem->GetCurrentLane();
 	const FString LaneText = FString::Printf(TEXT("Current Lane: %d"), CurrentLane);
 	DrawText(LaneText, FLinearColor::Yellow, CenterX - 60, ButtonY - 30, nullptr, 1.2f);
+}
+
+void AWarRigHUD::DebugToggleFuelUI()
+{
+	if (FuelWidget)
+	{
+		FuelWidget->ToggleVisibility();
+		UE_LOG(LogWarRigHUD, Log, TEXT("DebugToggleFuelUI: Toggled fuel UI visibility"));
+	}
+	else
+	{
+		UE_LOG(LogWarRigHUD, Warning, TEXT("DebugToggleFuelUI: Fuel widget is null"));
+	}
+}
+
+void AWarRigHUD::DebugTestFuelColors()
+{
+	if (FuelWidget)
+	{
+		FuelWidget->DebugCycleColors();
+		UE_LOG(LogWarRigHUD, Log, TEXT("DebugTestFuelColors: Cycled fuel colors"));
+	}
+	else
+	{
+		UE_LOG(LogWarRigHUD, Warning, TEXT("DebugTestFuelColors: Fuel widget is null"));
+	}
+}
+
+void AWarRigHUD::DebugShowFuelBindings()
+{
+	if (FuelWidget)
+	{
+		const bool bBindingSuccessful = FuelWidget->IsBindingSuccessful();
+		UE_LOG(LogWarRigHUD, Log, TEXT("DebugShowFuelBindings: Fuel widget binding status: %s"),
+			bBindingSuccessful ? TEXT("SUCCESS") : TEXT("FAILED"));
+
+		// Also log widget visibility
+		const ESlateVisibility Visibility = FuelWidget->GetVisibility();
+		FString VisibilityStr;
+		switch (Visibility)
+		{
+			case ESlateVisibility::Visible: VisibilityStr = TEXT("Visible"); break;
+			case ESlateVisibility::Collapsed: VisibilityStr = TEXT("Collapsed"); break;
+			case ESlateVisibility::Hidden: VisibilityStr = TEXT("Hidden"); break;
+			case ESlateVisibility::HitTestInvisible: VisibilityStr = TEXT("HitTestInvisible"); break;
+			case ESlateVisibility::SelfHitTestInvisible: VisibilityStr = TEXT("SelfHitTestInvisible"); break;
+			default: VisibilityStr = TEXT("Unknown"); break;
+		}
+		UE_LOG(LogWarRigHUD, Log, TEXT("DebugShowFuelBindings: Widget visibility: %s"), *VisibilityStr);
+		UE_LOG(LogWarRigHUD, Log, TEXT("DebugShowFuelBindings: Widget is in viewport: %s"),
+			FuelWidget->IsInViewport() ? TEXT("YES") : TEXT("NO"));
+
+		// Log detailed geometry information
+		FuelWidget->DebugLogGeometry();
+	}
+	else
+	{
+		UE_LOG(LogWarRigHUD, Warning, TEXT("DebugShowFuelBindings: Fuel widget is null"));
+	}
+}
+
+void AWarRigHUD::DebugForceCreateFuelWidget()
+{
+	UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: Attempting to create fuel widget..."));
+
+	if (FuelWidget)
+	{
+		UE_LOG(LogWarRigHUD, Warning, TEXT("DebugForceCreateFuelWidget: Fuel widget already exists!"));
+		UE_LOG(LogWarRigHUD, Log, TEXT("  -> Visibility: %s"),
+			FuelWidget->GetVisibility() == ESlateVisibility::Visible ? TEXT("Visible") : TEXT("Hidden/Other"));
+		UE_LOG(LogWarRigHUD, Log, TEXT("  -> In Viewport: %s"),
+			FuelWidget->IsInViewport() ? TEXT("YES") : TEXT("NO"));
+		UE_LOG(LogWarRigHUD, Log, TEXT("  -> Binding Status: %s"),
+			FuelWidget->IsBindingSuccessful() ? TEXT("SUCCESS") : TEXT("FAILED"));
+		return;
+	}
+
+	// Get world
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		UE_LOG(LogWarRigHUD, Error, TEXT("DebugForceCreateFuelWidget: World is null!"));
+		return;
+	}
+
+	// Create widget
+	FuelWidget = CreateWidget<UWarRigHUDWidget>(World, UWarRigHUDWidget::StaticClass());
+	if (!FuelWidget)
+	{
+		UE_LOG(LogWarRigHUD, Error, TEXT("DebugForceCreateFuelWidget: Failed to create widget!"));
+		return;
+	}
+
+	UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: Widget created successfully"));
+
+	// Add to viewport
+	FuelWidget->AddToViewport(0);
+
+	// CRITICAL: Set visibility to Visible so the widget renders!
+	FuelWidget->SetVisibility(ESlateVisibility::Visible);
+
+	UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: Widget added to viewport and set to Visible"));
+
+	// Try to initialize with War Rig's ASC
+	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetOwningPawn());
+	if (WarRig)
+	{
+		UAbilitySystemComponent* ASC = WarRig->GetAbilitySystemComponent();
+		if (ASC)
+		{
+			FuelWidget->InitializeWidget(ASC);
+			UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: Widget initialized with ASC"));
+		}
+		else
+		{
+			UE_LOG(LogWarRigHUD, Warning, TEXT("DebugForceCreateFuelWidget: War Rig has no ASC"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogWarRigHUD, Warning, TEXT("DebugForceCreateFuelWidget: No War Rig pawn found"));
+	}
+
+	// Force a test update to make it visible
+	FuelWidget->UpdateFuelDisplay(75.0f, 100.0f);
+	UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: Forced test update (75/100)"));
+
+	UE_LOG(LogWarRigHUD, Log, TEXT("DebugForceCreateFuelWidget: DONE - Widget should now be visible at top-left!"));
 }

@@ -19,43 +19,46 @@
 
 #if !UE_BUILD_SHIPPING
 
-// Helper function to get a valid world for testing
-static UWorld* GetTestWorld()
+namespace
 {
-	for (const FWorldContext& Context : GEngine->GetWorldContexts())
+	// Helper function to get a valid world for testing
+	UWorld* GetTestWorldForObjectPoolTests()
 	{
-		if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+		for (const FWorldContext& Context : GEngine->GetWorldContexts())
 		{
-			return Context.World();
+			if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+			{
+				return Context.World();
+			}
 		}
-	}
-	return nullptr;
-}
-
-// Helper function to create a pool component for testing
-static UObjectPoolComponent* CreateTestPoolComponent()
-{
-	UWorld* World = GetTestWorld();
-	if (!World)
-	{
 		return nullptr;
 	}
 
-	// Create a dummy actor to hold the component
-	AActor* DummyActor = World->SpawnActor<AActor>();
-	if (!DummyActor)
+	// Helper function to create a pool component for testing
+	UObjectPoolComponent* CreateTestPoolComponent()
 	{
-		return nullptr;
-	}
+		UWorld* World = GetTestWorldForObjectPoolTests();
+		if (!World)
+		{
+			return nullptr;
+		}
 
-	// Create and attach the pool component
-	UObjectPoolComponent* PoolComponent = NewObject<UObjectPoolComponent>(DummyActor);
-	if (PoolComponent)
-	{
-		PoolComponent->RegisterComponent();
-	}
+		// Create a dummy actor to hold the component
+		AActor* DummyActor = World->SpawnActor<AActor>();
+		if (!DummyActor)
+		{
+			return nullptr;
+		}
 
-	return PoolComponent;
+		// Create and attach the pool component
+		UObjectPoolComponent* PoolComponent = NewObject<UObjectPoolComponent>(DummyActor);
+		if (PoolComponent)
+		{
+			PoolComponent->RegisterComponent();
+		}
+
+		return PoolComponent;
+	}
 }
 
 /**
@@ -437,7 +440,7 @@ static AActor* CreateTestWarRig(UWorld* World, const FVector& Location)
  */
 static bool GroundTileTest_TilePoolRecycling()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForObjectPoolTests();
 	TEST_NOT_NULL(World, "World should exist");
 
 	// Create a war rig for position reference
@@ -499,7 +502,7 @@ static bool GroundTileTest_TilePoolRecycling()
  */
 static bool GroundTileTest_SeamlessScrolling()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForObjectPoolTests();
 	TEST_NOT_NULL(World, "World should exist");
 
 	// Create pool
@@ -568,7 +571,7 @@ static bool GroundTileTest_SeamlessScrolling()
  */
 static bool GroundTileTest_TilePositioning()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForObjectPoolTests();
 	TEST_NOT_NULL(World, "World should exist");
 
 	// Create war rig at a specific position
@@ -657,7 +660,7 @@ static bool GroundTileTest_TilePositioning()
  */
 static bool GroundTileTest_PoolSize()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForObjectPoolTests();
 	TEST_NOT_NULL(World, "World should exist");
 
 	AActor* PoolOwner = World->SpawnActor<AActor>();
@@ -726,7 +729,7 @@ static bool GroundTileTest_PoolSize()
  */
 static bool GroundTileTest_TileDespawn()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForObjectPoolTests();
 	TEST_NOT_NULL(World, "World should exist");
 
 	// Create war rig
@@ -815,7 +818,7 @@ static bool GroundTileTest_TileDespawn()
 // Helper function to create a test war rig
 static AWarRigPawn* CreateTestWarRig()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForObjectPoolTests();
 	if (!World)
 	{
 		return nullptr;
@@ -832,7 +835,7 @@ static AWarRigPawn* CreateTestWarRig()
 // Helper function to create a test turret
 static ATurretBase* CreateTestTurret()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForObjectPoolTests();
 	if (!World)
 	{
 		return nullptr;
@@ -900,7 +903,7 @@ static bool TurretTest_TurretSpawn()
  */
 static bool TurretTest_TargetAcquisition()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForObjectPoolTests();
 	TEST_NOT_NULL(World, "World should exist");
 
 	ATurretBase* Turret = CreateTestTurret();
@@ -1218,7 +1221,7 @@ static bool TurretTest_AbilitySystemIntegration()
 // Helper function to create a world scroll component for testing
 static UWorldScrollComponent* CreateTestWorldScrollComponent()
 {
-	UWorld* World = GetTestWorld();
+	UWorld* World = GetTestWorldForObjectPoolTests();
 	if (!World)
 	{
 		return nullptr;
