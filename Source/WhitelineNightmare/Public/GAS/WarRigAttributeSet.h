@@ -38,6 +38,7 @@ public:
 	// AttributeSet overrides
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+	virtual void PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
 	// Fuel attribute - current fuel amount
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes|Fuel", ReplicatedUsing = OnRep_Fuel)
@@ -62,7 +63,7 @@ protected:
 	virtual void OnRep_MaxFuel(const FGameplayAttributeData& OldMaxFuel);
 
 	// Helper function to handle game over when fuel reaches 0
-	void HandleFuelDepleted(const FGameplayEffectModCallbackData& Data);
+	void HandleFuelDepleted();
 
 	// Helper function to clamp an attribute
 	void AdjustAttributeForMaxChange(FGameplayAttributeData& AffectedAttribute, const FGameplayAttributeData& MaxAttribute,

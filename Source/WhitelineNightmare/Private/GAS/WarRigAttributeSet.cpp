@@ -50,7 +50,26 @@ void UWarRigAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 		// Check if fuel depleted
 		if (GetFuel() <= 0.0f)
 		{
-			HandleFuelDepleted(Data);
+			HandleFuelDepleted();
+		}
+	}
+}
+
+void UWarRigAttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+{
+	Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
+
+	// This is called when SetNumericAttributeBase is used (bypasses PostGameplayEffectExecute)
+	if (Attribute == GetFuelAttribute())
+	{
+		UE_LOG(LogTemp, Log, TEXT("UWarRigAttributeSet::PostAttributeBaseChange - Fuel base changed from %.2f to %.2f"),
+			OldValue, NewValue);
+
+		// Check if fuel depleted
+		if (NewValue <= 0.0f && OldValue > 0.0f)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("UWarRigAttributeSet::PostAttributeBaseChange - Fuel depleted via base change!"));
+			HandleFuelDepleted();
 		}
 	}
 }
@@ -65,17 +84,9 @@ void UWarRigAttributeSet::OnRep_MaxFuel(const FGameplayAttributeData& OldMaxFuel
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UWarRigAttributeSet, MaxFuel, OldMaxFuel);
 }
 
-void UWarRigAttributeSet::HandleFuelDepleted(const FGameplayEffectModCallbackData& Data)
+void UWarRigAttributeSet::HandleFuelDepleted()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UWarRigAttributeSet::HandleFuelDepleted - FUEL DEPLETED! Triggering game over..."));
-
-	// Get the owning actor
-	AActor* OwningActor = GetOwningActor();
-	if (!OwningActor)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UWarRigAttributeSet::HandleFuelDepleted - No owning actor found!"));
-		return;
-	}
 
 	// Get the ability system component
 	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
@@ -91,13 +102,26 @@ void UWarRigAttributeSet::HandleFuelDepleted(const FGameplayEffectModCallbackDat
 	{
 		UE_LOG(LogTemp, Error, TEXT("UWarRigAttributeSet::HandleFuelDepleted - Game over ability not found!"));
 		UE_LOG(LogTemp, Error, TEXT("Make sure GameOverAbilityClass is set in BP_WarRig Blueprint!"));
+
+		// List all granted abilities for debugging
+		UE_LOG(LogTemp, Error, TEXT("Currently granted abilities:"));
+		for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
+		{
+			if (Spec.Ability)
+			{
+				UE_LOG(LogTemp, Error, TEXT("  - %s"), *Spec.Ability->GetClass()->GetName());
+			}
+		}
 		return;
 	}
 
 	// Try to activate the game over ability
-	if (!ASC->TryActivateAbility(GameOverSpec->Handle))
+	bool bActivated = ASC->TryActivateAbility(GameOverSpec->Handle);
+	if (!bActivated)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UWarRigAttributeSet::HandleFuelDepleted - Failed to activate game over ability!"));
+		UE_LOG(LogTemp, Error, TEXT("  Ability: %s"), *GameOverSpec->Ability->GetClass()->GetName());
+		UE_LOG(LogTemp, Error, TEXT("  Is Active: %s"), GameOverSpec->IsActive() ? TEXT("Yes") : TEXT("No"));
 		return;
 	}
 
