@@ -3,6 +3,7 @@
 #include "Core/WarRigPlayerController.h"
 #include "Core/WarRigHUD.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerInput.h"
 
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogWarRigPlayerController, Log, All);
