@@ -509,7 +509,7 @@ void AWarRigHUD::DrawGameOverScreen()
 	}
 
 	// Draw restart instruction
-	DrawText(TEXT("Press Space or Enter to Restart"), FLinearColor(0.7f, 0.7f, 0.7f, 1.0f), CenterX - 200.0f, CenterY + 150.0f, nullptr, 1.0f);
+	DrawText(TEXT("Press Any Key to Restart"), FLinearColor(0.7f, 0.7f, 0.7f, 1.0f), CenterX - 150.0f, CenterY + 150.0f, nullptr, 1.0f);
 }
 
 void AWarRigHUD::DebugToggleFuelUI()

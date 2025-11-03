@@ -71,11 +71,18 @@ void AWarRigPlayerController::SetupInputComponent()
 		return;
 	}
 
-	// Bind Space and Enter for restart (standard "press to continue" keys)
+	// Bind multiple common keys for restart (creates "press any key" effect)
 	InputComponent->BindKey(EKeys::SpaceBar, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
 	InputComponent->BindKey(EKeys::Enter, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	InputComponent->BindKey(EKeys::R, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	InputComponent->BindKey(EKeys::Escape, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	InputComponent->BindKey(EKeys::E, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	InputComponent->BindKey(EKeys::W, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	InputComponent->BindKey(EKeys::A, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	InputComponent->BindKey(EKeys::S, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	InputComponent->BindKey(EKeys::D, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
 
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready"));
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready (multiple restart keys bound)"));
 }
 
 bool AWarRigPlayerController::AddScrap(int32 Amount)
