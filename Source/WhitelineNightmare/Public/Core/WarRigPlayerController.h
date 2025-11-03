@@ -27,9 +27,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupInputComponent() override;
 
-	// Override to handle "press any key" during game over
-	virtual void ProcessPlayerInput(const float DeltaTime, const bool bGamePaused) override;
-
 	/**
 	 * Add scrap to the player's inventory
 	 * @param Amount - Amount of scrap to add (can be negative to subtract)
