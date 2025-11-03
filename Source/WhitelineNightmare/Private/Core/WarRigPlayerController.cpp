@@ -146,11 +146,11 @@ void AWarRigPlayerController::OnGameOver(bool bPlayerWon)
 
 	LogPlayerState();
 
-	// Start a timer to auto-restart after 3 seconds
+	// Start a timer to auto-restart after 10 seconds
 	FTimerHandle RestartTimerHandle;
-	GetWorldTimerManager().SetTimer(RestartTimerHandle, this, &AWarRigPlayerController::RestartGame, 3.0f, false);
+	GetWorldTimerManager().SetTimer(RestartTimerHandle, this, &AWarRigPlayerController::RestartGame, 10.0f, false);
 
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("OnGameOver: Restart timer started (3 seconds)"));
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("OnGameOver: Restart timer started (10 seconds)"));
 }
 
 void AWarRigPlayerController::RestartGame()
