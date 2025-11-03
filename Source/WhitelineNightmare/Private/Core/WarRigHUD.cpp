@@ -8,6 +8,7 @@
 #include "UI/WarRigHUDWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "AbilitySystemComponent.h"
+#include "GAS/WarRigAttributeSet.h"
 
 // Define logging category
 DEFINE_LOG_CATEGORY_STATIC(LogWarRigHUD, Log, All);
@@ -78,6 +79,25 @@ void AWarRigHUD::BeginPlay()
 void AWarRigHUD::DrawHUD()
 {
 	Super::DrawHUD();
+
+	// Update fuel percentage from War Rig's GAS
+	AWarRigPawn* WarRig = Cast<AWarRigPawn>(GetOwningPawn());
+	if (WarRig)
+	{
+		UAbilitySystemComponent* ASC = WarRig->GetAbilitySystemComponent();
+		if (ASC)
+		{
+			// Get fuel values from GAS attributes
+			const float CurrentFuel = ASC->GetNumericAttribute(UWarRigAttributeSet::GetFuelAttribute());
+			const float MaxFuel = ASC->GetNumericAttribute(UWarRigAttributeSet::GetMaxFuelAttribute());
+
+			// Update fuel display percentage
+			if (MaxFuel > 0.0f)
+			{
+				FuelPercentage = FMath::Clamp(CurrentFuel / MaxFuel, 0.0f, 1.0f);
+			}
+		}
+	}
 
 	// Draw debug HUD until proper UI widgets are implemented
 	DrawDebugHUD();
@@ -232,10 +252,53 @@ void AWarRigHUD::DrawDebugHUD()
 	float YPos = 50.0f;
 	const float XPos = 50.0f;
 
-	// Draw fuel
+	// Draw fuel text
 	FString FuelText = FString::Printf(TEXT("Fuel: %.1f%%"), FuelPercentage * 100.0f);
-	DrawText(FuelText, FLinearColor::Green, XPos, YPos, nullptr, 1.0f);
+
+	// Determine color based on fuel percentage
+	FLinearColor FuelColor;
+	if (FuelPercentage > 0.6f)
+	{
+		FuelColor = FLinearColor::Green;  // > 60%
+	}
+	else if (FuelPercentage > 0.3f)
+	{
+		FuelColor = FLinearColor(1.0f, 1.0f, 0.0f, 1.0f);  // Yellow: 30-60%
+	}
+	else
+	{
+		FuelColor = FLinearColor::Red;  // < 30%
+	}
+
+	DrawText(FuelText, FuelColor, XPos, YPos, nullptr, 1.0f);
 	YPos += LineHeight;
+
+	// Draw fuel progress bar
+	const float BarWidth = 300.0f;
+	const float BarHeight = 20.0f;
+	const float BarYPos = YPos;
+
+	// Background (empty portion)
+	FCanvasTileItem BackgroundTile(FVector2D(XPos, BarYPos), FVector2D(BarWidth, BarHeight), FLinearColor(0.2f, 0.2f, 0.2f, 1.0f));
+	BackgroundTile.BlendMode = SE_BLEND_Translucent;
+	Canvas->DrawItem(BackgroundTile);
+
+	// Foreground (filled portion)
+	const float FilledWidth = BarWidth * FuelPercentage;
+	if (FilledWidth > 0.0f)
+	{
+		FCanvasTileItem ForegroundTile(FVector2D(XPos, BarYPos), FVector2D(FilledWidth, BarHeight), FuelColor);
+		ForegroundTile.BlendMode = SE_BLEND_Translucent;
+		Canvas->DrawItem(ForegroundTile);
+	}
+
+	// Border around bar
+	FCanvasBoxItem BorderBox(FVector2D(XPos, BarYPos), FVector2D(BarWidth, BarHeight));
+	BorderBox.SetColor(FLinearColor::White);
+	BorderBox.LineThickness = 2.0f;
+	Canvas->DrawItem(BorderBox);
+
+	YPos += BarHeight + 10.0f;
 
 	// Draw armor
 	FString ArmorText = FString::Printf(TEXT("Armor: %.1f%%"), ArmorPercentage * 100.0f);
