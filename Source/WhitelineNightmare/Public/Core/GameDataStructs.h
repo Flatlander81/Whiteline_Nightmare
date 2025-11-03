@@ -364,6 +364,8 @@ struct FTurretData : public FTableRowBase
 
 	FTurretData()
 		: TurretName(NAME_None)
+		, DisplayName(FText::FromString(TEXT("Default Turret")))
+		, Description(FText::FromString(TEXT("A basic defensive turret")))
 		, BaseDamage(10.0f)
 		, FireRate(1.0f)
 		, Range(1000.0f)

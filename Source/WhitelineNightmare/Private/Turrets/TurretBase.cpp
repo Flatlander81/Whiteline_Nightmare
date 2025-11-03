@@ -27,6 +27,14 @@ ATurretBase::ATurretBase()
 	TurretMesh->SetupAttachment(TurretRoot);
 	TurretMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Turrets don't need collision
 
+	// Set default sphere mesh
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMeshAsset(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+	if (SphereMeshAsset.Succeeded())
+	{
+		TurretMesh->SetStaticMesh(SphereMeshAsset.Object);
+		TurretMesh->SetRelativeScale3D(FVector(0.5f)); // Make it smaller (50cm radius instead of 100cm)
+	}
+
 	// Create Ability System Component
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
