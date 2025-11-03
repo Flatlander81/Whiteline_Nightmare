@@ -71,21 +71,15 @@ void AWarRigPlayerController::SetupInputComponent()
 		return;
 	}
 
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready"));
-}
+	// Bind common keys for "Press Any Key" restart effect
+	// This covers most keys a player would naturally press
+	InputComponent->BindKey(EKeys::SpaceBar, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	InputComponent->BindKey(EKeys::Enter, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	InputComponent->BindKey(EKeys::R, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	InputComponent->BindKey(EKeys::Escape, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	InputComponent->BindKey(EKeys::AnyKey, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
 
-bool AWarRigPlayerController::InputKey(const FInputKeyParams& Params)
-{
-	// If game is over and any key is pressed, restart the game
-	if (bIsGameOver && Params.Event == IE_Pressed)
-	{
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("InputKey: Key pressed during game over (%s), restarting..."), *Params.Key.ToString());
-		RestartGame();
-		return true; // Consume the input
-	}
-
-	// Otherwise, let the parent handle it
-	return Super::InputKey(Params);
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready (multiple keys bound for restart)"));
 }
 
 bool AWarRigPlayerController::AddScrap(int32 Amount)

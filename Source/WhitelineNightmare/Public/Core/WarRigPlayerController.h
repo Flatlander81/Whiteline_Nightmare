@@ -27,9 +27,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupInputComponent() override;
 
-	// Override to catch any key press for "Press Any Key" restart
-	virtual bool InputKey(const FInputKeyParams& Params) override;
-
 	/**
 	 * Add scrap to the player's inventory
 	 * @param Amount - Amount of scrap to add (can be negative to subtract)
