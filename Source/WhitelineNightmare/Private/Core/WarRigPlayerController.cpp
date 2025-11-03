@@ -69,51 +69,7 @@ void AWarRigPlayerController::SetupInputComponent()
 		return;
 	}
 
-	// Epic-approved approach: Bind all common keys to one handler for "press any key" functionality
-	TArray<FKey> KeysToBind;
-
-	// Add alphabet keys (A-Z)
-	for (TCHAR Char = 'A'; Char <= 'Z'; ++Char)
-	{
-		KeysToBind.Add(FKey(FString::Chr(Char)));
-	}
-
-	// Add number keys (0-9)
-	for (TCHAR Char = '0'; Char <= '9'; ++Char)
-	{
-		KeysToBind.Add(FKey(FString::Chr(Char)));
-	}
-
-	// Add common special keys
-	KeysToBind.Append({
-		EKeys::SpaceBar,
-		EKeys::Enter,
-		EKeys::Escape,
-		EKeys::Left,
-		EKeys::Right,
-		EKeys::Up,
-		EKeys::Down,
-		EKeys::Tab,
-		EKeys::BackSpace
-	});
-
-	// Bind all keys to the same handler
-	for (const FKey& Key : KeysToBind)
-	{
-		InputComponent->BindKey(Key, IE_Pressed, this, &AWarRigPlayerController::OnAnyKeyPressed);
-	}
-
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready (%d keys bound for 'any key' detection)"), KeysToBind.Num());
-}
-
-void AWarRigPlayerController::OnAnyKeyPressed(FKey Key)
-{
-	// Only handle input during game over
-	if (bIsGameOver)
-	{
-		UE_LOG(LogWarRigPlayerController, Log, TEXT("OnAnyKeyPressed: Restart triggered by key: %s"), *Key.GetDisplayName().ToString());
-		RestartGame();
-	}
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready"));
 }
 
 bool AWarRigPlayerController::AddScrap(int32 Amount)
@@ -190,8 +146,11 @@ void AWarRigPlayerController::OnGameOver(bool bPlayerWon)
 
 	LogPlayerState();
 
-	// Game over sequence is now handled by UGameplayAbility_GameOver
-	// This function is kept for Blueprint compatibility and additional logic if needed
+	// Start a timer to auto-restart after 3 seconds
+	FTimerHandle RestartTimerHandle;
+	GetWorldTimerManager().SetTimer(RestartTimerHandle, this, &AWarRigPlayerController::RestartGame, 3.0f, false);
+
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("OnGameOver: Restart timer started (3 seconds)"));
 }
 
 void AWarRigPlayerController::RestartGame()

@@ -27,11 +27,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupInputComponent() override;
 
-protected:
-	// Handler for any key press during game over
-	void OnAnyKeyPressed(FKey Key);
-
-public:
 	/**
 	 * Add scrap to the player's inventory
 	 * @param Amount - Amount of scrap to add (can be negative to subtract)
