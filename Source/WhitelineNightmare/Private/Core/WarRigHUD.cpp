@@ -99,13 +99,21 @@ void AWarRigHUD::DrawHUD()
 		}
 	}
 
-	// Draw debug HUD until proper UI widgets are implemented
-	DrawDebugHUD();
-
-	// Draw debug lane UI buttons
-	if (bShowDebugLaneUI)
+	// Draw game over screen if active (simple DrawText - placeholder)
+	if (bShowingGameOver)
 	{
-		DrawDebugLaneUI();
+		DrawGameOverScreen();
+	}
+	else
+	{
+		// Draw debug HUD until proper UI widgets are implemented
+		DrawDebugHUD();
+
+		// Draw debug lane UI buttons
+		if (bShowDebugLaneUI)
+		{
+			DrawDebugLaneUI();
+		}
 	}
 }
 
@@ -205,7 +213,7 @@ void AWarRigHUD::ShowGameOverScreen(bool bPlayerWon)
 
 	UE_LOG(LogWarRigHUD, Log, TEXT("ShowGameOverScreen: Player %s"), bPlayerWon ? TEXT("WON") : TEXT("LOST"));
 
-	// TODO: Create and show game over UI widget
+	// Game over will be drawn directly on canvas in DrawHUD (simple DrawText calls)
 }
 
 void AWarRigHUD::HideGameOverScreen()
@@ -455,6 +463,52 @@ void AWarRigHUD::DrawDebugLaneUI()
 	const int32 CurrentLane = LaneSystem->GetCurrentLane();
 	const FString LaneText = FString::Printf(TEXT("Current Lane: %d"), CurrentLane);
 	DrawText(LaneText, FLinearColor::Yellow, CenterX - 60, ButtonY - 30, nullptr, 1.2f);
+}
+
+void AWarRigHUD::DrawGameOverScreen()
+{
+	if (!Canvas)
+	{
+		return;
+	}
+
+	const float CenterX = Canvas->SizeX * 0.5f;
+	const float CenterY = Canvas->SizeY * 0.5f;
+
+	// Draw semi-transparent black background
+	DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.8f), 0.0f, 0.0f, Canvas->SizeX, Canvas->SizeY);
+
+	// Draw "GAME OVER" text
+	const FString GameOverText = bPlayerWonGame ? TEXT("YOU WIN!") : TEXT("GAME OVER");
+	const FLinearColor GameOverColor = bPlayerWonGame ? FLinearColor::Green : FLinearColor(1.0f, 0.2f, 0.0f, 1.0f); // Red/orange
+	DrawText(GameOverText, GameOverColor, CenterX - 200.0f, CenterY - 200.0f, nullptr, 3.0f);
+
+	// Draw reason
+	const FString ReasonText = bPlayerWonGame ? TEXT("Distance Complete!") : TEXT("Out of Fuel");
+	DrawText(ReasonText, FLinearColor::White, CenterX - 150.0f, CenterY - 100.0f, nullptr, 1.5f);
+
+	// Get stats from GameMode
+	AWhitelineNightmareGameMode* GameMode = Cast<AWhitelineNightmareGameMode>(GetWorld()->GetAuthGameMode());
+	if (GameMode)
+	{
+		const float Distance = GameMode->GetDistanceTraveled();
+		const int32 Enemies = GameMode->GetEnemiesKilled();
+		const float Fuel = GameMode->GetFuelCollected();
+		const int32 Scrap = GameMode->GetScrapCollected();
+
+		// Draw stats
+		float YPos = CenterY;
+		DrawText(FString::Printf(TEXT("Distance Traveled: %.0f units"), Distance), FLinearColor(0.8f, 0.8f, 0.8f, 1.0f), CenterX - 200.0f, YPos, nullptr, 1.0f);
+		YPos += 30.0f;
+		DrawText(FString::Printf(TEXT("Enemies Killed: %d"), Enemies), FLinearColor(0.8f, 0.8f, 0.8f, 1.0f), CenterX - 200.0f, YPos, nullptr, 1.0f);
+		YPos += 30.0f;
+		DrawText(FString::Printf(TEXT("Fuel Collected: %.0f"), Fuel), FLinearColor(0.8f, 0.8f, 0.8f, 1.0f), CenterX - 200.0f, YPos, nullptr, 1.0f);
+		YPos += 30.0f;
+		DrawText(FString::Printf(TEXT("Scrap Collected: %d"), Scrap), FLinearColor(0.8f, 0.8f, 0.8f, 1.0f), CenterX - 200.0f, YPos, nullptr, 1.0f);
+	}
+
+	// Draw restart instruction
+	DrawText(TEXT("Press R to Restart"), FLinearColor(0.7f, 0.7f, 0.7f, 1.0f), CenterX - 150.0f, CenterY + 150.0f, nullptr, 1.0f);
 }
 
 void AWarRigHUD::DebugToggleFuelUI()

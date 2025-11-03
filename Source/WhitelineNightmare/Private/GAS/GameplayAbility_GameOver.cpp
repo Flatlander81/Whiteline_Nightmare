@@ -4,7 +4,7 @@
 #include "Core/WhitelineNightmareGameMode.h"
 #include "Core/WorldScrollComponent.h"
 #include "Core/WarRigPlayerController.h"
-#include "UI/GameOverWidget.h"
+#include "Core/WarRigHUD.h"
 #include "AbilitySystemComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
@@ -169,50 +169,30 @@ void UGameplayAbility_GameOver::ShowGameOverUI()
 		return;
 	}
 
-	// Create the game over widget (pure C++, no Blueprint required!)
-	// Use UGameOverWidget::StaticClass() directly (same pattern as WarRigHUD with FuelWidget)
-	TSubclassOf<UGameOverWidget> WidgetClass = GameOverWidgetClass;
-	if (!WidgetClass)
+	// Get the HUD and tell it to show game over screen (simple DrawText - placeholder)
+	AHUD* HUD = PC->GetHUD();
+	if (!HUD)
 	{
-		// Fallback to C++ class if no Blueprint override is set
-		WidgetClass = UGameOverWidget::StaticClass();
-		UE_LOG(LogTemp, Log, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - Using default C++ UGameOverWidget class"));
+		UE_LOG(LogTemp, Error, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - No HUD found"));
+		return;
 	}
 
-	GameOverWidget = CreateWidget<UGameOverWidget>(PC, WidgetClass);
-	if (GameOverWidget)
+	AWarRigHUD* WarRigHUD = Cast<AWarRigHUD>(HUD);
+	if (!WarRigHUD)
 	{
-		// Cast to UGameOverWidget to set the reason
-		UGameOverWidget* GameOverWidgetTyped = Cast<UGameOverWidget>(GameOverWidget);
-		if (GameOverWidgetTyped)
-		{
-			GameOverWidgetTyped->SetGameOverReason(GameOverReason);
-		}
-
-		// Add to viewport with high Z-order
-		GameOverWidget->AddToViewport(100);
-
-		// CRITICAL: Set visibility (same as WarRigHUDWidget pattern)
-		GameOverWidget->SetVisibility(ESlateVisibility::Visible);
-
-		UE_LOG(LogTemp, Log, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - Game over widget added to viewport and set to Visible"));
-
-		// Show mouse cursor for UI interaction
-		PC->bShowMouseCursor = true;
-		PC->bEnableClickEvents = true;
-		PC->bEnableMouseOverEvents = true;
-
-		// Set input mode to Game and UI (allows both mouse and keyboard input)
-		// Don't use UIOnly mode because it requires a focusable widget
-		FInputModeGameAndUI InputMode;
-		InputMode.SetHideCursorDuringCapture(false);
-		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-		PC->SetInputMode(InputMode);
+		UE_LOG(LogTemp, Error, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - HUD is not a WarRigHUD"));
+		return;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - Failed to create game over widget"));
-	}
+
+	// Tell HUD to show game over screen (it will draw it in DrawHUD)
+	WarRigHUD->ShowGameOverScreen(false); // Player lost
+
+	UE_LOG(LogTemp, Log, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - Game over screen activated on HUD"));
+
+	// Show mouse cursor
+	PC->bShowMouseCursor = true;
+	PC->bEnableClickEvents = true;
+	PC->bEnableMouseOverEvents = true;
 }
 
 void UGameplayAbility_GameOver::PlayGameOverSound()

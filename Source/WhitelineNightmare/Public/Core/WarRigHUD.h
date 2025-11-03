@@ -169,4 +169,9 @@ private:
 	 * Draw debug lane UI buttons
 	 */
 	void DrawDebugLaneUI();
+
+	/**
+	 * Draw game over screen (simple DrawText placeholder)
+	 */
+	void DrawGameOverScreen();
 };
