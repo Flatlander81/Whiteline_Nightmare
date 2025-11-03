@@ -63,26 +63,57 @@ void AWarRigPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	// Input will be set up using Enhanced Input in the future
-	// For now, this is just a placeholder
 	if (!InputComponent)
 	{
 		UE_LOG(LogWarRigPlayerController, Error, TEXT("SetupInputComponent: InputComponent is null"));
 		return;
 	}
 
-	// Bind multiple common keys for restart (creates "press any key" effect)
-	InputComponent->BindKey(EKeys::SpaceBar, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
-	InputComponent->BindKey(EKeys::Enter, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
-	InputComponent->BindKey(EKeys::R, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
-	InputComponent->BindKey(EKeys::Escape, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
-	InputComponent->BindKey(EKeys::E, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
-	InputComponent->BindKey(EKeys::W, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
-	InputComponent->BindKey(EKeys::A, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
-	InputComponent->BindKey(EKeys::S, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
-	InputComponent->BindKey(EKeys::D, IE_Pressed, this, &AWarRigPlayerController::RestartGame);
+	// Epic-approved approach: Bind all common keys to one handler for "press any key" functionality
+	TArray<FKey> KeysToBind;
 
-	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready (multiple restart keys bound)"));
+	// Add alphabet keys (A-Z)
+	for (TCHAR Char = 'A'; Char <= 'Z'; ++Char)
+	{
+		KeysToBind.Add(FKey(FString::Chr(Char)));
+	}
+
+	// Add number keys (0-9)
+	for (TCHAR Char = '0'; Char <= '9'; ++Char)
+	{
+		KeysToBind.Add(FKey(FString::Chr(Char)));
+	}
+
+	// Add common special keys
+	KeysToBind.Append({
+		EKeys::SpaceBar,
+		EKeys::Enter,
+		EKeys::Escape,
+		EKeys::Left,
+		EKeys::Right,
+		EKeys::Up,
+		EKeys::Down,
+		EKeys::Tab,
+		EKeys::BackSpace
+	});
+
+	// Bind all keys to the same handler
+	for (const FKey& Key : KeysToBind)
+	{
+		InputComponent->BindKey(Key, IE_Pressed, this, &AWarRigPlayerController::OnAnyKeyPressed);
+	}
+
+	UE_LOG(LogWarRigPlayerController, Log, TEXT("SetupInputComponent: Input component ready (%d keys bound for 'any key' detection)"), KeysToBind.Num());
+}
+
+void AWarRigPlayerController::OnAnyKeyPressed(FKey Key)
+{
+	// Only handle input during game over
+	if (bIsGameOver)
+	{
+		UE_LOG(LogWarRigPlayerController, Log, TEXT("OnAnyKeyPressed: Restart triggered by key: %s"), *Key.GetDisplayName().ToString());
+		RestartGame();
+	}
 }
 
 bool AWarRigPlayerController::AddScrap(int32 Amount)
