@@ -62,8 +62,12 @@ void UWarRigAttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attr
 	// This is called when SetNumericAttributeBase is used (bypasses PostGameplayEffectExecute)
 	if (Attribute == GetFuelAttribute())
 	{
-		UE_LOG(LogTemp, Log, TEXT("UWarRigAttributeSet::PostAttributeBaseChange - Fuel base changed from %.2f to %.2f"),
-			OldValue, NewValue);
+		// Only log if there's an actual change (avoid spam when fuel stays at 0)
+		if (!FMath::IsNearlyEqual(OldValue, NewValue))
+		{
+			UE_LOG(LogTemp, Log, TEXT("UWarRigAttributeSet::PostAttributeBaseChange - Fuel base changed from %.2f to %.2f"),
+				OldValue, NewValue);
+		}
 
 		// Check if fuel depleted
 		if (NewValue <= 0.0f && OldValue > 0.0f)

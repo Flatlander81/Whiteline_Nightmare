@@ -39,8 +39,8 @@ void UGameplayAbility_GameOver::ActivateAbility(const FGameplayAbilitySpecHandle
 	// Stop world scrolling
 	StopWorldScrolling();
 
-	// Disable player input
-	DisablePlayerInput();
+	// NOTE: Don't disable input - we need the R key to work for restart
+	// The bIsGameOver flag on PlayerController prevents gameplay actions
 
 	// Show game over UI
 	ShowGameOverUI();
@@ -188,6 +188,14 @@ void UGameplayAbility_GameOver::ShowGameOverUI()
 	WarRigHUD->ShowGameOverScreen(false); // Player lost
 
 	UE_LOG(LogTemp, Log, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - Game over screen activated on HUD"));
+
+	// Set game over flag on PlayerController so restart works
+	AWarRigPlayerController* WarRigPC = Cast<AWarRigPlayerController>(PC);
+	if (WarRigPC)
+	{
+		WarRigPC->OnGameOver(false); // Sets bIsGameOver = true
+		UE_LOG(LogTemp, Log, TEXT("UGameplayAbility_GameOver::ShowGameOverUI - Set bIsGameOver on PlayerController"));
+	}
 
 	// Show mouse cursor
 	PC->bShowMouseCursor = true;
