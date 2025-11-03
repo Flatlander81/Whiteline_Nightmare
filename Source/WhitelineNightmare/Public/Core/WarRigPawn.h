@@ -18,6 +18,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class ULaneSystemComponent;
 class USceneComponent;
+class ATurretBase;
 
 /**
  * AWarRigPawn - The player's war rig vehicle
@@ -209,6 +210,14 @@ protected:
 	/** Current rig configuration ID (e.g., "SemiTruck") */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Configuration")
 	FName CurrentRigID;
+
+	/** Reference to the turret data table (DT_TurretData) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "War Rig|Turrets")
+	TObjectPtr<UDataTable> TurretDataTable;
+
+	/** Currently spawned turrets on this war rig */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "War Rig|Turrets")
+	TArray<TObjectPtr<ATurretBase>> SpawnedTurrets;
 
 	/** Cached war rig data from data table */
 	UPROPERTY(BlueprintReadOnly, Category = "War Rig|Configuration")
