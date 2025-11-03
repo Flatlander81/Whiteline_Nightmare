@@ -296,13 +296,26 @@ namespace FuelPickupTests
 }
 
 // Register tests with the test manager
-REGISTER_TEST("Fuel Pickup - Collection", ETestCategory::Economy, FuelPickupTests::TestPickupCollection);
-REGISTER_TEST("Fuel Pickup - Pooling", ETestCategory::ObjectPool, FuelPickupTests::TestPickupPooling);
-REGISTER_TEST("Fuel Pickup - Spawn Position", ETestCategory::Economy, FuelPickupTests::TestPickupSpawn);
-REGISTER_TEST("Fuel Pickup - Despawn Logic", ETestCategory::ObjectPool, FuelPickupTests::TestPickupDespawn);
-REGISTER_TEST("Fuel Pickup - GameplayEffect", ETestCategory::GAS, FuelPickupTests::TestGameplayEffectApplication);
-REGISTER_TEST("Fuel Pickup - Sound Playback", ETestCategory::Economy, FuelPickupTests::TestPickupSound);
-REGISTER_TEST("Fuel Pickup - IPoolableActor", ETestCategory::ObjectPool, FuelPickupTests::TestIPoolableActorInterface);
-REGISTER_TEST("Fuel Pickup - World Scroll", ETestCategory::Economy, FuelPickupTests::TestWorldScrollIntegration);
+// Note: REGISTER_TEST macro requires simple identifiers, so we create wrapper functions
+namespace
+{
+	bool TestPickupCollectionWrapper() { return FuelPickupTests::TestPickupCollection(); }
+	bool TestPickupPoolingWrapper() { return FuelPickupTests::TestPickupPooling(); }
+	bool TestPickupSpawnWrapper() { return FuelPickupTests::TestPickupSpawn(); }
+	bool TestPickupDespawnWrapper() { return FuelPickupTests::TestPickupDespawn(); }
+	bool TestGameplayEffectApplicationWrapper() { return FuelPickupTests::TestGameplayEffectApplication(); }
+	bool TestPickupSoundWrapper() { return FuelPickupTests::TestPickupSound(); }
+	bool TestIPoolableActorInterfaceWrapper() { return FuelPickupTests::TestIPoolableActorInterface(); }
+	bool TestWorldScrollIntegrationWrapper() { return FuelPickupTests::TestWorldScrollIntegration(); }
+}
+
+REGISTER_TEST("Fuel Pickup - Collection", ETestCategory::Economy, TestPickupCollectionWrapper);
+REGISTER_TEST("Fuel Pickup - Pooling", ETestCategory::ObjectPool, TestPickupPoolingWrapper);
+REGISTER_TEST("Fuel Pickup - Spawn Position", ETestCategory::Economy, TestPickupSpawnWrapper);
+REGISTER_TEST("Fuel Pickup - Despawn Logic", ETestCategory::ObjectPool, TestPickupDespawnWrapper);
+REGISTER_TEST("Fuel Pickup - GameplayEffect", ETestCategory::GAS, TestGameplayEffectApplicationWrapper);
+REGISTER_TEST("Fuel Pickup - Sound Playback", ETestCategory::Economy, TestPickupSoundWrapper);
+REGISTER_TEST("Fuel Pickup - IPoolableActor", ETestCategory::ObjectPool, TestIPoolableActorInterfaceWrapper);
+REGISTER_TEST("Fuel Pickup - World Scroll", ETestCategory::Economy, TestWorldScrollIntegrationWrapper);
 
 #endif // !UE_BUILD_SHIPPING

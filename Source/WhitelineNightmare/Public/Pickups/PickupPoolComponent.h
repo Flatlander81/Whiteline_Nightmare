@@ -64,13 +64,13 @@ public:
 	 * Get the number of active pickups in the pool
 	 */
 	UFUNCTION(BlueprintPure, Category = "Pickup Pool")
-	int32 GetActivePickupCount() const { return ActiveObjects.Num(); }
+	int32 GetActivePickupCount() const { return GetActiveCount(); }
 
 	/**
 	 * Get the number of available pickups in the pool
 	 */
 	UFUNCTION(BlueprintPure, Category = "Pickup Pool")
-	int32 GetAvailablePickupCount() const { return AvailableObjects.Num(); }
+	int32 GetAvailablePickupCount() const { return GetAvailableCount(); }
 
 protected:
 	/** Reference to the war rig pawn */

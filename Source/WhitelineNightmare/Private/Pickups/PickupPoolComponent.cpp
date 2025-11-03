@@ -65,7 +65,7 @@ void UPickupPoolComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 
 #if !UE_BUILD_SHIPPING
 	// Draw debug visualization if enabled
-	if (bShowDebugVisualization)
+	if (IsDebugVisualizationEnabled())
 	{
 		DrawDebugVisualization();
 	}
@@ -312,10 +312,11 @@ void UPickupPoolComponent::DebugShowPickups(const TArray<FString>& Args)
 		return;
 	}
 
-	DebugInstance->bShowDebugVisualization = !DebugInstance->bShowDebugVisualization;
+	bool bNewValue = !DebugInstance->IsDebugVisualizationEnabled();
+	DebugInstance->SetDebugVisualization(bNewValue);
 
 	UE_LOG(LogTemp, Log, TEXT("DebugShowPickups - Debug visualization %s"),
-		DebugInstance->bShowDebugVisualization ? TEXT("ENABLED") : TEXT("DISABLED"));
+		bNewValue ? TEXT("ENABLED") : TEXT("DISABLED"));
 }
 
 void UPickupPoolComponent::DebugShowPickupPool(const TArray<FString>& Args)
@@ -327,9 +328,9 @@ void UPickupPoolComponent::DebugShowPickupPool(const TArray<FString>& Args)
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("=== Pickup Pool Statistics ==="));
-	UE_LOG(LogTemp, Log, TEXT("Active Pickups: %d"), DebugInstance->ActiveObjects.Num());
-	UE_LOG(LogTemp, Log, TEXT("Available Pickups: %d"), DebugInstance->AvailableObjects.Num());
-	UE_LOG(LogTemp, Log, TEXT("Total Pool Size: %d"), DebugInstance->AllPooledObjects.Num());
+	UE_LOG(LogTemp, Log, TEXT("Active Pickups: %d"), DebugInstance->GetActiveCount());
+	UE_LOG(LogTemp, Log, TEXT("Available Pickups: %d"), DebugInstance->GetAvailableCount());
+	UE_LOG(LogTemp, Log, TEXT("Total Pool Size: %d"), DebugInstance->GetTotalPoolSize());
 	UE_LOG(LogTemp, Log, TEXT("Spawn Distance Ahead: %.1f"), DebugInstance->SpawnDistanceAhead);
 	UE_LOG(LogTemp, Log, TEXT("Despawn Distance Behind: %.1f"), DebugInstance->DespawnDistanceBehind);
 	UE_LOG(LogTemp, Log, TEXT("Number of Lanes: %d"), DebugInstance->LaneYPositions.Num());

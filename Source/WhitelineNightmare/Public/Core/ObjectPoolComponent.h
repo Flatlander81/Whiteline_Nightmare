@@ -149,6 +149,7 @@ private:
 	 */
 	void DrawDebugVisualization();
 
+protected:
 	// Configuration for this pool
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Object Pool", meta = (AllowPrivateAccess = "true"))
 	FObjectPoolConfig PoolConfig;
