@@ -55,7 +55,7 @@ void UWarRigAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 	}
 }
 
-void UWarRigAttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+void UWarRigAttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const
 {
 	Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
 
@@ -84,7 +84,7 @@ void UWarRigAttributeSet::OnRep_MaxFuel(const FGameplayAttributeData& OldMaxFuel
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UWarRigAttributeSet, MaxFuel, OldMaxFuel);
 }
 
-void UWarRigAttributeSet::HandleFuelDepleted()
+void UWarRigAttributeSet::HandleFuelDepleted() const
 {
 	UE_LOG(LogTemp, Warning, TEXT("UWarRigAttributeSet::HandleFuelDepleted - FUEL DEPLETED! Triggering game over..."));
 
